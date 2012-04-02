@@ -7,7 +7,8 @@ import string
 import gzip
 import csv
 import utils
-
+from astLib import astWCS
+#import photometry as phot
 
 class GalaxyParameters:
   @staticmethod
@@ -33,7 +34,15 @@ class GalaxyParameters:
 	ret.runstr = utils.run2string(ret.run)
 	ret.field_str = utils.field2string(ret.field)	
     return ret
-
+  
+  @staticmethod
+  def getSDSSUrl(listFile, dataDir, ID):
+      camcol = GalaxyParameters.SDSS(listFile, ID).camcol
+      field = GalaxyParameters.SDSS(listFile, ID).field
+      field_str = GalaxyParameters.SDSS(listFile, ID).field_str
+      runstr = GalaxyParameters.SDSS(listFile, ID).runstr
+      fpCFile = dataDir+'/SDSS/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+      return fpCFile 
   
   @staticmethod
   def getZeropoint(listFile, ID):
@@ -45,8 +54,7 @@ class GalaxyParameters:
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
 	#http://das.sdss.org/imaging/5115/40/calibChunks/2/tsField-005115-2-40-0023.fit
-	
-      print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+      print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
       tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')
       print 'opened'
       img = tsFile[1].data
@@ -54,14 +62,29 @@ class GalaxyParameters:
       zpt_r = list(img.field(27))[0][filterNumber]
       return zpt_r
 	
-	
-      '''
-	print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
-	os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
-	print 'uncompressing..'
-	gz = gzip.open('fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
-	imgFile = pyfits.open(gz, mode='readonly')
-	print 'getting header info...'  '''
+  @staticmethod
+  def getNedName(listFile, simpleFile, ID):
+    ret = GalaxyParameters()
+    with open(simpleFile, 'rb') as f:
+      NEDNAME_col = 2
+      mycsv = csv.reader(f)
+      mycsv = list(mycsv)	
+      ret.NedName = string.strip(mycsv[ID][NEDNAME_col])
+    return ret
+  
+
+class Astrometry():
+  @staticmethod
+  def getCenterCoords(listFile, ID):
+    centerCoords = (GalaxyParameters.SDSS(listFile, ID).ra, GalaxyParameters.SDSS(listFile, ID).dec)
+    return centerCoords
+  @staticmethod
+  def getPixelCoords(listFile, ID, dataDir):
+    WCS=astWCS.WCS(GalaxyParameters.getSDSSUrl(listFile, dataDir, ID))
+    centerCoords = Astrometry.getCenterCoords(listFile, ID)
+    print centerCoords
+    pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
+    return pixelCoords
   
 def main():
 
@@ -70,10 +93,11 @@ def main():
   dataDir = '../data'
   outputFile = '../data/growthCurvePhotometry.csv'
   imgDir = 'img/'
+  simpleFile = '../data/CALIFA_mother_simple.csv'
   noOfGalaxies = 939
   
-  print GalaxyParameters.getZeropoint(listFile, 938) #number of galaxy: ID-1
-
-  
+  print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
+  print Astrometry.getCenterCoords(listFile, 0)
+  print Astrometry.getPixelCoords(listFile, 0, dataDir)
 if __name__ == "__main__":
   main()

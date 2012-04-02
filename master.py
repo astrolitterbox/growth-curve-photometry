@@ -36,26 +36,33 @@ class GalaxyParameters:
 
   
   @staticmethod
-  def getTsFieldFiles(listFile, noOfGalaxies):
-      for i in range(0, noOfGalaxies):
-	run = GalaxyParameters.SDSS(listFile, i).run
-	rerun = GalaxyParameters.SDSS(listFile, i).rerun
-	camcol = GalaxyParameters.SDSS(listFile, i).camcol
-	field = GalaxyParameters.SDSS(listFile, i).field
-	runstr = GalaxyParameters.SDSS(listFile, i).runstr
-	field_str = GalaxyParameters.SDSS(listFile, i).field_str
+  def getZeropoint(listFile, ID):
+      filterNumber = 2 #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
+      run = GalaxyParameters.SDSS(listFile, ID).run
+      rerun = GalaxyParameters.SDSS(listFile, ID).rerun
+      camcol = GalaxyParameters.SDSS(listFile, ID).camcol
+      field = GalaxyParameters.SDSS(listFile, ID).field
+      runstr = GalaxyParameters.SDSS(listFile, ID).runstr
+      field_str = GalaxyParameters.SDSS(listFile, ID).field_str
 	#http://das.sdss.org/imaging/5115/40/calibChunks/2/tsField-005115-2-40-0023.fit
 	
-	print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+      print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+      tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')
+      print 'opened'
+      img = tsFile[1].data
+      head = tsFile[1].header
+      zpt_r = list(img.field(27))[0][filterNumber]
+      return zpt_r
 	
-	'''
+	
+      '''
 	print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
 	os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
 	print 'uncompressing..'
 	gz = gzip.open('fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
 	imgFile = pyfits.open(gz, mode='readonly')
 	print 'getting header info...'  '''
-
+  
 def main():
 
   listFile = '../data/SDSS_photo_match.csv'
@@ -65,7 +72,7 @@ def main():
   imgDir = 'img/'
   noOfGalaxies = 939
   
-  print GalaxyParameters.getTsFieldFiles(listFile, noOfGalaxies)
+  print GalaxyParameters.getZeropoint(listFile, 938) #number of galaxy: ID-1
 
   
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ Created on Tue Feb 28 11:56:41 2012
 """A module for various utilities and helper functions"""
 
 import numpy as np
+import utils
 #cimport numpy as np
 #cimport cython
 
@@ -74,14 +75,10 @@ a copy of the input array, where NaN elements have been replaced.
         print kernel, 'kernel'
 
     elif method == 'idw':
-        kernel = np.array([[0, 0.5, 0.5, 0.5,0],
-                  [0.5,0.75,0.75,0.75,0.5], 
-                  [0.5,0.75,1,0.75,0.5],
-                  [0.5,0.75,0.75,0.5,1],
-                  [0, 0.5, 0.5 ,0.5 ,0]])
+        kernel = utils.gauss_kern(2)
         print kernel, 'kernel'		    
     else:
-        raise ValueError( 'method not valid. Should be one of `localmean`.')
+        raise ValueError( 'method not valid. Should be one of `localmean` or idw.')
     
     # fill new array with input elements
     for i in range(array.shape[0]):

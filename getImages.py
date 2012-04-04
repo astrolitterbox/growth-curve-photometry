@@ -9,7 +9,7 @@ import gzip
 
 #awk < CALIFA.csv 'BEGIN { FS="," }; { print $1,",",$2,",",$3,",",$8,",",$9,",",$10,",",$11}' > list.txt
 
-dataFile = 'list.txt'
+
 
 def run2string(runs):
     """

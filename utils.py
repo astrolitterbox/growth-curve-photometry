@@ -2,7 +2,7 @@
 import numpy
 import string
 import csv
-
+import scipy
 
 def run2string(runs):
     """
@@ -68,4 +68,17 @@ def createOutputFilename(sdssFilename):
   sdssFilename = sdssFilename.lstrip('../data/SDSS/')
   outputFilename = sdssFilename[:-3]+'s'
   return outputFilename
+  
+def gauss_kern(size, sizey=None):
+    """ Returns a normalized 2D gauss kernel array for convolutions """
+    size = int(size)
+    if not sizey:
+        sizey = size
+    else:
+        sizey = int(sizey)
+    x, y = scipy.mgrid[-size:size+1, -sizey:sizey+1]
+    g = scipy.exp(-(x**2/float(size)+y**2/float(sizey)))
+    return g / g.max()
+  
+  
   

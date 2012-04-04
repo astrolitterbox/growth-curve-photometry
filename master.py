@@ -7,7 +7,9 @@ import string
 import gzip
 import csv
 import utils
+import inpaint
 from astLib import astWCS
+import numpy as np
 #import photometry as phot
 
 class GalaxyParameters:
@@ -42,7 +44,14 @@ class GalaxyParameters:
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
       fpCFile = dataDir+'/SDSS/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
-      return fpCFile 
+      return fpCFile
+   
+  @staticmethod
+  def getMaskUrl(listFile, dataDir, simpleFile, ID):
+     NedName = GalaxyParameters.getNedName(listFile, simpleFile, ID).NedName
+     print NedName
+     maskFile = dataDir+'/MASKS/'+NedName+'_mask_r.fits'
+     return maskFile
   
   @staticmethod
   def getZeropoint(listFile, ID):
@@ -86,6 +95,30 @@ class Astrometry():
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
     return pixelCoords
   
+#class Inpaint():  
+  
+class Interpolation():
+  @staticmethod
+  def runInpainting(maskFile, listFile, dataDir, ID):
+    maskFilename = utils.getMask(maskFile, ID)
+    sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
+    outputFilename = utils.createOutputFilename(sdssFilename)
+    sdssImage = pyfits.open(sdssFilename)
+    imageData = sdssImage[0].data
+    imageData = imageData - 1000 #soft bias subtraction, comment out if needed
+    head = sdssImage[0].header
+    maskFile = pyfits.open(maskFilename)
+    mask = maskFile[0].data
+    maskedImg = np.ma.array(imageData, mask = mask)
+    NANMask =  maskedImg.filled(np.NaN)
+    filled = inpaint.replace_nans(NANMask, 5, 0.5, 2, 'idw')
+    hdu = pyfits.PrimaryHDU(filled, header = head)
+    hdu.writeto(dataDir+'/filled/'+outputFilename)
+    	
+    
+    
+    
+    
 def main():
 
   listFile = '../data/SDSS_photo_match.csv'
@@ -94,10 +127,16 @@ def main():
   outputFile = '../data/growthCurvePhotometry.csv'
   imgDir = 'img/'
   simpleFile = '../data/CALIFA_mother_simple.csv'
+  maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 939
   
-  print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
-  print Astrometry.getCenterCoords(listFile, 0)
-  print Astrometry.getPixelCoords(listFile, 0, dataDir)
+  #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
+  #print Astrometry.getCenterCoords(listFile, 0)
+  #print Astrometry.getPixelCoords(listFile, 0, dataDir)
+
+  for i in range(0, 938):
+    Interpolation.runInpainting(maskFile, listFile, dataDir, i)  
+  
+  
 if __name__ == "__main__":
   main()

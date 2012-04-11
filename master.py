@@ -111,7 +111,7 @@ class Interpolation():
     mask = maskFile[0].data
     maskedImg = np.ma.array(imageData, mask = mask)
     NANMask =  maskedImg.filled(np.NaN)
-    filled = inpaint.replace_nans(NANMask, 5, 0.5, 2, 'idw')
+    filled = inpaint.replace_nans(NANMask, 15, 0.1, 2, 'idw')
     hdu = pyfits.PrimaryHDU(filled, header = head)
     hdu.writeto(dataDir+'/filled/'+outputFilename)
     	
@@ -134,9 +134,11 @@ def main():
   #print Astrometry.getCenterCoords(listFile, 0)
   #print Astrometry.getPixelCoords(listFile, 0, dataDir)
 
-  for i in range(0, 938):
+  for i in range(0, 161):
+    print i, 'galaxy'
     Interpolation.runInpainting(maskFile, listFile, dataDir, i)  
-  
+    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+    
   
 if __name__ == "__main__":
   main()

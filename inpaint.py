@@ -76,7 +76,7 @@ a copy of the input array, where NaN elements have been replaced.
 
     elif method == 'idw':
         kernel = utils.gauss_kern(2)
-        print kernel, 'kernel'		    
+        print kernel, 'IDW kernel'		    
     else:
         raise ValueError( 'method not valid. Should be one of `localmean` or idw.')
     
@@ -115,7 +115,7 @@ a copy of the input array, where NaN elements have been replaced.
                                     # convolve kernel with original array
                                     filled[i,j] = filled[i,j] + filled[i+I-kernel_size, j+J-kernel_size]*kernel[I, J]
                                     n = n + 1*kernel[I,J]
-                                    print n
+                                    #print n
 
             # divide value by effective number of added elements
             if n != 0:

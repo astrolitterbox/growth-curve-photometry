@@ -11,6 +11,7 @@ import inpaint
 from astLib import astWCS
 import numpy as np
 #import photometry as phot
+import sdss_photo_check as sdss
 
 class GalaxyParameters:
   @staticmethod
@@ -137,6 +138,12 @@ class Interpolation():
 class Photometry():
   iso25D = 80 / 0.396
   @staticmethod
+  def compareWithSDSS(listFile, dataDir, i):
+  	ra = Astrometry.getCenterCoords(listFile, 0)[0]
+  	dec = Astrometry.getCenterCoords(listFile, 0)[1]
+  	band = 'r'
+  	return sdss.get_sdss_photometry([ra, dec, band, 10])
+  @staticmethod
   def calculateGrowthCurve(listFile, dataDir, i):
     print 'input image', GalaxyParameters.getFilledUrl(listFile, dataDir, i), '\n'
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
@@ -189,7 +196,7 @@ class Photometry():
     fluxRatio = totalFlux/(53.9075*10**(-0.4*(-23.98+0.07*1.19)))
     mag = -2.5 * np.log10(fluxRatio)
     mag2 = -2.5 * np.log10(fluxRatio2)
-    print 'full magnitude', mag, 'flux 20 mag', mag2
+    print 'full magnitude', mag, 'flux 20 mag', mag2, "SDSS mag ", Photometry.compareWithSDSS(listFile, dataDir, i)
 
 
     
@@ -215,6 +222,7 @@ def main():
     print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
     '''
   Photometry.calculateGrowthCurve(listFile, dataDir, 0)
+  #print Photometry.compareWithSDSS(listFile, dataDir, 0)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 0)
   
 if __name__ == "__main__":

@@ -11,23 +11,25 @@ import time
 
 
 def get_sdss_photometry(coords):
-
-	if (len(coords) == 1 or len(coords) != 2):
+	#print len(coords)
+	if (len(coords) == 1 or len(coords) != 4):
 		print "It checks the SDSS PhotoObjAll catalog to find all photometric objects\n within a given radius."
 		print "usage : sdss_photo_check.py (ra) (dec) -r (search radius)"
 		print "\tra : degree"
 		print "\tdec : degree"
+		print "\tband : filter (ugriz)"
 		print "\tsearch radius : arcsec (optional) (default : 3 arcsec)"
 		print "output : ObjId model_u model_g model_r model_i model_z"
 		sys.exit()
 
-	search_rad = '10'
-	print coords, "****************************", coords[0]	
+	
+	#print coords, "****************************", coords[2]	
 	ra = str(coords[0])
-	print ra, coords[0]
 	dec = str(coords[1])
+	band = coords[2]
+	search_rad = str(coords[3])
 
-	sql_query = "select P.objid, P.modelMag_u, P.modelMag_g, P.modelMag_r, P.modelMag_i, P.modelMag_z from PhotoObjAll P, dbo.fGetNearbyObjAllEq("+ra+","+dec+","+search_rad+") n where P.objID = n.objID"
+	sql_query = "select P.modelMag_"+band+" from PhotoObjAll P, dbo.fGetNearbyObjAllEq("+ra+","+dec+","+search_rad+") n where P.objID = n.objID"
 	query_result = sqlcl.query(sql_query).readlines()
 	if len(query_result) > 1 :
 		data_part = string.split(query_result[1],",")

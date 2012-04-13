@@ -69,6 +69,8 @@ def createOutputFilename(sdssFilename):
   outputFilename = sdssFilename[:-3]+'s'
   return outputFilename
   
+  
+  
 def gauss_kern(size, sizey=None):
     """ Returns a normalized 2D gauss kernel array for convolutions """
     size = int(size)

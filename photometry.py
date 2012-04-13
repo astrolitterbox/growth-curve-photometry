@@ -5,6 +5,7 @@ import numpy as np
 import pyfits
 from astLib import astWCS
 import matplotlib.pyplot as plt
+import plot_survey
 
 def plotScatter(data, xlabel, ylabel, filename):
   fig = plt.figure()
@@ -46,27 +47,15 @@ WCS=astWCS.WCS("IC3376R_masked.fits")
 center = WCS.wcs2pix(186.9597481,26.99352614)
 print center
 print 'brightness at the galaxy center', img[center[1], center[0]] #thanks, numpy
-#here we want to find 'flatten' the image to 1-d light distribution, with origin at the galaxy's center
-#what basically means going to polar coordinates
 
 
 
-def distance2origin(y, x, center):
-   deltaY = y - center[1]
-   deltaX = x - center[0]
-   r = np.sqrt(deltaY**2 + deltaX**2)
-   return r
 
-def makeDistanceArray(img, center):
-  distances = np.zeros(img.shape)
-  print distance2origin(0,0, center), 'distance'
 
-  for i in range(0, img.shape[0]):
-    for j in range(0, img.shape[1]):
-      distances[i,j] = int(round(distance2origin(i,j, center), 0))
-  return distances
   
-distances = makeDistanceArray(img, center)
+#distances = Astrometry.makeDistanceArray(img, center)
+
+
 
 fluxData = np.empty((np.max(distances), 4))
 print fluxData.shape

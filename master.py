@@ -12,6 +12,7 @@ from astLib import astWCS
 import numpy as np
 #import photometry as phot
 import sdss_photo_check as sdss
+import plot_survey as plot
 
 class GalaxyParameters:
   @staticmethod
@@ -155,16 +156,22 @@ class Photometry():
     fluxData = np.empty((np.max(distances), 4))
     print fluxData.shape
     cumulativeFlux = 0
-    #meanFlux = inputImage[center[1], center[0]]
     distance = 0
     oldFlux = 2
+    currentFlux = 0
     meanFlux = inputImage[center[1], center[0]]
     skyMean = np.mean(inputImage[np.where(distances > int(round(Photometry.iso25D)))])
     print np.where(distances > int(round(Photometry.iso25D)))[0].shape, 'np.where(distances > int(round(iso25D)))[0].shape'
     print skyMean, 'skyMean'
-    while round(skyMean, 1) <= round(meanFlux, 1):  
+    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
+    #while round(skyMean, 1) <= round(meanFlux, 1): 
+    skyRms = np.sqrt((np.sum(sky**2))/len(sky))/len(sky)
+    print len(sky), skyRms
+    #while round(skyMean, 1) <= round(meanFlux, 1): 
+    while abs(currentFlux-oldFlux) > skyRms: 
       print '\n sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
       print 'distance', distance
+      oldFlux = currentFlux
       currentPixels = np.where(distances == distance)
       Npix = len(inputImage[currentPixels])
       print 'Npix', Npix
@@ -177,13 +184,15 @@ class Photometry():
     #  print 'oldFlux - meanFlux', oldFlux - meanFlux
       rms = np.sqrt((np.sum(inputImage[currentPixels]**2))/Npix)/Npix
       print rms, 'rms'
-      stDev = np.sqrt(np.sum((inputImage[currentPixels] - meanFlux)**2)/Npix)/Npix
-      print stDev, 'stDev'
+      #stDev = np.sqrt(np.sum((inputImage[currentPixels] - meanFlux)**2)/Npix)/Npix
+      #print stDev, 'stDev'
       fluxData[distance, 0] = distance
       fluxData[distance, 1] = cumulativeFlux
-      fluxData[distance, 2] = rms
-      fluxData[distance, 3] = currentFlux
+      #fluxData[distance, 2] = rms
+      fluxData[distance, 3] = currentFlux/Npix
+
       distance = distance +1
+    fluxData = fluxData[0:distance,:]  
     totalNpix = len(inputImage[np.where(distances < distance)])
     totalFlux = np.sum(inputImage[np.where(distances < distance)]) - totalNpix * skyMean - inputImage[center[1], center[0]]
     print totalFlux, 'totalFlux'
@@ -191,13 +200,21 @@ class Photometry():
     skysub = np.mean(inputImage[np.where(distances < distance)])
     print np.mean(skysub), 'np.mean(skysub)'
     print head['EXPTIME'], 'head[EXPTIME]'
-    print 'head[FLUX20]', head['FLUX20']
-    fluxRatio2 = totalFlux/(10**8 * head['FLUX20'])
-    fluxRatio = totalFlux/(53.9075*10**(-0.4*(-23.98+0.07*1.19)))
+    print 'head[FLUX20]', float(head['FLUX20'])
+    exp = float(head['EXPTIME'])
+    fluxRatio2 = totalFlux/(10**8 * exp)
+    fluxRatio = totalFlux/(exp*10**(-0.4*(-23.98+0.07*1.19)))
     mag = -2.5 * np.log10(fluxRatio)
     mag2 = -2.5 * np.log10(fluxRatio2)
-    print 'full magnitude', mag, 'flux 20 mag', mag2, "SDSS mag ", Photometry.compareWithSDSS(listFile, dataDir, i)
-
+    #print 'full magnitude', mag, 'flux 20 mag', mag2, "SDSS mag ", Photometry.compareWithSDSS(listFile, dataDir, i)
+    graph = plot.Plots()
+    #np.savetxt('distance.txt', fluxData[:, 0])
+    #np.savetxt('cumulative.txt', fluxData[:, 1])
+    #graphData = plot.GraphData(calculatedGalaxyParams.stMass, 'k', 'kliurka')
+    cumulativeFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,1])), 'r', 'best')
+    currentFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,3])), 'b', 'best')
+    graph.plotScatter([currentFluxData], "cumulativeFlux", plot.PlotTitles("CumulativeFlux", "distance", "Flux"))
+    #plot.Plots.plotScatter(np.array((fluxData[:,0], fluxData[:,3])), 'distance', 'Flux', 'Flux')
 
     
     

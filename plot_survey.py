@@ -5,7 +5,7 @@ Created on Tue Feb 21 19:18:52 2012
 @author: astrolitterbox
 """
 import numpy as np
-import db
+#import db
 import matplotlib.pyplot as plt
 import matplotlib.font_manager
  
@@ -24,7 +24,7 @@ class GraphData:
         self.legend = legend
 
 class Plots:
-    imgDir = './'        
+    imgDir = './img/'        
     def plotLogHist(self, graphDataList, filename, plotTitles, bins, *args):
       bins=10**np.arange(*bins)     
       s = plt.figure()
@@ -79,7 +79,8 @@ class Plots:
           ax.axis(v)
       prop = matplotlib.font_manager.FontProperties(size=8)     
       for gd in graphDataList:
-          p1 = ax.plot(gd.data, color=gd.colour, markersize=1, mec=gd.colour, alpha = 0.9)
+      	  print gd.data[0], 
+          p1 = ax.plot(gd.data[0], gd.data[1], ',', markersize=1, color=gd.colour, mec=gd.colour, alpha = 0.9) 
           plt.legend([p1[0]], gd.legend,  loc=0, markerscale=10, fancybox=True, labelspacing = 0.2, prop=prop, shadow=True)
       plt.title(plotTitles.title)
       plt.xlabel = plotTitles.xlabel

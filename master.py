@@ -94,9 +94,9 @@ class Astrometry():
     return centerCoords
   @staticmethod
   def getPixelCoords(listFile, ID, dataDir):
+    print ID, 'ID'
     WCS=astWCS.WCS(GalaxyParameters.getSDSSUrl(listFile, dataDir, ID))
     centerCoords = Astrometry.getCenterCoords(listFile, ID)
-    print centerCoords
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
     return pixelCoords
   @staticmethod
@@ -146,30 +146,41 @@ class Photometry():
   iso25D = 80 / 0.396
   @staticmethod
   def compareWithSDSS(listFile, dataDir, i):
-   ra = Astrometry.getCenterCoords(listFile, 0)[0]
-   dec = Astrometry.getCenterCoords(listFile, 0)[1]
+   ra = Astrometry.getCenterCoords(listFile, i)[0]
+   dec = Astrometry.getCenterCoords(listFile, i)[1]
+   print ra, dec, 'ra, dec'
    band = 'r'
    return sdss.get_sdss_photometry([ra, dec, band, 10])  
   @staticmethod
   def calculateGrowthCurve(listFile, dataDir, i):
+    print 'i', i
     print 'input image', GalaxyParameters.getFilledUrl(listFile, dataDir, i), '\n'
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
     inputImage = inputFile[0].data
     head = inputFile[0].header
+    print 'opened the input file'
     center = Astrometry.getPixelCoords(listFile, i, dataDir)
-    print 'center coords', center
-    distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(listFile, 0, dataDir))
+    
+    print 'center coords', center, 'coords', center[1], center[0]
+    distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(listFile, i, dataDir))
     fluxData = np.empty((np.max(distances), 4))
     print fluxData.shape
-    cumulativeFlux = 0
-    #meanFlux = inputImage[center[1], center[0]]
-    distance = 0
-    oldFlux = 2
+    cumulativeFlux = inputImage[center[1], center[0]]
+    
+    distance = 1
+    oldFlux = inputImage[center[1], center[0]]
+    growthSlope = 200
     meanFlux = inputImage[center[1], center[0]]
-    skyMean = np.mean(inputImage[np.where(distances > int(round(Photometry.iso25D)))])
+    print 'central flux', meanFlux
+    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
+    skyMean = np.mean(sky)
     print np.where(distances > int(round(Photometry.iso25D)))[0].shape, 'np.where(distances > int(round(iso25D)))[0].shape'
     print skyMean, 'skyMean'
-    while round(skyMean, 1) <= round(meanFlux, 1):  
+    
+    sky_rms = np.sqrt(np.sum(sky**2)/len(sky))
+    print sky_rms, 'sky rms'
+    while abs(growthSlope) > sky_rms:
+      print 'SLOPE:', growthSlope
       print '\n sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
       print 'distance', distance
       currentPixels = np.where(distances == distance)
@@ -177,6 +188,7 @@ class Photometry():
       print 'Npix', Npix
       #oldFlux = meanFlux
       currentFlux = np.sum(inputImage[currentPixels])
+      growthSlope = ((currentFlux - oldFlux)/(distance - (distance - 1))/Npix)
       cumulativeFlux = cumulativeFlux+currentFlux
       print 'cumulative Flux', cumulativeFlux      
       meanFlux = np.sum(inputImage[currentPixels])/Npix
@@ -189,8 +201,9 @@ class Photometry():
       fluxData[distance, 0] = distance
       fluxData[distance, 1] = cumulativeFlux
       fluxData[distance, 2] = rms
-      fluxData[distance, 3] = currentFlux
+      fluxData[distance, 3] = currentFlux/Npix
       distance = distance +1
+    fluxData = fluxData[0:distance,:] 
     totalNpix = len(inputImage[np.where(distances < distance)])
     totalFlux = np.sum(inputImage[np.where(distances < distance)]) - totalNpix * skyMean - inputImage[center[1], center[0]]
     print totalFlux, 'totalFlux'
@@ -198,6 +211,7 @@ class Photometry():
     skysub = np.mean(inputImage[np.where(distances < distance)])
     print np.mean(skysub), 'np.mean(skysub)'
     print head['EXPTIME'], 'head[EXPTIME]'
+    print head['NAXIS1'], 'NAXIS1'
     print 'head[FLUX20]', head['FLUX20']
     fluxRatio2 = totalFlux/(10**8 * head['FLUX20'])
     fluxRatio = totalFlux/(53.9075*10**(-0.4*(-23.98+0.07*1.19)))
@@ -208,7 +222,7 @@ class Photometry():
     cumulativeFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,1])), 'r', 'best')
     currentFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,3])), 'b', 'best')
     graph.plotScatter([cumulativeFluxData], "cumulativeFlux", plot.PlotTitles("CumulativeFlux", "distance", "Flux"))
-
+    graph.plotScatter([currentFluxData], "Flux per pixel", plot.PlotTitles("flux_per_pixel", "distance", "Flux per pixel"))
     
     
 def main():
@@ -231,8 +245,8 @@ def main():
 #    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
 #    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
 #  np.savetxt('errorlog.txt', log)  
-  Photometry.calculateGrowthCurve(listFile, dataDir, 0)
-  print GalaxyParameters.getFilledUrl(listFile, dataDir, 0)
-  print Photometry.compareWithSDSS(listFile, dataDir, 0)
+  Photometry.calculateGrowthCurve(listFile, dataDir, 2)
+  print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
+  print Photometry.compareWithSDSS(listFile, dataDir, 2)
 if __name__ == "__main__":
   main()

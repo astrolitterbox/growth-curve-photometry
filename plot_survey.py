@@ -79,7 +79,6 @@ class Plots:
           ax.axis(v)
       prop = matplotlib.font_manager.FontProperties(size=8)     
       for gd in graphDataList:
-      	  print gd.data[0], 
           p1 = ax.plot(gd.data[0], gd.data[1], ',', markersize=1, color=gd.colour, mec=gd.colour, alpha = 0.9) 
           plt.legend([p1[0]], gd.legend,  loc=0, markerscale=10, fancybox=True, labelspacing = 0.2, prop=prop, shadow=True)
       plt.title(plotTitles.title)

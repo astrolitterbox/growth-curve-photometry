@@ -10,6 +10,8 @@ import utils
 import inpaint
 from astLib import astWCS
 import numpy as np
+import sdss_photo_check as sdss
+import plot_survey as plot
 #import photometry as phot
 
 class GalaxyParameters:
@@ -143,6 +145,12 @@ class Interpolation():
 class Photometry():
   iso25D = 80 / 0.396
   @staticmethod
+  def compareWithSDSS(listFile, dataDir, i):
+   ra = Astrometry.getCenterCoords(listFile, 0)[0]
+   dec = Astrometry.getCenterCoords(listFile, 0)[1]
+   band = 'r'
+   return sdss.get_sdss_photometry([ra, dec, band, 10])  
+  @staticmethod
   def calculateGrowthCurve(listFile, dataDir, i):
     print 'input image', GalaxyParameters.getFilledUrl(listFile, dataDir, i), '\n'
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
@@ -196,7 +204,10 @@ class Photometry():
     mag = -2.5 * np.log10(fluxRatio)
     mag2 = -2.5 * np.log10(fluxRatio2)
     print 'full magnitude', mag, 'flux 20 mag', mag2
-
+    graph = plot.Plots()
+    cumulativeFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,1])), 'r', 'best')
+    currentFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,3])), 'b', 'best')
+    graph.plotScatter([cumulativeFluxData], "cumulativeFlux", plot.PlotTitles("CumulativeFlux", "distance", "Flux"))
 
     
     
@@ -214,14 +225,14 @@ def main():
   #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
   #print Astrometry.getCenterCoords(listFile, 0)
   #print Astrometry.getPixelCoords(listFile, 0, dataDir)
-  log = []
-  for i in range(248, 938):  
-    print i, 'galaxy'
-    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
-    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-  np.savetxt('errorlog.txt', log)  
-  #Photometry.calculateGrowthCurve(listFile, dataDir, 0)
-  #print GalaxyParameters.getFilledUrl(listFile, dataDir, 0)
-  
+#  log = []
+#  for i in range(248, 938):  
+#    print i, 'galaxy'
+#    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
+#    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+#  np.savetxt('errorlog.txt', log)  
+  Photometry.calculateGrowthCurve(listFile, dataDir, 0)
+  print GalaxyParameters.getFilledUrl(listFile, dataDir, 0)
+  print Photometry.compareWithSDSS(listFile, dataDir, 0)
 if __name__ == "__main__":
   main()

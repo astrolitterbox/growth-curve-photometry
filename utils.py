@@ -116,7 +116,7 @@ def nmgy2mag(nmgy, ivar=None):
     nmgy_clip = numpy.clip(nmgy,0.001,1.e11)
 
     mag = nmgy_clip.copy()
-    mag[:] = 22.5-2.5*log10(nmgy_clip)
+    mag[:] = 22.5-2.5*scipy.log10(nmgy_clip)
 
     if ivar is not None:
 

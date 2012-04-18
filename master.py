@@ -139,8 +139,9 @@ class Interpolation():
     try:
       hdu.writeto(dataDir+'/filled/'+outputFilename)
     except IOError:
-      print 'file already exists!', dataDir+'/filled/'+outputFilename
-      log.append(sdssFilename, outputFilename)
+      errmsg = 'file already exists!', dataDir+'/filled/'+outputFilename
+      print errmsg
+      log.append(errmsg)
     return log
     
     
@@ -254,19 +255,19 @@ def main():
   #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
   #print Astrometry.getCenterCoords(listFile, 0)
   #print Astrometry.getPixelCoords(listFile, 0, dataDir)
-#  log = []
-#  for i in range(248, 938):  
-#    print i, 'galaxy'
-#    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
-#    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-#  np.savetxt('errorlog.txt', log)  
-  Photometry.calculateGrowthCurve(listFile, dataDir, 4)
+  log = []
+  for i in range(766, 938):  
+    print i, 'galaxy'
+    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
+    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+  np.savetxt('errorlog.txt', log)  
+  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
-  print Photometry.compareWithSDSS(listFile, dataDir, 4)
-  ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
-  dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
+  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
+  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
+  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
   
-  print readAtlas.find_mag(ra, dec)
+  #print readAtlas.find_mag(ra, dec)
   
   
 if __name__ == "__main__":

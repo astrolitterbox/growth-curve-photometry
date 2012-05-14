@@ -15,6 +15,8 @@ import plot_survey as plot
 #import photometry as phot
 from sgolay2d import sgolay2d
 import readAtlas
+import circle
+
 
 class GalaxyParameters:
   @staticmethod
@@ -146,35 +148,58 @@ class Interpolation():
     
     
 class Photometry():
-  iso25D = 80 / 0.396
+  	
+
+  @staticmethod
+  def getCenter(listFile, i, dataDir):
+  	   ra = Astrometry.getCenterCoords(listFile, i)[0]
+	   dec = Astrometry.getCenterCoords(listFile, i)[1]
+  	   return Astrometry.getPixelCoords(listFile, i, dataDir)
+  @staticmethod
+  def createDistanceArray(listFile, i, dataDir, center):
+    print 'center coords', center, 'coords', center[1], center[0]
+    inputImage = Photometry.getInputFile(listFile, dataDir, i)
+    distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(listFile, i, dataDir))
+    return distances
   @staticmethod
   def compareWithSDSS(listFile, dataDir, i):
    ra = Astrometry.getCenterCoords(listFile, i)[0]
    dec = Astrometry.getCenterCoords(listFile, i)[1]
    print ra, dec, 'ra, dec'
    band = 'r'
-   return sdss.get_sdss_photometry([ra, dec, band, 10])  
+   return sdss.get_sdss_photometry([ra, dec, band, 10])
+  @staticmethod
+  def circleContours(inputFile, distances, center, iso25D):
+    iso25D = round(iso25D, 1)
+    print 'aa', distances.shape
+    circleLength = len(inputFile[np.where(distances == iso25D)])
+    print circleLength, 'clen'	
+    circle.drawOuterLimit(circleLength, center[0], center[1], iso25D)  
+
+  @staticmethod
+  def getInputFile(listFile, dataDir, i):
+    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
+    inputImage = inputFile[0].data
+    print 'opened the input file'
+    return inputImage
+  @staticmethod    
+  def getInputHeader(listFile, dataDir, i): 
+    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))	
+    head = inputFile[0].header
+    return head	
+  
   @staticmethod
   def calculateGrowthCurve(listFile, dataDir, i):
     print 'i', i
-    print 'input image', GalaxyParameters.getFilledUrl(listFile, dataDir, i), '\n'
-    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
-    inputImage = inputFile[0].data
-    head = inputFile[0].header
-    print 'opened the input file'
-    center = Astrometry.getPixelCoords(listFile, i, dataDir)
-    
-    print 'center coords', center, 'coords', center[1], center[0]
-    distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(listFile, i, dataDir))
-    fluxData = np.empty((np.max(distances), 4))
-    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
+
     
     #fit_sky_rows = sgolay2d(inputImage, 51, 1, 'row')
     
     #hdu = pyfits.PrimaryHDU(fit_sky_rows)
     #hdu.writeto('fit_sky_row.fits')
-    
-    
+    fluxData = np.empty((np.max(distances), 4))
+    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]	
+   
     skyMean = np.mean(sky)    
     cumulativeFlux = inputImage[center[1], center[0]] - skyMean #central pixel, sky subtracted
     
@@ -242,7 +267,7 @@ class Photometry():
     
     
 def main():
-
+  iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
   fitsDir = '../data/SDSS/'
   dataDir = '../data'
@@ -251,23 +276,41 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
+  noOfGalaxies = 939
+  i = 0
+  inputFile = Photometry.getInputFile(listFile, dataDir, i)
+
   
+  center = Photometry.getCenter(listFile, i, dataDir)
+  distances = Photometry.createDistanceArray(listFile, i, dataDir, center)
+
+  #Photometry.createDistanceArray(listFile, i, dataDir, center)
+  Photometry.circleContours(inputFile, distances, center, iso25D)
   #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
   #print Astrometry.getCenterCoords(listFile, 0)
-  #print Astrometry.getPixelCoords(listFile, 0, dataDir)
+  
   #log = []
   #for i in range(766, 938):  
   #  print i, 'galaxy'
   #  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
   #  print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
   #np.savetxt('errorlog.txt', log)  
-  Photometry.calculateGrowthCurve(listFile, dataDir, 4)
+  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
-  print Photometry.compareWithSDSS(listFile, dataDir, 4)
-  ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
-  dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
-  print readAtlas.find_mag(ra, dec)
+  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
+  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
+  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
+  #print readAtlas.find_mag(ra, dec)
   
+  center = Astrometry.getPixelCoords(listFile, 0, dataDir)
+    
+  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
+  #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
+  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
+  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
+  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
   
+  #print readAtlas.find_mag(ra, dec)
+
 if __name__ == "__main__":
   main()

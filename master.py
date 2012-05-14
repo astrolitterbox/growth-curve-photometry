@@ -189,8 +189,8 @@ class Photometry():
     
     sky_rms = np.sqrt(np.sum(sky**2)/len(sky))
     print sky_rms, 'sky rms'
-    while abs(growthSlope) > sky_rms:
-    #while distance < 300:
+    #while abs(growthSlope) > sky_rms:
+    while distance < 300:
       print 'SLOPE:', growthSlope
       print '\n sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
       print 'distance', distance
@@ -212,8 +212,8 @@ class Photometry():
       stDev = np.sqrt(np.sum((inputImage[currentPixels] - meanFlux)**2)/Npix)/Npix
       print stDev, 'stDev'
       fluxData[distance, 0] = distance
-      fluxData[distance, 1] = cumulativeFlux
-      fluxData[distance, 2] = (cumulativeFlux)/totalNpix
+      fluxData[distance, 1] = cumulativeFlux #sky-subtracted cumulative flux
+      fluxData[distance, 2] = (cumulativeFlux)/totalNpix #sky-subtracted cumulative flux per pixe
       fluxData[distance, 3] = currentFluxSkysub/Npix
       distance = distance +1
     fluxData = fluxData[0:distance,:] 
@@ -250,24 +250,23 @@ def main():
   imgDir = 'img/'
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
-  noOfGalaxies = 939
+  noOfGalaxies = 938
   
   #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
   #print Astrometry.getCenterCoords(listFile, 0)
   #print Astrometry.getPixelCoords(listFile, 0, dataDir)
-  log = []
-  for i in range(766, 938):  
-    print i, 'galaxy'
-    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
-    print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-  np.savetxt('errorlog.txt', log)  
-  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
+  #log = []
+  #for i in range(766, 938):  
+  #  print i, 'galaxy'
+  #  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)  
+  #  print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+  #np.savetxt('errorlog.txt', log)  
+  Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
-  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
-  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
-  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
-  
-  #print readAtlas.find_mag(ra, dec)
+  print Photometry.compareWithSDSS(listFile, dataDir, 4)
+  ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
+  dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
+  print readAtlas.find_mag(ra, dec)
   
   
 if __name__ == "__main__":

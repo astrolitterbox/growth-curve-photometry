@@ -2,7 +2,7 @@ from numpy import linspace
 from scipy import pi,sin,cos
 
 
-def ellipse(ra,rb,ang,x0,y0,Nb=50):
+def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	'''ra - major axis length
 	  rb - minor axis length
 	  ang - angle
@@ -17,34 +17,20 @@ def ellipse(ra,rb,ang,x0,y0,Nb=50):
 	  Neuchatel, Switzerland, blattner@imt.unine.ch
 	'''
 	xpos,ypos=x0,y0
+	print 'xpos', xpos, 'ypos', ypos
 	radm,radn=ra,rb
 	an=ang
 
 	co,si=cos(an),sin(an)
-	the=linspace(0,2*pi,Nb)
+
+	the=linspace(0,2*pi,nPoints)
 	X=radm*cos(the)*co-si*radn*sin(the)+xpos
 	Y=radm*cos(the)*si+co*radn*sin(the)+ypos
-	return X,Y
+	return Y,X
 
-def test():
-	import pylab as p
-	
-	fig = p.figure(figsize=(5,5))
-	p.axis([-3,3,-3,3])
-	
-	#eg 1
-	X,Y=ellipse(2,1,pi*2.0/3.0,0,1)
-	p.plot(X,Y,"b.-",ms=1) # blue ellipse
-	
-	#eg 2
-	X,Y=ellipse(2,0.2,pi/3.0,1,1)
-	p.plot(X,Y,"r.-",ms=1) # red ellipse
-	
-	#eg 3
-	X,Y=ellipse(2,1,pi/3.0,0,0,Nb=16)
-	p.plot(X,Y,"g.-",ms=1) # green ellipse
-	
-	p.grid(True)
-	p.show()
+def draw_ellipse(y0, x0, pa, isoA, axisRatio, nPoints):
+	print isoA, axisRatio, 'a, axisRatio'
+	#return ellipse(10,5,7510,10,300)
+	return ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints)
 
 

@@ -83,12 +83,12 @@ def drawOuterLimit(circleLength, xcenter, ycenter, length):
 	#drawOuterLimit(angle_step, xcenter, ycenter, length)
 
 
-def main():
-  inputFileName = '../data/filled/fpC-004152-r6-0064.fits'
+def main(inputImage):
+  #inputFileName = '../data/filled/fpC-004152-r6-0064.fits'
 
 
-  inputFile = pyfits.open(inputFileName)
-  inputImage = inputFile[0].data
+  #inputFile = pyfits.open(inputFileName)
+  #inputImage = inputFile[0].data
 
   
   listFile = '../data/SDSS_photo_match.csv'
@@ -96,8 +96,8 @@ def main():
   dataDir = '../data'
   
   print inputImage.shape
-  center = master.Astrometry.getPixelCoords(listFile, 0, dataDir)
-  print 'aaaaa', center
+  #center = master.Astrometry.getPixelCoords(listFile, 0, dataDir)
+  #print 'aaaaa', center
 
   #img=Image.fromarray(inputImage)
   #print img.shape, 'img'
@@ -115,28 +115,13 @@ def main():
 		  
 		  
 		  
-  def get_cutout(center, inputImage, cutout_size):
-    dims = inputImage.shape
-    
-    limits = [center[1]-cutout_size/2, center[1]+cutout_size/2, center[0]-cutout_size/2, center[0]+cutout_size/2]
-    
-    if ((center[1] - cutout_size/2) < 0):  
-      limits[0] = 0
-    if ((center[1] + cutout_size/2) > dims[0]):
-      limits[1] = dims[0]
-    if ((center[0] - cutout_size/2) < 0):
-      limits[2] = 0
-    if ((center[0] + cutout_size/2) > dims[1]):
-      limits[3] = dims[1]
-    print limits
-    #inputImage[center[0], center[1]] = 10000
-    return inputImage[limits[0]:limits[1], limits[2]:limits[3]]
+ 
       
       
 		  
-  #center = db.dbUtils.getFromDB('ra, dec', 'mothersample', 'mothersample', ' where califa_id = 1')[0]		
+  center = db.dbUtils.getFromDB('ra, dec', 'mothersample', 'mothersample', ' where califa_id = 1')[0]		
   print center
-  cutout = get_cutout(center, inputImage, 700)
+  cutout = inputImage #get_cutout(center, inputImage, 700)
   print cutout.shape, 'cutoutshape'
 
   
@@ -227,4 +212,4 @@ angle_step = (2 * math.pi) / n_lines
  
 '''
 if __name__ == "__main__":
-  main()
+  main(inputImage)

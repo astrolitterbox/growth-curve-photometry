@@ -1,10 +1,19 @@
+# -*- coding: utf-8 -*-
 from Tkinter import *
 import math
 import numpy as np 
 import Image, ImageTk
 import pyfits
-
+import db
+import master 
+import img_scale
  
+def convert(data):
+     tempDATA = []
+     for i in data:
+         tempDATA.append([float(j) for j in i])
+     return np.asarray(tempDATA)
+     
 def draw_point(color, x, y):
     r,g,b = color
     pic.put("#%02x%02x%02x" % (r,g,b),(x,y))
@@ -131,6 +140,7 @@ def drawOuterLimit(circleLength, xcenter, ycenter, length):
 	    draw_line(xstart, ystart, xend, yend, color=(0,0,0))
 	#drawOuterLimit(angle_step, xcenter, ycenter, length)
 
+<<<<<<< HEAD
 inputFileName = '../data/filled/fpC-004152-r6-0064.fits'
 inputFile = pyfits.open(inputFileName)
 inputImage = inputFile[0].data
@@ -191,19 +201,106 @@ canvas.pack()
 '''
 h['command'] = canvas.xview
 v['command'] = canvas.yview
+=======
+>>>>>>> c91c1e5b8444073b8df3d031b6d81445c5199185
 
-#canvas.grid(row=0, column=0)
+def main(inputImage):
+  #inputFileName = '../data/filled/fpC-004152-r6-0064.fits'
 
-h.grid(row=0, column=1, sticky=NS)
-v.grid(row=1, column=0, sticky=EW)
-'''
-canvas.create_image(0, 0, image = img, anchor=NW)
-#root.grid_columnconfigure(0, weight=1)
-#root.grid_rowconfigure(0, weight=1)
-#lb = Label(root,image=img)
-#lb.pack()
+
+  #inputFile = pyfits.open(inputFileName)
+  #inputImage = inputFile[0].data
+
+  
+  listFile = '../data/SDSS_photo_match.csv'
+  fitsDir = '../data/SDSS/'
+  dataDir = '../data'
+  
+  print inputImage.shape
+  #center = master.Astrometry.getPixelCoords(listFile, 0, dataDir)
+  #print 'aaaaa', center
+
+  #img=Image.fromarray(inputImage)
+  #print img.shape, 'img'
+  #imgTk=ImageTk.PhotoImage(img)
+  #l.configure(image=imgTk)
+  #l.bind('<Motion>', callback)
+  
+
+  #rgbArray = np.empty((height, width), dtype='object')
+  #print rgbArray.shape
+  #for i in range(0, height):
+  #	for j in range(0, width):
+		  #print  '#%02x%02x%02x' % (inputImage[i, j], inputImage[i, j], inputImage[i, j])
+		  #rgbArray[i, j] = '#%02x%02x%02x' % (inputImage[i, j], inputImage[i, j], inputImage[i, j])
+		  
+		  
+		  
  
-root.mainloop()
+      
+      
+		  
+  center = db.dbUtils.getFromDB('ra, dec', 'mothersample', 'mothersample', ' where califa_id = 1')[0]		
+  print center
+  cutout = inputImage #get_cutout(center, inputImage, 700)
+  print cutout.shape, 'cutoutshape'
+
+  
+  root = Tk()
+  def callback():
+      exit()
+
+  b = Button(root, text="Exit?", command=callback)
+  b.pack()
+
+
+  print np.max(cutout), 'max', np.mean(cutout), 'mean', np.min(cutout), 'min'	
+  
+  #inputImage = 255*(np.log(inputImage)/np.log(np.max(inputImage)))
+  #cutout = cutout - 85
+  #cutout = 255*(cutout/np.max(cutout))
+  #cutout = cutout-np.min(cutout)
+  #cutout = 255*(cutout)/(np.max(cutout))
+  cutout = 255 * img_scale.log(cutout-85)
+  height=cutout.shape[0]
+  width=cutout.shape[1]
+  print np.max(cutout), 'max', np.mean(cutout), 'mean', np.min(cutout), 'min'
+  
+  
+  img = PhotoImage(height=height, width=width)
+  for i in range(0, height):
+	  for j in range(0, width):		
+		  
+	      #if(cutout[i, j] > 14):
+	    img.put('#%02x%02x%02x' % (cutout[i, j], cutout[i, j], cutout[i, j]), (j, i))
+		 # print cutout[i, j], i, j
+  #		img.put('#%02x%02x%02x' % (np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)), (j, i))
+  #	horizontal_line = "{" + " ".join(rgbArray[i]) + "}"
+  #	img.put(horizontal_line, (i, 0))
+		  #print '#%02x%02x%02x' % (inputImage[i, j], inputImage[i, j], inputImage[i, j])	
+	  print i,'-th column drawn'
+  print "jau"
+  h = Scrollbar(root, orient=HORIZONTAL)
+  v = Scrollbar(root, orient=VERTICAL)
+  canvas = Canvas(root, height=height, width=width, bg='#000000')#, yscrollcommand=v.set, xscrollcommand=h.set, scrollregion=(0, 0, width-300, height-900))
+  canvas.pack()
+
+  '''
+  h['command'] = canvas.xview
+  v['command'] = canvas.yview
+
+  #canvas.grid(row=0, column=0)
+
+  h.grid(row=0, column=1, sticky=NS)
+  v.grid(row=1, column=0, sticky=EW)
+  '''
+  canvas.create_image(0, 0, image = img, anchor=NW)
+  #root.grid_columnconfigure(0, weight=1)
+  #root.grid_rowconfigure(0, weight=1)
+  #lb = Label(root,image=img)
+  #lb.pack()
+  
+  root.mainloop()
 
 def main():
  
@@ -214,3 +311,11 @@ def main():
 
 
 
+<<<<<<< HEAD
+=======
+ 
+ 
+'''
+if __name__ == "__main__":
+  main(inputImage)
+>>>>>>> c91c1e5b8444073b8df3d031b6d81445c5199185

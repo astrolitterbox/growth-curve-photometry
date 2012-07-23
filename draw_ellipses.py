@@ -178,9 +178,9 @@ class Photometry():
     print circleLength, 'clen'	
     circle.drawOuterLimit(circleLength, center[0], center[1], iso25D)  
   @staticmethod
-  def ellipseContours(y0, x0, pa, isoA, axisRatio, nPoints):
+  def ellipseContours(y0, x0, pa, isoA, axisRatio):
 	#ellipseY, ellipseX = ellipse.draw_ellipse(y0, x0, pa, isoA, axisRatio, nPoints)
-	ellipseY, ellipseX = ellipse.draw_ellipse(y0, x0, pa, 60, 0.5, nPoints)
+	ellipseY, ellipseX = ellipse.draw_ellipse(y0, x0, pa, 60, 0.5)
 	return (ellipseY, ellipseX)
 	
   @staticmethod
@@ -316,7 +316,7 @@ def main():
   #inputImage = np.zeros((50, 50))
 
   print y0, x0
-  ellipseCoords = np.round(Photometry.ellipseContours(y0, x0, nadinePA, nadineR_90, nadine_ba, nPoints), 0).astype('int8')
+  ellipseCoords = np.round(Photometry.ellipseContours(y0, x0, nadinePA, nadineR_90, nadine_ba), 0).astype('int16')
   print ellipseCoords[0], ellipseCoords[1], 'ellipseCoords'
  
   inputImage[ellipseCoords[0], ellipseCoords[1]] = 100000

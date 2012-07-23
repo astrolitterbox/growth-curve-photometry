@@ -59,6 +59,64 @@ def draw_line(x0, y0, x1, y1, color):
         if error > 0:
             y = y + ystep
             error = error - deltax
+def drawEllipse(x0, y0, angle, a, b, nPoints):
+	inputFileName = '../data/filled/fpC-004152-r6-0064.fits'
+	inputFile = pyfits.open(inputFileName)
+	inputImage = inputFile[0].data
+	height=inputImage.shape[0]
+	width=inputImage.shape[1]
+	root = Tk()
+	def callback():
+    		exit()
+
+	b = Button(root, text="Exit?", command=callback)
+	b.pack()
+
+
+	print np.max(inputImage), 'max', np.mean(inputImage), 'mean', np.min(inputImage), 'min'	
+
+	#inputImage = 255*(np.log(inputImage)/np.log(np.max(inputImage)))
+	inputImage = np.round(255*(inputImage/np.max(inputImage)), 0)
+
+	print np.max(inputImage), 'max', np.mean(inputImage), 'mean', np.min(inputImage), 'min'
+
+	print inputImage.shape
+	
+	img = PhotoImage(height=height, width=width)
+	for i in range(300, height):
+		for j in range(900, width):		
+		
+			if(inputImage[i, j] > 14):
+				img.put('#%02x%02x%02x' % (inputImage[i, j], inputImage[i, j], inputImage[i, j]), (j-900, i-300))
+				print inputImage[i, j], i, j
+	#		img.put('#%02x%02x%02x' % (np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)), (j, i))
+	#	horizontal_line = "{" + " ".join(rgbArray[i]) + "}"
+	#	img.put(horizontal_line, (i, 0))
+			#print '#%02x%02x%02x' % (inputImage[i, j], inputImage[i, j], inputImage[i, j])	
+		#print i,'-th column drawn'
+	print "jau"
+	h = Scrollbar(root, orient=HORIZONTAL)
+	v = Scrollbar(root, orient=VERTICAL)
+
+	canvas = Canvas(root, height=height-300, width=width-900, bg='#000000')#, yscrollcommand=v.set, xscrollcommand=h.set, scrollregion=(0, 0, width-300, height-900))
+	canvas.pack()
+	'''
+	h['command'] = canvas.xview
+	v['command'] = canvas.yview
+
+	#canvas.grid(row=0, column=0)
+
+	h.grid(row=0, column=1, sticky=NS)
+	v.grid(row=1, column=0, sticky=EW)
+	'''
+	canvas.create_image(0, 0, image = img, anchor=NW)
+	#root.grid_columnconfigure(0, weight=1)
+	#root.grid_rowconfigure(0, weight=1)
+	#lb = Label(root,image=img)
+	#lb.pack()
+	 
+	root.mainloop()
+
 
 def drawOuterLimit(circleLength, xcenter, ycenter, length):
 
@@ -74,8 +132,6 @@ def drawOuterLimit(circleLength, xcenter, ycenter, length):
 	#drawOuterLimit(angle_step, xcenter, ycenter, length)
 
 inputFileName = '../data/filled/fpC-004152-r6-0064.fits'
-
-
 inputFile = pyfits.open(inputFileName)
 inputImage = inputFile[0].data
 height=inputImage.shape[0]
@@ -149,33 +205,12 @@ canvas.create_image(0, 0, image = img, anchor=NW)
  
 root.mainloop()
 
-
-	    
-''' 	 
-	for i in range(0,margin):
-	    mid(xcenter, ycenter,i,(0,0,0))
-	 
-	for i in range(line_length,line_length+4):
-	    mid(xcenter, ycenter,i,(0,0,0))
-
- # Initializing Tkinter window
-root = Tk()
-CANVAS_SIZE = 600
-pic = PhotoImage(width=CANVAS_SIZE,height=CANVAS_SIZE)
-lb = Label(root,image=pic)
-lb.pack()
+def main():
  
-margin = CANVAS_SIZE / 40
-xcenter = int(CANVAS_SIZE / 2)
-ycenter = int(CANVAS_SIZE / 2)
-line_length = ((CANVAS_SIZE / 12) - margin)
-
-currentPixels = np.array((100, 1))
-n_lines = len(currentPixels)
-angle_step = (2 * math.pi) / n_lines
+  if __name__ == '__main__':
+    main()
 
 
 
- 
- 
-'''
+
+

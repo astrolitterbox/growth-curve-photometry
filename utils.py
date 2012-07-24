@@ -1,8 +1,21 @@
 # -*- coding: utf-8 -*-
-import numpy
+import numpy 
 import string
 import csv
 import scipy
+
+
+
+def convert(data):
+     tempDATA = []
+     for i in data:
+         tempDATA.append([float(j) for j in i])
+     return numpy.asarray(tempDATA)
+
+def unique_rows(a):
+    unique_a = numpy.unique(a.view([('', a.dtype)]*a.shape[1]))
+    return unique_a.view(a.dtype).reshape((unique_a.shape[0], a.shape[1]))
+
 
 def run2string(runs):
     """

@@ -52,9 +52,12 @@ class GalaxyParameters:
       return fpCFile
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
-     sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
-     print sdssFilename
-     return '/'+utils.createOutputFilename(sdssFilename)
+      camcol = GalaxyParameters.SDSS(listFile, ID).camcol
+      field = GalaxyParameters.SDSS(listFile, ID).field
+      field_str = GalaxyParameters.SDSS(listFile, ID).field_str
+      runstr = GalaxyParameters.SDSS(listFile, ID).runstr
+      fpCFile = dataDir+'/filled/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
      NedName = GalaxyParameters.getNedName(listFile, simpleFile, ID).NedName
@@ -190,8 +193,8 @@ class Photometry():
     cumulativeFlux = meanFlux-skyMean
 
     #while abs(round(meanFlux, 1)) > round(skySD, 1):
-    #while abs(growthSlope) > skySD:
-    while isoA < 300:  
+    while abs(growthSlope) > 0.05*skySD:
+    #while isoA < 300:  
       previousCumulativeFlux = cumulativeFlux
       
       currentPixels = ellipse.draw_ellipse(center[1], center[0], pa, isoA, ba)
@@ -298,8 +301,9 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
-  i = 145
-
+  i = 0
+  print GalaxyParameters.getZeropoint(listFile, i)
+  exit()
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)
   hdu = pyfits.PrimaryHDU(img)
   hdu.writeto('CALIFA_145.fits')

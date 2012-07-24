@@ -45,7 +45,11 @@ def draw_ellipse(y0, x0, pa, isoA, axisRatio):
 	print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
 	#return ellipse(10,5,7510,10,300)
-	return ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints*2)
+	#pa - 90: ellipse code uses x axis as 0 deg, while SDSS and Nadine's data gives the North direction as the 0 deg reference  
+	return ellipse(isoA,isoA*axisRatio,pa+90,x0,y0,nPoints*2)
+
+
+#border case, solve later if necessary
 
 def getMaxIndices(inputImage):
     maxY = inputImage.shape[0]
@@ -95,6 +99,7 @@ def main():
   
   #goodCoords = np.where((ellipseCoords < 
   goodCoords = getGoodCoords(inputImage, ellipseCoords)
+  
   inputImage[goodCoords[0], goodCoords[1]] = 1000
   hdu = pyfits.PrimaryHDU(inputImage)
   hdu.writeto('ellipse.fits')

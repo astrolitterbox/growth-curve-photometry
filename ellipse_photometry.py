@@ -1,3 +1,5 @@
+
+
 # -*- coding: utf-8 -*-
 #import Interpol
 #import getImages
@@ -16,6 +18,10 @@ import plot_survey as plot
 import readAtlas
 import ellipse
 import db
+import getTSFieldParameters
+import plotGrowthCurve		
+
+
 
 class GalaxyParameters:
   @staticmethod
@@ -65,23 +71,7 @@ class GalaxyParameters:
      maskFile = dataDir+'/MASKS/'+NedName+'_mask_r.fits'
      return maskFile
   
-  @staticmethod
-  def getZeropoint(listFile, ID):
-      filterNumber = 2 #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
-      run = GalaxyParameters.SDSS(listFile, ID).run
-      rerun = GalaxyParameters.SDSS(listFile, ID).rerun
-      camcol = GalaxyParameters.SDSS(listFile, ID).camcol
-      field = GalaxyParameters.SDSS(listFile, ID).field
-      runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      field_str = GalaxyParameters.SDSS(listFile, ID).field_str
-	#http://das.sdss.org/imaging/5115/40/calibChunks/2/tsField-005115-2-40-0023.fit
-      print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
-      tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')
-      print 'opened'
-      img = tsFile[1].data
-      head = tsFile[1].header
-      zpt_r = list(img.field(27))[0][filterNumber]
-      return zpt_r
+
 	
   @staticmethod
   def getNedName(listFile, simpleFile, ID):
@@ -142,6 +132,7 @@ class Photometry():
     return distances
   @staticmethod
   def getInputFile(listFile, dataDir, i):
+    print 'filename:', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
     inputImage = inputFile[0].data
     print 'opened the input file'
@@ -151,6 +142,18 @@ class Photometry():
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))	
     head = inputFile[0].header
     return head	
+  @staticmethod
+  def calculateFlux(flux, listFile, i):
+  	tsFieldParams = getTSFieldParameters.getParams(listFile, i)
+  	zpt = tsFieldParams[0]
+  	ext_coeff = tsFieldParams[1]
+  	airmass = tsFieldParams[2]
+  	print zpt, ext_coeff, airmass, 'tsparams'    
+	fluxRatio = flux/(53.9075*10**(-0.4*(zpt+ext_coeff*airmass)))
+    	mag = -2.5 * np.log10(fluxRatio)
+    	#mag2 = -2.5 * np.log10(fluxRatio2)
+    	print 'full magnitude', mag
+	return mag
 
   @staticmethod
   def calculateGrowthCurve(listFile, dataDir, i):
@@ -168,7 +171,7 @@ class Photometry():
     ellipseMask = np.zeros((inputImage.shape))
     
     fluxData = np.empty((np.max(distances), 4))
-    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]	
+    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
     center = Photometry.getCenter(listFile, i, dataDir)
     print 'center', center
     skyMean = np.mean(sky)    
@@ -192,24 +195,24 @@ class Photometry():
     print sky_rms, 'sky rms'
     cumulativeFlux = meanFlux-skyMean
 
-    #while abs(round(meanFlux, 1)) > round(skySD, 1):
-    while abs(growthSlope) > 0.05*skySD:
-    #while isoA < 300:  
+    
+    while abs(growthSlope) > 0.1*skySD:
+    #while abs(growthSlope) > 0.01*skyMean:
+    #while isoA < 400:  
       previousCumulativeFlux = cumulativeFlux
       
       currentPixels = ellipse.draw_ellipse(center[1], center[0], pa, isoA, ba)
       ellipseMask[currentPixels] = 1
-      print 'SLOPE:', growthSlope
-      print 'sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
+      #print 'sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
       print 'major axis', isoA
       Npix = len(inputImage[currentPixels])
-      #totalNpix = totalNpix + Npix #this is actually wrong -- we may not have all the pixels at larger distances!
+      
       totalNpix = len(inputImage[np.where(ellipseMask == 1)])
-      print totalNpix
-      print 'Npix', Npix
+      #print totalNpix
+      #print 'Npix', Npix
       oldFlux = meanFlux
       currentFlux = np.sum(inputImage[currentPixels])
-      print 'currFL', currentFlux
+      #print 'currFL', currentFlux
 
       #currentPixels = utils.unique_rows(inputImage[currentPixels])
       #currentFlux = np.sum(currentPixels)
@@ -217,17 +220,17 @@ class Photometry():
       currentFluxSkysub = currentFlux - (Npix*skyMean)
       cumulativeFlux = cumulativeFlux + currentFluxSkysub		
       growthSlope = (cumulativeFlux - previousCumulativeFlux)/Npix
-      print 'slope', growthSlope, 'oldFlux', oldFlux, currentFluxSkysub/Npix
+      #print 'slope', growthSlope, 'oldFlux', oldFlux, currentFluxSkysub/Npix
       cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
-      print 'cumulative Flux', cumulativeFlux      
+      #print 'cumulative Flux', cumulativeFlux      
       meanFlux = currentFluxSkysub/Npix #mean sky-subtracted flux per pixel at a certain isoA
       #print 'meanFlux', meanFlux
       #totalNpix = len(inputImage[np.where(distances < distance)])
       #  print 'oldFlux - meanFlux', oldFlux - meanFlux
-      rms = np.sqrt((np.sum(inputImage[currentPixels]**2))/Npix)
-      print rms, 'rms'
+      #rms = np.sqrt((np.sum(inputImage[currentPixels]**2))/Npix)
+      #print rms, 'rms'
       SN = meanFlux/skySD
-      print 'SIGNAL TO NOISE', SN
+      #print 'SIGNAL TO NOISE', SN
 
       
       #stDev = np.sqrt(np.sum((inputImage[currentPixels] - meanFlux)**2)/Npix)/Npix
@@ -237,14 +240,12 @@ class Photometry():
       fluxData[isoA, 2] = (cumulativeFlux)/totalNpix #sky-subtracted cumulative flux per pixel
       fluxData[isoA, 3] = currentFluxSkysub/Npix #mean sky-subtracted flux per pixel at some isoA
       isoA = isoA +1
-    fluxData = fluxData[0:isoA-2,:] #indexing and the last isoA value was incremented
+    fluxData = fluxData[0:isoA-2,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
     print fluxData.shape
     totalFlux = cumulativeFlux
     
-    fluxRatio = totalFlux/(53.9075*10**(-0.4*(-23.98+0.07*1.19)))
-    mag = -2.5 * np.log10(fluxRatio)
-    #mag2 = -2.5 * np.log10(fluxRatio2)
-    print 'full magnitude', mag
+    
+    print Photometry.calculateFlux(totalFlux, listFile, i)
     
     print 'start HLR debug...'
     print fluxData[1], 'cumulativeFlux'
@@ -255,12 +256,13 @@ class Photometry():
     
     #print np.where(np.round(totalFlux/fluxData[:, 1], 1) == 2)[0]
     
-    halfLightRadius = fluxData[np.where(np.round(totalFlux/fluxData[:, 1], 1) == 2)[0]][0][0]
-    print halfLightRadius, "halfLightRadius"
+    halfLightRadius = fluxData[np.where(np.round(totalFlux/fluxData[:, 1], 1) == 2)[0]][0][0] #zeroth element of fluxData, i.e. isoA. 
+    print halfLightRadius, "halfLightRadius", np.where(np.round(totalFlux/fluxData[:, 1], 1) == 2)
     
     #elliptical mask for total magnitude
     hdu = pyfits.PrimaryHDU(ellipseMask)
-    hdu.writeto('ellipseMask.fits')
+    CALIFA_ID = str(i+1)
+    hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
 
     inputImage[currentPixels] = 1000
     #Reff =  np.where(distances == (np.round(10/Photometry.pixelScale, 0)))
@@ -278,14 +280,7 @@ class Photometry():
     #print head['NAXIS1'], 'NAXIS1'
     #print 'head[FLUX20]', head['FLUX20']
     #fluxRatio2 = totalFlux/(10**8 * head['FLUX20'])
-
-    graph = plot.Plots()
-    cumulativeFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,1])), 'r', 'best')
-    currentFluxSkySubPPData = plot.GraphData(((fluxData[:,0], fluxData[:,2])), 'b', 'best')
-    currentFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,3])), 'b', 'best')
-    graph.plotScatter([cumulativeFluxData], "Sky subtracted cumulative Flux", plot.PlotTitles("Sky subtracted cumulativeFlux", "distance", "Flux"))
-    graph.plotScatter([currentFluxSkySubPPData], "Sky subtracted cumulative flux per pixel", plot.PlotTitles("cumulative_flux_skysub_per_pixel", "distance", "Flux per pixel"))
-    graph.plotScatter([currentFluxData], "Sky subtracted flux per pixel", plot.PlotTitles("flux_per_pixel", "distance", "Flux per pixel"))
+    plotGrowthCurve.plotGrowthCurve(fluxData)	
     return inputImage
     
     
@@ -302,11 +297,12 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
   i = 0
-  print GalaxyParameters.getZeropoint(listFile, i)
-  exit()
+  CALIFA_ID = str(i+1)
+
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)
   hdu = pyfits.PrimaryHDU(img)
-  hdu.writeto('CALIFA_145.fits')
+
+  hdu.writeto('CALIFA_'+CALIFA_ID+'.fits')
 
 if __name__ == "__main__":
   main()

@@ -4,6 +4,7 @@
 #import Interpol
 #import getImages
 import pyfits
+import math
 import os
 import string
 import gzip
@@ -70,9 +71,7 @@ class GalaxyParameters:
      print NedName
      maskFile = dataDir+'/MASKS/'+NedName+'_mask_r.fits'
      return maskFile
-  
-
-	
+     	
   @staticmethod
   def getNedName(listFile, simpleFile, ID):
     ret = GalaxyParameters()
@@ -85,7 +84,7 @@ class GalaxyParameters:
   
 
 
-
+#a set of methods for swapping between pixel coordinates and ra, dec
 
 class Astrometry():
   @staticmethod
@@ -97,22 +96,26 @@ class Astrometry():
     print ID, 'ID'
     WCS=astWCS.WCS(GalaxyParameters.getFilledUrl(listFile, dataDir, ID))
     centerCoords = Astrometry.getCenterCoords(listFile, ID)
+    print 'centerCoords', centerCoords
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
-    return pixelCoords
+    print 'pixCoords', pixelCoords
+    return (pixelCoords[1], pixelCoords[0]) #y -- first, x axis -- second
   @staticmethod
   def distance2origin(y, x, center):
-   deltaY = y - center[1]
-   deltaX = x - center[0]
-   r = np.sqrt(deltaY**2 + deltaX**2)
+   deltaY = y - center[0]
+   deltaX = x - center[1]
+   r = (deltaY**2 + deltaX**2)
    return r
   @staticmethod
   def makeDistanceArray(img, center):
     distances = np.zeros(img.shape)
-    print Astrometry.distance2origin(0,0, center), 'distance'
+    print Astrometry.distance2origin(0,0, center), 'squared distance to origin'
     for i in range(0, img.shape[0]):
       for j in range(0, img.shape[1]):
 	distances[i,j] = int(round(Astrometry.distance2origin(i,j, center), 0))
-    return distances
+    return np.sqrt(distances)
+
+
 
 class Photometry():
   pixelScale = 0.396
@@ -123,10 +126,23 @@ class Photometry():
     dec = Astrometry.getCenterCoords(listFile, i)[1]
     return Astrometry.getPixelCoords(listFile, i, dataDir)
   @staticmethod
+  def findClosestEdge(distances, center):
+  #finds the closest distance from the center to the edge. Used for sky gradient calculation, as we want to avoid using a small number of pixels in a ring.
+  #works by finding minimum [index] distance to one of the edges of array. 
+    maxy = distances.shape[0] 
+    maxx = distances.shape[1]
+    print center, maxy, maxx
+    yUp = center[0]
+    yDown = maxy - center[0]
+    xLeft = center[1]
+    xRight = maxx - center[1]
+    return int(math.floor(min(yUp, yDown, xLeft, xRight)))
+
+  @staticmethod
   def createDistanceArray(listFile, i, dataDir):
     center = Photometry.getCenter(listFile, i, dataDir)
 
-    print 'center coords', center, 'coords', center[1], center[0]
+    print 'center coords', center, 'coords', center[0], center[1]
     inputImage = Photometry.getInputFile(listFile, dataDir, i)
     distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(listFile, i, dataDir))
     return distances
@@ -155,12 +171,18 @@ class Photometry():
     	print 'full magnitude', mag
 	return mag
 
+
   @staticmethod
   def calculateGrowthCurve(listFile, dataDir, i):
     inputImage = Photometry.getInputFile(listFile, dataDir, i)
 
     print 'i', i
+    center = Photometry.getCenter(listFile, i, dataDir)
     distances = Photometry.createDistanceArray(listFile, i, dataDir)
+    #hdu = pyfits.PrimaryHDU(distances)
+    #hdu.writeto('distances.fits')
+    print Photometry.findClosestEdge(distances, center)
+
     #i+1 in the next line reflects the fact that CALIFA id's start with 1
     pa = db.dbUtils.getFromDB('PA_align', 'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0] #parsing tuples
     print 'pa', pa
@@ -170,20 +192,22 @@ class Photometry():
     
     ellipseMask = np.zeros((inputImage.shape))
     
-    fluxData = np.empty((np.max(distances), 4))
+    fluxData = np.empty((np.max(distances), 6))
     sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
-    center = Photometry.getCenter(listFile, i, dataDir)
+    currentPixels = center
     print 'center', center
     skyMean = np.mean(sky)    
-    cumulativeFlux = inputImage[center[1], center[0]] - skyMean #central pixel, sky subtracted: initialising
-    print 'center[1]', center[1]
+    cumulativeFlux = inputImage[center[0], center[1]] - skyMean #central pixel, sky subtracted: initialising
+    print 'center[1]', center[1], 'center', center
     
     isoA = 1 #initialising    
-    distance = 1
+
+    Npix = 1
+    cumulNpix = 1
     totalNpix = 1		
-    oldFlux = inputImage[center[1], center[0]]
+    oldFlux = inputImage[center[0], center[1]]
     growthSlope = 200
-    meanFlux = inputImage[center[1], center[0]]
+    meanFlux = inputImage[center[0], center[1]]
     print 'central flux', meanFlux
 
     #print np.where(distances > int(round(Photometry.iso25D)))[0].shape, 'np.where(distances > int(round(iso25D)))[0].shape'
@@ -193,37 +217,39 @@ class Photometry():
     sky_rms = np.sqrt(np.sum((sky-skyMean)**2)/len(sky))
     print 'skySD', skySD
     print sky_rms, 'sky rms'
-    cumulativeFlux = meanFlux-skyMean
+    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
 
-    
-    while abs(growthSlope) > 0.1*skySD:
+    while abs(growthSlope) > 0.01*skySD*Npix:
     #while abs(growthSlope) > 0.01*skyMean:
     #while isoA < 400:  
-      previousCumulativeFlux = cumulativeFlux
-      
-      currentPixels = ellipse.draw_ellipse(center[1], center[0], pa, isoA, ba)
+      print 'major axis', isoA
+      previousNpix = Npix
+      oldEllipseMask = ellipseMask
+      oldFlux = np.sum(inputImage[np.where(oldEllipseMask == 1)]) - previousNpix*skyMean
+      currentPixels = ellipse.draw_ellipse(center[0], center[1], pa, isoA, ba)
       ellipseMask[currentPixels] = 1
       #print 'sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
-      print 'major axis', isoA
-      Npix = len(inputImage[currentPixels])
-      
-      totalNpix = len(inputImage[np.where(ellipseMask == 1)])
-      #print totalNpix
-      #print 'Npix', Npix
-      oldFlux = meanFlux
-      currentFlux = np.sum(inputImage[currentPixels])
-      #print 'currFL', currentFlux
 
-      #currentPixels = utils.unique_rows(inputImage[currentPixels])
-      #currentFlux = np.sum(currentPixels)
-      #print 'currFL unique', currentFlux
+      Npix = inputImage[currentPixels].shape[0]      
+      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
+      cumulNpix = cumulNpix+ Npix
+      print totalNpix, 'totalNpix', cumulNpix, 'sum of ellipse pixels', Npix, 'Npix'
+
+      previousCumulativeFlux = cumulativeFlux
+      
+      cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean		
+      meanFlux = cumulativeFlux/Npix #mean sky-subtracted flux per pixel at a certain isoA      
+
+      currentFlux = np.sum(inputImage[currentPixels])
+      currentFlux2 = cumulativeFlux - oldFlux
+      print 'ellipse pixels flux', currentFlux, 'difference masks flux', currentFlux2
       currentFluxSkysub = currentFlux - (Npix*skyMean)
-      cumulativeFlux = cumulativeFlux + currentFluxSkysub		
-      growthSlope = (cumulativeFlux - previousCumulativeFlux)/Npix
-      #print 'slope', growthSlope, 'oldFlux', oldFlux, currentFluxSkysub/Npix
-      cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
+
+      growthSlope = utils.getSlope(previousCumulativeFlux, cumulativeFlux, isoA-1, isoA)
+      print 'slope', growthSlope,'0.01*skySD*Npix', 0.01*skySD*Npix
+      #cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
       #print 'cumulative Flux', cumulativeFlux      
-      meanFlux = currentFluxSkysub/Npix #mean sky-subtracted flux per pixel at a certain isoA
+
       #print 'meanFlux', meanFlux
       #totalNpix = len(inputImage[np.where(distances < distance)])
       #  print 'oldFlux - meanFlux', oldFlux - meanFlux
@@ -232,18 +258,19 @@ class Photometry():
       SN = meanFlux/skySD
       #print 'SIGNAL TO NOISE', SN
 
-      
       #stDev = np.sqrt(np.sum((inputImage[currentPixels] - meanFlux)**2)/Npix)/Npix
       #print stDev, 'stDev'
       fluxData[isoA, 0] = isoA
       fluxData[isoA, 1] = cumulativeFlux #sky-subtracted cumulative flux
-      fluxData[isoA, 2] = (cumulativeFlux)/totalNpix #sky-subtracted cumulative flux per pixel
+      fluxData[isoA, 2] = (cumulativeFlux)/cumulNpix #sky-subtracted cumulative flux per pixel
       fluxData[isoA, 3] = currentFluxSkysub/Npix #mean sky-subtracted flux per pixel at some isoA
+      fluxData[isoA, 4] = ellipse.get_ellipse_circumference(isoA, ba)
+      fluxData[isoA, 5] = Npix
       isoA = isoA +1
     fluxData = fluxData[0:isoA-2,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
     print fluxData.shape
-    totalFlux = cumulativeFlux
-    
+    totalFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
+
     
     print Photometry.calculateFlux(totalFlux, listFile, i)
     
@@ -259,11 +286,21 @@ class Photometry():
     halfLightRadius = fluxData[np.where(np.round(totalFlux/fluxData[:, 1], 1) == 2)[0]][0][0] #zeroth element of fluxData, i.e. isoA. 
     print halfLightRadius, "halfLightRadius", np.where(np.round(totalFlux/fluxData[:, 1], 1) == 2)
     
+    fluxInCirc = np.sum(inputImage[np.where(distances <= halfLightRadius)]) - skyMean*len(inputImage[np.where(distances <= halfLightRadius)])
+    
+    print 'flux in circ apert', fluxInCirc/totalFlux, 'ratio'    
+
+
+    fluxInCirc = np.sum(inputImage[np.where(distances <= 25)]) - skyMean*len(inputImage[np.where(distances <= 25)])
+    
+    print 'flux in circ apert', fluxInCirc/totalFlux, 'ratio'    
+
+    
     #elliptical mask for total magnitude
     hdu = pyfits.PrimaryHDU(ellipseMask)
     CALIFA_ID = str(i+1)
     hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-
+    inputImage[halfLightRadius] = 1000
     inputImage[currentPixels] = 1000
     #Reff =  np.where(distances == (np.round(10/Photometry.pixelScale, 0)))
  
@@ -296,7 +333,7 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
-  i = 0
+  i = 7
   CALIFA_ID = str(i+1)
 
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)

@@ -20,7 +20,7 @@ def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	  Neuchatel, Switzerland, blattner@imt.unine.ch
 	'''
 	xpos,ypos=x0,y0
-	print 'xpos', xpos, 'ypos', ypos
+#	print 'xpos', xpos, 'ypos', ypos
 	radm,radn=ra,rb
 	an=ang
 
@@ -42,7 +42,7 @@ def get_ellipse_circumference(isoA, axisRatio):
   return np.round(circumference, 0)
 
 def draw_ellipse(y0, x0, pa, isoA, axisRatio):
-	print isoA, axisRatio, 'a, axisRatio'
+	#print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
 	#return ellipse(10,5,7510,10,300)
 	#pa - 90: ellipse code uses x axis as 0 deg, while SDSS and Nadine's data gives the North direction as the 0 deg reference  

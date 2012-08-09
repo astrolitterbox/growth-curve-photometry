@@ -124,7 +124,7 @@ def main():
   #  print i, 'galaxy'
   
   
-  for i in range(0, 938):
+  for i in range(780, 938):
     print 'i', i
     Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   

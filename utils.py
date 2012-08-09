@@ -5,8 +5,8 @@ import csv
 import scipy
 
 def getSlope(y1, y2, x1, x2):
-	print  ((y2 - y1)/(x2 - x1)), 'slope', y1, y2, x1, x2
-  	return ((y2 - y1)/(x2 - x1))
+	#print  (abs(y2 - y1)/abs(x2 - x1)), 'slope', y1, y2, x1, x2
+  	return (abs(y2 - y1)/abs(x2 - x1))
 
 
 def convert(data):

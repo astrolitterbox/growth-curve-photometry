@@ -7,7 +7,7 @@ def touch(fname, times = None):
 	  os.utime(fname, times)
 
 
-for i in range(0, 939):
+for i in range(0, 937):
   with open('../data/maskFilenames.csv', 'rb') as f:
     mycsv = csv.reader(f)
     mycsv = list(mycsv)

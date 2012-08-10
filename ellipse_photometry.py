@@ -171,7 +171,11 @@ class Photometry():
     	#mag2 = -2.5 * np.log10(fluxRatio2)
     	print 'full magnitude', mag
 	return mag
-
+  
+  @staticmethod
+  def cropIndices(array, indices):
+    
+  
   @staticmethod
   def getSkyGradient(start, end, center, inputImage, pa, ba, skyMean):
        print start, end, 'start and end'
@@ -184,7 +188,10 @@ class Photometry():
        for i in range(0, gradientRingWidth):
 #	    	print 'i', i
 		#TODO: fix this so that galaxies near the edges are processed consistently
-	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, start-i, ba)]) - ellipse.get_ellipse_circumference(start-i, ba)*skyMean
+	    	#
+	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
+	    	
+	    	
 	    	startNpix += ellipse.get_ellipse_circumference(start-i, ba)*skyMean
 	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
 	    	endNpix += ellipse.get_ellipse_circumference(end-i, ba)*skyMean
@@ -344,7 +351,7 @@ class Photometry():
     skyMean = np.mean(sky)   
     skySD = np.std(sky)
     #i+1 in the next line reflects the fact that CALIFA id's start with 1
-    pa = db.dbUtils.getFromDB('PA_align', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0] - 90  #parsing tuples
+    pa = db.dbUtils.getFromDB('PA', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0]  #parsing tuples
 #    print 'pa', pa
     ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0]#parsing tuples
  #   print 'ba', ba
@@ -451,7 +458,7 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
-  i = 0
+  i = 6
  
   
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)

@@ -22,12 +22,13 @@ def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	xpos,ypos=x0,y0
 #	print 'xpos', xpos, 'ypos', ypos
 	radm,radn=ra,rb
-	an=ang
-
+	an=np.radians(ang)
+	print 'ANGLE', an
 	co,si=cos(an),sin(an)
 
 	the=np.linspace(0,2*pi,nPoints)
 	X=radm*cos(the)*co-si*radn*sin(the)+xpos
+	
 	Y=radm*cos(the)*si+co*radn*sin(the)+ypos
 	return [np.round(Y,0).astype('int16'), np.round(X, 0).astype('int16')]
 

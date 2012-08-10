@@ -183,6 +183,7 @@ class Photometry():
        gradientRingWidth = 13
        for i in range(0, gradientRingWidth):
 #	    	print 'i', i
+		#TODO: fix this so that galaxies near the edges are processed consistently
 	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, start-i, ba)]) - ellipse.get_ellipse_circumference(start-i, ba)*skyMean
 	    	startNpix += ellipse.get_ellipse_circumference(start-i, ba)*skyMean
 	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
@@ -253,13 +254,13 @@ class Photometry():
 #	    print 'skySD', skySD
 #	    print sky_rms, 'sky rms'
 	    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
-	    limitCriterion = 0.01*skySD
+	    limitCriterion = 0.05*skySD
 	    #while abs(growthSlope) > 1*skySD*Npix:
 	    #while abs(growthSlope) > 0.01*skySD:
 	    #while isoA < 120:  
 	    #fluxData[1, 3] = 20 #init
 	    #print 'passing array', fluxData[1, 3]
-	    while Photometry.checkLimitCriterion(fluxData, isoA, limitCriterion) != 1:
+	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion) != 1:
 	      
 #	      print 'major axis', isoA
 	      previousNpix = Npix
@@ -283,7 +284,7 @@ class Photometry():
 	      #	outputImage[currentPixels] = 1000
 	      growthSlope = utils.getSlope(oldFlux/previousNpix, currentFlux/Npix, isoA-1, isoA)
 	      
-	      print 'slope', growthSlope,'crit', limitCriterion, 'isoA', isoA
+	      #print 'slope', growthSlope,'crit', limitCriterion, 'isoA', isoA
 	      #cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
 	      #print 'cumulative Flux', cumulativeFlux      
 	      #print 'flux in ellipse', np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0]
@@ -315,10 +316,12 @@ class Photometry():
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion):
     out = 0
+    
     try:
       #print 'distance length', fluxData[distance-10:distance, 3].shape
       n = fluxData[distance-4:distance+1, 3].shape[0]
       #print 'n', n
+      print abs(np.sum(fluxData[distance-4:distance, 3])), 'avg', n*limitCriterion, 'lim', distance, 'dist', fluxData[distance, 3], 'slope'
       if abs(np.sum(fluxData[distance-4:distance+1, 3])) < n*limitCriterion:
 	print 'limit reached!', distance
 	out = 1
@@ -341,7 +344,7 @@ class Photometry():
     skyMean = np.mean(sky)   
     skySD = np.std(sky)
     #i+1 in the next line reflects the fact that CALIFA id's start with 1
-    pa = db.dbUtils.getFromDB('PA_align', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0] #parsing tuples
+    pa = db.dbUtils.getFromDB('PA_align', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0] - 90  #parsing tuples
 #    print 'pa', pa
     ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(i+1))[0][0]#parsing tuples
  #   print 'ba', ba
@@ -449,11 +452,10 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
   i = 0
-  CALIFA_ID = str(i+1)
-
+ 
+  
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)
   hdu = pyfits.PrimaryHDU(img)
-
   hdu.writeto('CALIFA_'+CALIFA_ID+'.fits')
 
 if __name__ == "__main__":

@@ -172,9 +172,7 @@ class Photometry():
     	print 'full magnitude', mag
 	return mag
   
-  @staticmethod
-  def cropIndices(array, indices):
-    
+
   
   @staticmethod
   def getSkyGradient(start, end, center, inputImage, pa, ba, skyMean):

@@ -9,6 +9,7 @@ def getSlope(y1, y2, x1, x2):
   	return (abs(y2 - y1)/abs(x2 - x1))
 
 
+
 def convert(data):
      tempDATA = []
      for i in data:

@@ -29,9 +29,7 @@ def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	the=np.linspace(0,2*pi,nPoints)
 	X=radm*cos(the)*co-si*radn*sin(the)+xpos	
 	Y=radm*cos(the)*si+co*radn*sin(the)+ypos
-	print X.shape, X.dtype
-	
-	return [np.round(Y,0).astype('int16'), np.round(X, 0).astype('int16')]
+	return np.asarray((np.round(Y,0).astype('int16'), np.round(X, 0).astype('int16')))
 
 
 def get_ellipse_circumference(isoA, axisRatio):
@@ -62,19 +60,38 @@ def cropCoords(inputShape, ellipseCoords):
   maxX = inputShape[1]
   print maxY, maxX, 'maxes' 
   length = len(ellipseCoords[0])
-  print 'len', length 
-  coords = zip(ellipseCoords[0], ellipseCoords[1])
-  print coords
-  print '____________'
+  
+  print '____________', ellipseCoords.shape
   
   
-  exit()
+  condY = ((0 <= ellipseCoords[0, :]) & (ellipseCoords[0, :] < maxY))
+  condX = ((0 <= ellipseCoords[1, :]) & (ellipseCoords[1, :] < maxX))
   
-  cond = np.where([((0 <= ellipseCoords[0]) & (ellipseCoords[0] <= maxY)) & ((0 <= ellipseCoords[1]) & (ellipseCoords[1]<= maxX))])
+  print 'condy', (condY & condX)
   
-  goodCoords = ellipseCoords[cond]
   
-  return goodCoords
+  print len(condY & condX)
+  
+  print (condY & condX).shape
+  
+  print '*******************'
+  
+  
+  goodCoords = np.where((condY & condX) == True)[0]
+  print goodCoords, 'gc'
+  goodEllipse = ellipseCoords[:, goodCoords]
+  print goodEllipse.shape[1], '\n', ellipseCoords[:, goodCoords].shape
+  out = []
+  
+  for i in range(0, goodEllipse.shape[1]):
+    out.append(((goodEllipse[1, i], goodEllipse[0, i])))
+    print 'out', out[i]
+  #out = np.transpose(out)
+  #print out.shape, inputShape, '\n'
+  print out, inputShape
+  return out
+  
+  
   #goodCoords[0] = ellipseCoords[np.where(where)][0]
   
   
@@ -88,13 +105,12 @@ def cropCoords(inputShape, ellipseCoords):
   return goodYCoords
   
 def main():
-  inputImage = np.zeros((51, 51))
+  inputImage = np.zeros((49, 51))
   
     
   ellipseCoords = draw_ellipse(inputImage.shape, 26, 25, 0, 26, 1)
   
-  print len(ellipseCoords), ellipseCoords[0].shape[0]
-  inputImage[goodCoords[0], goodCoords[1]] = 1000
+  inputImage[ellipseCoords] = 1000
   hdu = pyfits.PrimaryHDU(inputImage)
   hdu.writeto('ellipse.fits')
   

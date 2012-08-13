@@ -187,11 +187,11 @@ class Photometry():
 #	    	print 'i', i
 		#TODO: fix this so that galaxies near the edges are processed consistently
 	    	#
-	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
+	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
 	    	
 	    	
 	    	startNpix += ellipse.get_ellipse_circumference(start-i, ba)*skyMean
-	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
+	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
 	    	endNpix += ellipse.get_ellipse_circumference(end-i, ba)*skyMean
        startFlux = startFlux/startNpix
        endFlux = endFlux/endNpix
@@ -272,7 +272,7 @@ class Photometry():
 	      oldEllipseMask = ellipseMask
 	      #oldFlux = np.sum(inputImage[np.where(oldEllipseMask == 1)]) - previousNpix*skyMean
 	      oldFlux = currentFlux#currentFlux/previousNpix
-	      currentPixels = ellipse.draw_ellipse(center[0], center[1], pa, isoA, ba)
+	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
 	      ellipseMask[currentPixels] = 1
 	      #print 'sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
 	      Npix = inputImage[currentPixels].shape[0]      

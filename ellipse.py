@@ -4,6 +4,10 @@ import numpy as np
 from scipy import pi,sin,cos
 import math
 import pyfits
+import collections #Counter class is necessary, check if your module version is up to date
+
+import utils
+
 
 def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	'''ra - major axis length
@@ -44,73 +48,48 @@ def get_ellipse_circumference(isoA, axisRatio):
 def draw_ellipse(inputShape, y0, x0, pa, isoA, axisRatio):
 	#print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
-	#return ellipse(10,5,7510,10,300)
-	
-	return cropCoords(inputShape, ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints))
+	#passing an index array for edge clipping as the first argument
+	return cropCoords(utils.createIndexArray(inputShape), ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints))
 
 
 
-def cropCoords(inputShape, ellipseCoords):
-  #taking care of the boundaries: 
-   #for 2D arrays: shape of the array, list of indices
+def cropCoords(inputIndices, ellipseCoords):
+  #taking care of the boundaries and duplicate indices: 
+   #for 2D arrays: index array, list of indices
   #checks if the indices are between 0 and ylim and xlim, rejects the bad coordinates
   #returns good indices 
   
-  maxY = inputShape[0]
-  maxX = inputShape[1]
-  print maxY, maxX, 'maxes' 
-  length = len(ellipseCoords[0])
+  e = []
+  ellipseCoords = ellipseCoords.transpose()
   
-  print '____________', ellipseCoords.shape
+  print ellipseCoords.shape
   
-  
-  condY = ((0 <= ellipseCoords[0, :]) & (ellipseCoords[0, :] < maxY))
-  condX = ((0 <= ellipseCoords[1, :]) & (ellipseCoords[1, :] < maxX))
-  
-  print 'condy', (condY & condX)
-  
-  
-  print len(condY & condX)
-  
-  print (condY & condX).shape
-  
-  print '*******************'
-  
-  
-  goodCoords = np.where((condY & condX) == True)[0]
-  print goodCoords, 'gc'
-  goodEllipse = ellipseCoords[:, goodCoords]
-  print goodEllipse.shape[1], '\n', ellipseCoords[:, goodCoords].shape
-  out = []
-  
-  for i in range(0, goodEllipse.shape[1]):
-    out.append(((goodEllipse[1, i], goodEllipse[0, i])))
-    print 'out', out[i]
-  #out = np.transpose(out)
-  #print out.shape, inputShape, '\n'
-  print out, inputShape
-  return out
-  
-  
-  #goodCoords[0] = ellipseCoords[np.where(where)][0]
-  
-  
-       
-  #  if [(ellipseCoords[0][i] in range(0, maxY)) & (ellipseCoords[1][i] in range(0, maxX))]:
- #     goodCoords[0].append(ellipseCoords[0][i])
-  #    goodCoords[1].append(ellipseCoords[1][i])
+  for i in range(ellipseCoords.shape[0]):
+    e.append((ellipseCoords[i, 0], ellipseCoords[i, 1]))
       
+  print 'e',  sorted(e)
   
-  #print len(goodCoords[0]), 'goodcoords', len(ellipseCoords[0]), 'ell coords'
-  return goodYCoords
+  a = collections.Counter(e)
+  b = collections.Counter(inputIndices)  
+  out = list((a & b).elements())
+  print 'out', sorted(out), type(out)
+  print len(set(out)), 'duplicates removed, cropped', len(ellipseCoords[:, 0]), 'original ellipse coords length'
+  
+  return out
+
   
 def main():
-  inputImage = np.zeros((49, 51))
   
-    
-  ellipseCoords = draw_ellipse(inputImage.shape, 26, 25, 0, 26, 1)
+  #it's all for testing
+  inputImage = np.zeros((50, 49))
   
-  inputImage[ellipseCoords] = 1000
+
+  
+  
+  
+  for i in range(0, len(ellipseCoords)):
+    print ellipseCoords[i]
+    inputImage[ellipseCoords[i]] = 1000
   hdu = pyfits.PrimaryHDU(inputImage)
   hdu.writeto('ellipse.fits')
   

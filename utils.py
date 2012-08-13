@@ -1,23 +1,34 @@
 # -*- coding: utf-8 -*-
-import numpy 
+import numpy as np
 import string
 import csv
 import scipy
+import itertools
+
 
 def getSlope(y1, y2, x1, x2):
 	#print  (abs(y2 - y1)/abs(x2 - x1)), 'slope', y1, y2, x1, x2
   	return (abs(y2 - y1)/abs(x2 - x1))
 
+def createIndexArray(inputShape):  
+  inputIndices = np.empty((inputShape), dtype=object) 
+  for i in range(0, inputShape[0]):
+    print i, inputShape[1]
+    for j in range(0, inputShape[1]):  
+      inputIndices[i, j] = (i, j)
+  #some fancy juggling -- create a list of lists of tuples, flatten it using itertools
+  inputIndices = list(itertools.chain(*inputIndices.tolist()))
+  return inputIndices
 
 
 def convert(data):
      tempDATA = []
      for i in data:
          tempDATA.append([float(j) for j in i])
-     return numpy.asarray(tempDATA)
+     return np.asarray(tempDATA)
 
 def unique_rows(a):
-    unique_a = numpy.unique(a.view([('', a.dtype)]*a.shape[1]))
+    unique_a = np.unique(a.view([('', a.dtype)]*a.shape[1]))
     return unique_a.view(a.dtype).reshape((unique_a.shape[0], a.shape[1]))
 
 
@@ -39,7 +50,7 @@ def field2string(fields):
 
 
 def tostring(val, nmin=None, nmax=None):
-    if not numpy.isscalar(val):
+    if not np.isscalar(val):
         return [tostring(v,nmin,nmax) for v in val]
     if isinstance(val, (str,unicode)):
 	nlen = len(str(nmax))
@@ -128,16 +139,16 @@ def nmgy2mag(nmgy, ivar=None):
             [0.001,1.e11]
         which corresponds to a mag range of 30 to -5
     """
-    nmgy = numpy.array(nmgy, ndmin=1, copy=False)
+    nmgy = np.array(nmgy, ndmin=1, copy=False)
 
-    nmgy_clip = numpy.clip(nmgy,0.001,1.e11)
+    nmgy_clip = np.clip(nmgy,0.001,1.e11)
 
     mag = nmgy_clip.copy()
     mag[:] = 22.5-2.5*scipy.log10(nmgy_clip)
 
     if ivar is not None:
 
-        ivar = numpy.array(ivar, ndmin=1, copy=False)
+        ivar = np.array(ivar, ndmin=1, copy=False)
         if ivar.shape != nmgy.shape:
             raise ValueError("ivar must be same shape as input nmgy array")
 

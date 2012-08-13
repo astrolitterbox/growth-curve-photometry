@@ -177,6 +177,7 @@ class Photometry():
   @staticmethod
   def getSkyGradient(start, end, center, inputImage, pa, ba, skyMean):
        print start, end, 'start and end'
+       inputIndices = utils.createIndexArray(inputImage.shape)
        #take means of (2n - 1) elliptical annuli as input fluxes for gradient search
        startFlux = 0
        startNpix = 0
@@ -187,11 +188,11 @@ class Photometry():
 #	    	print 'i', i
 		#TODO: fix this so that galaxies near the edges are processed consistently
 	    	#
-	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
+	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(inputIndices, center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(inputIndices, center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
 	    	
 	    	
 	    	startNpix += ellipse.get_ellipse_circumference(start-i, ba)*skyMean
-	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
+	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(inputIndices, center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
 	    	endNpix += ellipse.get_ellipse_circumference(end-i, ba)*skyMean
        startFlux = startFlux/startNpix
        endFlux = endFlux/endNpix
@@ -236,6 +237,7 @@ class Photometry():
   @staticmethod
   def buildGrowthCurve(inputImage, center,  distances, skyMean, pa, ba, CALIFA_ID):
 	    ellipseMask = np.zeros((inputImage.shape))
+	    inputIndices = utils.createIndexArray(inputImage.shape)
             sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
 	    fluxData = np.empty((np.max(distances), 6))
 	    currentPixels = center
@@ -272,7 +274,7 @@ class Photometry():
 	      oldEllipseMask = ellipseMask
 	      #oldFlux = np.sum(inputImage[np.where(oldEllipseMask == 1)]) - previousNpix*skyMean
 	      oldFlux = currentFlux#currentFlux/previousNpix
-	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
+	      currentPixels = ellipse.draw_ellipse(inputIndices, center[0], center[1], pa, isoA, ba)
 	      ellipseMask[currentPixels] = 1
 	      #print 'sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
 	      Npix = inputImage[currentPixels].shape[0]      
@@ -409,11 +411,10 @@ class Photometry():
     
     plotGrowthCurve.plotGrowthCurve(fluxData)
     exit()
-
     
     
-    print 'flux in circ apert', fluxInCirc/totalFlux, 'ratio'    
-    plotGrowthCurve.plotGrowthCurve(fluxData)
+    #print 'flux in circ apert', fluxInCirc/totalFlux, 'ratio'    
+    #plotGrowthCurve.plotGrowthCurve(fluxData)
     #inputImage[currentPixels] = 1000	
     exit()
     
@@ -456,7 +457,7 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
-  i = 6
+  i = 10
  
   
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)

@@ -45,11 +45,12 @@ def get_ellipse_circumference(isoA, axisRatio):
   #print circumference 
   return np.round(circumference, 0)
 
-def draw_ellipse(inputShape, y0, x0, pa, isoA, axisRatio):
+def draw_ellipse(inputIndices, y0, x0, pa, isoA, axisRatio):
+      
 	#print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
 	#passing an index array for edge clipping as the first argument
-	return cropCoords(utils.createIndexArray(inputShape), ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints))
+	return cropCoords(inputIndices, ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints))
 
 
 
@@ -62,21 +63,22 @@ def cropCoords(inputIndices, ellipseCoords):
   e = []
   ellipseCoords = ellipseCoords.transpose()
   
-  print ellipseCoords.shape
+  print ellipseCoords.shape, 'start'
   
   for i in range(ellipseCoords.shape[0]):
     e.append((ellipseCoords[i, 0], ellipseCoords[i, 1]))
-      
+  print ellipseCoords.shape, 'end'    
   #print 'e',  sorted(e)
-  
+  print 'start collections'
   a = collections.Counter(e)
   b = collections.Counter(inputIndices)  
   out = list((a & b).elements())
   #print 'out', sorted(out), type(out)
+  print 'end collections'
   print len(set(out)), 'duplicates removed, cropped', len(ellipseCoords[:, 0]), 'original ellipse coords length'
   y = [i[0] for i in out]
   x = [i[1] for i in out]
-  
+  print 'done'
   return [y, x]
 
   

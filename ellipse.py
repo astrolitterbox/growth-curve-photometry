@@ -67,29 +67,27 @@ def cropCoords(inputIndices, ellipseCoords):
   for i in range(ellipseCoords.shape[0]):
     e.append((ellipseCoords[i, 0], ellipseCoords[i, 1]))
       
-  print 'e',  sorted(e)
+  #print 'e',  sorted(e)
   
   a = collections.Counter(e)
   b = collections.Counter(inputIndices)  
   out = list((a & b).elements())
-  print 'out', sorted(out), type(out)
+  #print 'out', sorted(out), type(out)
   print len(set(out)), 'duplicates removed, cropped', len(ellipseCoords[:, 0]), 'original ellipse coords length'
+  y = [i[0] for i in out]
+  x = [i[1] for i in out]
   
-  return out
+  return [y, x]
 
   
 def main():
   
   #it's all for testing
   inputImage = np.zeros((50, 49))
+  ellipseCoords = draw_ellipse(inputImage.shape, 25, 27, 0, 27, 0.9)
+  #print ellipseCoords
   
-
-  
-  
-  
-  for i in range(0, len(ellipseCoords)):
-    print ellipseCoords[i]
-    inputImage[ellipseCoords[i]] = 1000
+  inputImage[ellipseCoords] = 1000
   hdu = pyfits.PrimaryHDU(inputImage)
   hdu.writeto('ellipse.fits')
   

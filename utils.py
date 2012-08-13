@@ -13,7 +13,6 @@ def getSlope(y1, y2, x1, x2):
 def createIndexArray(inputShape):  
   inputIndices = np.empty((inputShape), dtype=object) 
   for i in range(0, inputShape[0]):
-    print i, inputShape[1]
     for j in range(0, inputShape[1]):  
       inputIndices[i, j] = (i, j)
   #some fancy juggling -- create a list of lists of tuples, flatten it using itertools

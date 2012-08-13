@@ -10,14 +10,17 @@ def getSlope(y1, y2, x1, x2):
 	#print  (abs(y2 - y1)/abs(x2 - x1)), 'slope', y1, y2, x1, x2
   	return (abs(y2 - y1)/abs(x2 - x1))
 
-def createIndexArray(inputShape):  
-  inputIndices = np.empty((inputShape), dtype=object) 
+def createIndexArray(inputShape):
+  shape = (inputShape[0]*inputShape[1], 2)
+  inputIndices = np.zeros(shape, dtype = int) 
+  k = 0
   for i in range(0, inputShape[0]):
     for j in range(0, inputShape[1]):  
-      inputIndices[i, j] = (i, j)
-  #some fancy juggling -- create a list of lists of tuples, flatten it using itertools
-  inputIndices = list(itertools.chain(*inputIndices.tolist()))
-  return inputIndices
+      inputIndices[k, 0] = j
+      inputIndices[k, 1] = i
+      k+=1
+  #np.savetxt('inputIndices.txt', inputIndices, fmt = '%8i')    
+  return np.asarray(inputIndices)
 
 
 def convert(data):

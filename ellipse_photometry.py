@@ -457,7 +457,7 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
-  i = 10
+  i = 11
  
   
   img = Photometry.calculateGrowthCurve(listFile, dataDir, i)

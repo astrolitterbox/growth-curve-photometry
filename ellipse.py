@@ -5,7 +5,7 @@ from scipy import pi,sin,cos
 import math
 import pyfits
 import collections #Counter class is necessary, check if your module version is up to date
-
+import itertools
 import utils
 
 
@@ -31,9 +31,14 @@ def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	co,si=cos(an),sin(an)
 
 	the=np.linspace(0,2*pi,nPoints)
-	X=radm*cos(the)*co-si*radn*sin(the)+xpos	
-	Y=radm*cos(the)*si+co*radn*sin(the)+ypos
-	return np.asarray((np.round(Y,0).astype('int16'), np.round(X, 0).astype('int16')))
+	
+	out = np.empty((nPoints, 2))
+	print out.shape, 'out'
+	
+	out[:, 0] = np.round(radm*cos(the)*si+co*radn*sin(the)+ypos,0).astype('int16')
+	out[:, 1] = np.round(radm*cos(the)*co-si*radn*sin(the)+xpos,0).astype('int16')
+	print out.shape, type(out), out[0]
+	return out
 
 
 def get_ellipse_circumference(isoA, axisRatio):
@@ -46,7 +51,7 @@ def get_ellipse_circumference(isoA, axisRatio):
   return np.round(circumference, 0)
 
 def draw_ellipse(inputIndices, y0, x0, pa, isoA, axisRatio):
-      
+        
 	#print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
 	#passing an index array for edge clipping as the first argument
@@ -54,32 +59,26 @@ def draw_ellipse(inputIndices, y0, x0, pa, isoA, axisRatio):
 
 
 
-def cropCoords(inputIndices, ellipseCoords):
+def cropCoords(inputShape, ellipseCoords):
   #taking care of the boundaries and duplicate indices: 
    #for 2D arrays: index array, list of indices
   #checks if the indices are between 0 and ylim and xlim, rejects the bad coordinates
   #returns good indices 
   
-  e = []
-  ellipseCoords = ellipseCoords.transpose()
   
-  print ellipseCoords.shape, 'start'
+  ellipseCoords.tolist()
   
-  for i in range(ellipseCoords.shape[0]):
-    e.append((ellipseCoords[i, 0], ellipseCoords[i, 1]))
-  print ellipseCoords.shape, 'end'    
-  #print 'e',  sorted(e)
-  print 'start collections'
-  a = collections.Counter(e)
-  b = collections.Counter(inputIndices)  
-  out = list((a & b).elements())
-  #print 'out', sorted(out), type(out)
-  print 'end collections'
-  print len(set(out)), 'duplicates removed, cropped', len(ellipseCoords[:, 0]), 'original ellipse coords length'
-  y = [i[0] for i in out]
-  x = [i[1] for i in out]
-  print 'done'
-  return [y, x]
+  print '))))))))))))))))'
+  gc = np.where((ellipseCoords[:, 0] >= 0) & (ellipseCoords[:, 0] < inputShape[0]) & (ellipseCoords[:, 1] >= 0) & (ellipseCoords[:, 1] < inputShape[1]))
+  
+  
+  goodCoords = ellipseCoords[gc]
+  
+  
+  print len(goodCoords), len(set(itertools.chain(*goodCoords.tolist())))
+  print type(goodCoords.astype('int16')), 
+  
+  return goodCoords.astype('int16')
 
   
 def main():

@@ -31,15 +31,23 @@ def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	co,si=cos(an),sin(an)
 
 	the=np.linspace(0,2*pi,nPoints)
+	out = np.empty((len(the), 1), dtype = 'object')
+	#enumerate #TODO
+	Y = np.round(radm*cos(the)*si+co*radn*sin(the)+ypos,0).astype('int16')
+	X = np.round(radm*cos(the)*co-si*radn*sin(the)+xpos,0).astype('int16')
+	Y = removeLimits(Y, image.shape[0])
+	X = removeLimits(X, image.shape[1])
+	out = out[:Y.shape[0],:]
+	for i, v in enumerate(out):
+	  out[i, 0] = (Y[i], X[i])
 	
-	out = np.empty((nPoints, 2))
-	print out.shape, 'out'
 	
-	out[:, 0] = np.round(radm*cos(the)*si+co*radn*sin(the)+ypos,0).astype('int16')
-	out[:, 1] = np.round(radm*cos(the)*co-si*radn*sin(the)+xpos,0).astype('int16')
-	print out.shape, type(out), out[0]
 	return out
 
+def removeLimits(array, limit):
+  gc = np.where((array[:, 0] >= 0) & (array[:, 0] < limit))
+  print gc
+  return array[gc]
 
 def get_ellipse_circumference(isoA, axisRatio):
   #Ramanujan's second approximation
@@ -66,16 +74,22 @@ def cropCoords(inputShape, ellipseCoords):
   #returns good indices 
   
   
-  ellipseCoords.tolist()
+  #ellipseCoords = ellipseCoords.T
   
+
+  
+  u, indices = np.unique(ellipseCoords, return_index=True)
+  
+  print ellipseCoords.shape[0] - ellipseCoords[indices].shape[0], 'Duplicate points rejected'
   print '))))))))))))))))'
-  gc = np.where((ellipseCoords[:, 0] >= 0) & (ellipseCoords[:, 0] < inputShape[0]) & (ellipseCoords[:, 1] >= 0) & (ellipseCoords[:, 1] < inputShape[1]))
+  print ellipseCoords[:, 0], '\n\n\n', ellipseCoords[:, 0]
   
   
+  print gc, type(gc)
   goodCoords = ellipseCoords[gc]
   
   
-  print len(goodCoords), len(set(itertools.chain(*goodCoords.tolist())))
+  
   print type(goodCoords.astype('int16')), 
   
   return goodCoords.astype('int16')

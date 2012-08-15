@@ -97,16 +97,16 @@ def main():
   #it's all for testing
   inputImage = np.zeros((50, 49))
   ellipseCoords = draw_ellipse(inputImage.shape, 25, 27, 0, 27, 0.9)
-  print type(ellipseCoords[0].tolist()), type(ellipseCoords[0][0][0]), 
+  
   
   
   
 
   
-  print X, 'a'
-  inputImage[(Y, X)] = 1000
-  hdu = pyfits.PrimaryHDU(inputImage)
-  hdu.writeto('ellipse.fits')
+  #print X, 'a'
+  #inputImage[(Y, X)] = 1000
+  #hdu = pyfits.PrimaryHDU(inputImage)
+  #hdu.writeto('ellipse.fits')
   
 if __name__ == "__main__":
   main()  

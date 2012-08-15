@@ -325,8 +325,7 @@ class Photometry():
   def checkLimitCriterion(fluxData, distance, limitCriterion):
     out = 0
     
-    try:
-      #print 'distance length', fluxData[distance-10:distance, 3].shape
+    try:      
       n = fluxData[distance-4:distance+1, 3].shape[0]
       
       #print abs(np.sum(fluxData[distance-4:distance, 3])), 'avg', n*limitCriterion, 'lim', distance, 'dist', fluxData[distance, 3], 'slope'

@@ -9,7 +9,7 @@ import itertools
 import utils
 
 
-def ellipse(ra,rb,ang,x0,y0,nPoints=50):
+def ellipse(inputShape, ra,rb,ang,x0,y0,nPoints=50):
 	'''ra - major axis length
 	  rb - minor axis length
 	  ang - angle
@@ -35,20 +35,26 @@ def ellipse(ra,rb,ang,x0,y0,nPoints=50):
 	#enumerate #TODO
 	Y = np.round(radm*cos(the)*si+co*radn*sin(the)+ypos,0).astype('int16')
 	X = np.round(radm*cos(the)*co-si*radn*sin(the)+xpos,0).astype('int16')
-	Y = removeLimits(Y, image.shape[0])
-	X = removeLimits(X, image.shape[1])
+	
+	#Y = removeLimits(Y, inputImage.shape[0])
+	#X = removeLimits(X, inputImage.shape[1])
 	out = out[:Y.shape[0],:]
+	
+	goodRows = []
 	for i, v in enumerate(out):
-	  out[i, 0] = (Y[i], X[i])
 	
-	
+	  if ((Y[i] >= 0) & (Y[i] < inputShape[0]) & (X[i] >= 0) & (X[i] < inputShape[1])):	    
+	    out[i, 0] = (Y[i], X[i])	
+	    goodRows.append(i)	  
+	out = out[goodRows]
 	return out
-
-def removeLimits(array, limit):
-  gc = np.where((array[:, 0] >= 0) & (array[:, 0] < limit))
+'''
+#input 2D array, input image shape (tuple)
+def removeLimits(array, inputShape):
+  gc = np.where((array[:, 0] >= 0) & (array[:, 0] < inputShape[0]) & (array[:, 1] >= 0) & (array[:, 1] < inputShape[1]))
   print gc
   return array[gc]
-
+'''
 def get_ellipse_circumference(isoA, axisRatio):
   #Ramanujan's second approximation
   a = isoA
@@ -58,41 +64,32 @@ def get_ellipse_circumference(isoA, axisRatio):
   #print circumference 
   return np.round(circumference, 0)
 
-def draw_ellipse(inputIndices, y0, x0, pa, isoA, axisRatio):
+def draw_ellipse(inputShape, y0, x0, pa, isoA, axisRatio):
         
 	#print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
 	#passing an index array for edge clipping as the first argument
-	return cropCoords(inputIndices, ellipse(isoA,isoA*axisRatio,pa,x0,y0,nPoints))
+	return rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,nPoints))
 
 
 
-def cropCoords(inputShape, ellipseCoords):
-  #taking care of the boundaries and duplicate indices: 
-   #for 2D arrays: index array, list of indices
-  #checks if the indices are between 0 and ylim and xlim, rejects the bad coordinates
+def rejectDuplicates(ellipseCoords):
+  #taking care of the duplicate indices: 
+  #for 2D arrays: index array, list of indices
   #returns good indices 
-  
-  
-  #ellipseCoords = ellipseCoords.T
-  
-
   
   u, indices = np.unique(ellipseCoords, return_index=True)
   
   print ellipseCoords.shape[0] - ellipseCoords[indices].shape[0], 'Duplicate points rejected'
-  print '))))))))))))))))'
-  print ellipseCoords[:, 0], '\n\n\n', ellipseCoords[:, 0]
   
   
-  print gc, type(gc)
-  goodCoords = ellipseCoords[gc]
-  
-  
-  
-  print type(goodCoords.astype('int16')), 
-  
-  return goodCoords.astype('int16')
+  ellipseCoords = ellipseCoords[indices]
+  ellipseCoords = list(itertools.chain(*ellipseCoords))
+  Y = [i[0] for i in ellipseCoords]
+  X = [i[1] for i in ellipseCoords]
+  #print '))))))))))))))))'
+  #print ellipseCoords[:, 0], '\n\n\n', ellipseCoords[:, 0]
+  return (Y, X)
 
   
 def main():
@@ -100,9 +97,14 @@ def main():
   #it's all for testing
   inputImage = np.zeros((50, 49))
   ellipseCoords = draw_ellipse(inputImage.shape, 25, 27, 0, 27, 0.9)
-  #print ellipseCoords
+  print type(ellipseCoords[0].tolist()), type(ellipseCoords[0][0][0]), 
   
-  inputImage[ellipseCoords] = 1000
+  
+  
+
+  
+  print X, 'a'
+  inputImage[(Y, X)] = 1000
   hdu = pyfits.PrimaryHDU(inputImage)
   hdu.writeto('ellipse.fits')
   

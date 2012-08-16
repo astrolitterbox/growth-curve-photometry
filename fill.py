@@ -69,9 +69,13 @@ class GalaxyParameters:
 #class Inpaint():  
   
 class Interpolation():
-
+  
   @staticmethod
-  def runInpainting(maskFile, listFile, dataDir, ID, log):
+  def rotateYourOwl(inputArray, n):
+    return np.rot90(inputArray, n)
+  
+  @staticmethod
+  def runInpainting(maskFile, listFile, dataDir, ID, rot, log):
     maskFilename = utils.getMask(maskFile, ID)
     sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
     outputFilename = utils.createOutputFilename(sdssFilename)
@@ -87,9 +91,14 @@ class Interpolation():
       head = sdssImage[0].header
       maskFile = pyfits.open(maskFilename)
       mask = maskFile[0].data
+      if rot != 0:
+	imageData = Interpolation.rotateYourOwl(imageData, 3)
+	mask = Interpolation.rotateYourOwl(mask, 3)
+
       maskedImg = np.ma.array(imageData, mask = mask)
       NANMask =  maskedImg.filled(np.NaN)
       filled = inpaint.replace_nans(NANMask, 100, 0.1, 2, 'idw')
+      filled = Interpolation.rotateYourOwl(filled, 1)
       hdu = pyfits.PrimaryHDU(filled, header = head)
       hdu.writeto(dataDir+'/filled/'+outputFilename)
     return log
@@ -124,10 +133,11 @@ def main():
   #  print i, 'galaxy'
   
   
-  for i in range(780, 938):
-    print 'i', i
-    Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
+  #for i in range(780, 938):
+  #  print 'i', i
+  #  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
+  Interpolation.runInpainting(maskFile, listFile, dataDir, 8, 1, log)
   
   
   #  print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)

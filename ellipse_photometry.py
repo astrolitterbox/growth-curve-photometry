@@ -420,14 +420,15 @@ class Photometry():
     fluxData, outputImage = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
     totalFlux = fluxData[fluxData.shape[0]-1, 1]   
     elMag = Photometry.calculateFlux(totalFlux, listFile, i)
-    elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)[0]][0][0]
+    elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]
+    #print 'ELLL?', fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)[0]][0][0], '\n', fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]
     plotGrowthCurve.plotGrowthCurve(fluxData, CALIFA_ID)
 
     
     
     # --------------------- writing output jpg file with both outermost annuli  
     outputImage[np.where(distances == circRadius)] = 600
-    scipy.misc.bytescale(np.log(outputImage), cmin=80, cmax=600, high=255, low=0)
+    scipy.misc.bytescale(outputImage, cmin=None, cmax=None, high=255, low=0)
     scipy.misc.imsave('img/'+CALIFA_ID+'.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
@@ -468,7 +469,7 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
  
-  output = Photometry.calculateGrowthCurve(listFile, dataDir, 0)
+  output = Photometry.calculateGrowthCurve(listFile, dataDir, 160)
 
   '''
     for i in range(56, 200):

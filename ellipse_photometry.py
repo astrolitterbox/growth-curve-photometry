@@ -22,7 +22,7 @@ import ellipse
 import db
 import getTSFieldParameters
 import plotGrowthCurve		
-
+from math import isnan
 
 
 class GalaxyParameters:
@@ -94,7 +94,7 @@ class Astrometry():
     return centerCoords
   @staticmethod
   def getPixelCoords(listFile, ID, dataDir):
-    print ID, 'ID'
+    
     WCS=astWCS.WCS(GalaxyParameters.getFilledUrl(listFile, dataDir, ID))
     centerCoords = Astrometry.getCenterCoords(listFile, ID)
     print 'centerCoords', centerCoords
@@ -176,18 +176,25 @@ class Photometry():
   
   @staticmethod
   def getSkyGradient(start, end, center, inputImage, pa, ba, skyMean):
-       print start, end, 'start and end'
+
        #inputIndices = utils.createIndexArray(inputImage.shape)
        #take means of (2n - 1) elliptical annuli as input fluxes for gradient search
+       
+       gradientRingWidth = 13
+       if start >= end:
+	 start = end
+	 end = end - gradientRingWidth	  
        startFlux = 0
        startNpix = 0
        endFlux = 0
-       endNpix = 0
-       gradientRingWidth = 13
+       endNpix = 0       
+       
+       print start, end, 'start and end'   
+       
+       
+       
        for i in range(0, gradientRingWidth):
-#	    	print 'i', i
-		#TODO: fix this so that galaxies near the edges are processed consistently
-	    	#
+#	    	#
 	    	
 	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
 	    	
@@ -354,10 +361,10 @@ class Photometry():
     pa = db.dbUtils.getFromDB('PA', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
 #    print 'pa', pa
     ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    r_mag = db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    r_e = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    lucy_re = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0]#parsing tuples
-    l_SkyMean = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0] - 1000#parsing tuples
+    #r_mag = db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
+    #r_e = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
+    #lucy_re = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0]#parsing tuples
+    #l_SkyMean = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0] - 1000#parsing tuples
  #   print 'ba', ba
     
     #fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba)
@@ -367,19 +374,25 @@ class Photometry():
     print 'isoA', isoA -1
 
     start = isoA-3 + 50
+
+    oldSky =  skyMean
+    
     end = Photometry.findClosestEdge(distances, center)
-    
-    print 'old sky mean', skyMean
-    
-    skyErr = 1 #init
-    while skyErr > 0.1*skySD:
-    	skyErr = Photometry.getSkyGradient(start, end, center, inputImage, pa, ba, skyMean)
-    	skyMean -= skyErr
- 	print skyMean, 'skyMean'    
+    if end < Photometry.iso25D:
+      skyMean = oldSky
+    else:      
+      skyErr = 1 #init
+      while skyErr > 0.1*skySD:
+	  skyErr = Photometry.getSkyGradient(start, end, center, inputImage, pa, ba, skyMean)
+	  skyMean -= skyErr
+	  print skyMean, 'skyMean'    
 
    
-    print 'old sky mean', skyMean, 'building the GC with new skyMean', skyMean   	
+    #print 'old sky mean', skyMean, 'building the GC with new skyMean', skyMean   	
   
+    if  math.isnan(skyMean):
+      output = ['unable to get the sky value', GalaxyParameters.getSDSSUrl(listFile, dataDir, i), GalaxyParameters.getFilledUrl(listFile, dataDir, i)]
+      return output
     
     #print 'start HLR debug...'
     #print fluxData[:,-1], 'cumulativeFlux'
@@ -410,18 +423,19 @@ class Photometry():
     elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)[0]][0][0]
     plotGrowthCurve.plotGrowthCurve(fluxData)
 
-    # ------------------------------------- writing output csv
-    output = CALIFA_ID, elMag, elHLR, circMag, circHLR
-    f = open('gc_photometry.csv','aw')
-    w = csv.writer(f, delimiter=',')
-    w.writerow([CALIFA_ID, elMag, elHLR, circMag, circHLR, r_mag, r_e, lucy_re, skyMean, l_SkyMean])
-    f.close()
+    
     
     # --------------------- writing output fits file with both outermost annuli  
-    outputImage[np.where(distances == circRadius)] = 1000
-    hdu = pyfits.PrimaryHDU(outputImage)
-    outputName = 'CALIFA'+CALIFA_ID+'.fits'
-    hdu.writeto(outputName) 
+    #outputImage[np.where(distances == circRadius)] = 1000
+    #hdu = pyfits.PrimaryHDU(outputImage)
+    #outputName = 'CALIFA'+CALIFA_ID+'.fits'
+    #hdu.writeto(outputName) 
+    
+    
+    # ------------------------------------- formatting output row
+    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
+    return output
+    
     
     
     
@@ -450,13 +464,23 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
-  i = 0
  
-  for i in range(0, 6):
-    Photometry.calculateGrowthCurve(listFile, dataDir, i)
-  #hdu = pyfits.PrimaryHDU(img)
-  #hdu.writeto('CALIFA_'+CALIFA_ID+'.fits')
+ 
 
+ 
+  for i in range(56, 200):
+    try:
+     print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+     print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+     print i, 'a'
+     output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+     utils.writeOut(output)
+    except IOError as err:
+     print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
+     output = [str(i+1), 'File not found', err]
+     utils.writeOut(output)
+     pass
+  
 if __name__ == "__main__":
   main()
 

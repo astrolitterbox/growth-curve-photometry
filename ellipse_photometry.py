@@ -23,7 +23,7 @@ import db
 import getTSFieldParameters
 import plotGrowthCurve		
 from math import isnan
-
+import scipy.misc 
 
 class GalaxyParameters:
   @staticmethod
@@ -220,7 +220,7 @@ class Photometry():
       distance = 1
       Npix=1
       fluxData = np.empty((np.max(distances), 4))
-      limitCriterion = 0.05*skySD
+      limitCriterion = 0.01*skySD
       #while abs(growthSlope) > 0.01*skySD:
       #while distance < 120:
       while Photometry.checkLimitCriterion(fluxData, distance-1, limitCriterion) != 1:
@@ -270,7 +270,7 @@ class Photometry():
 #	    print 'skySD', skySD
 #	    print sky_rms, 'sky rms'
 	    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
-	    limitCriterion = 0.05*skySD
+	    limitCriterion = 0.01*skySD
 	    #while abs(growthSlope) > 1*skySD*Npix:
 	    #while abs(growthSlope) > 0.01*skySD:
 	    #while isoA < 120:  
@@ -324,7 +324,7 @@ class Photometry():
 	      isoA = isoA +1
 	    fluxData = fluxData[0:isoA-2,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
 	    
-	    outputImage[currentPixels] = 1000
+	    outputImage[currentPixels] = 600
    
 	    return (fluxData, outputImage) 
   
@@ -421,12 +421,15 @@ class Photometry():
     totalFlux = fluxData[fluxData.shape[0]-1, 1]   
     elMag = Photometry.calculateFlux(totalFlux, listFile, i)
     elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)[0]][0][0]
-    plotGrowthCurve.plotGrowthCurve(fluxData)
+    plotGrowthCurve.plotGrowthCurve(fluxData, CALIFA_ID)
 
     
     
-    # --------------------- writing output fits file with both outermost annuli  
-    #outputImage[np.where(distances == circRadius)] = 1000
+    # --------------------- writing output jpg file with both outermost annuli  
+    outputImage[np.where(distances == circRadius)] = 600
+    scipy.misc.bytescale(np.log(outputImage), cmin=80, cmax=600, high=255, low=0)
+    scipy.misc.imsave('img/'+CALIFA_ID+'.jpg', outputImage)
+
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
     #hdu.writeto(outputName) 
@@ -465,22 +468,22 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
  
- 
+  output = Photometry.calculateGrowthCurve(listFile, dataDir, 0)
 
- 
-  for i in range(56, 200):
-    try:
-     print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-     print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
-     print i, 'a'
-     output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-     utils.writeOut(output)
-    except IOError as err:
-     print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
-     output = [str(i+1), 'File not found', err]
-     utils.writeOut(output)
-     pass
-  
+  '''
+    for i in range(56, 200):
+      try:
+      print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+      print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+      print i, 'a'
+      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+      utils.writeOut(output)
+      except IOError as err:
+      print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
+      output = [str(i+1), 'File not found', err]
+      utils.writeOut(output)
+      pass
+  ''' 
 if __name__ == "__main__":
   main()
 

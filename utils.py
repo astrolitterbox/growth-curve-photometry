@@ -6,6 +6,12 @@ import scipy
 import itertools
 
 
+def writeOut(output):
+   f = open('gc_photometry.csv','aw')
+   w = csv.writer(f, delimiter=',')
+   w.writerow(output)
+   f.close()
+
 def getSlope(y1, y2, x1, x2):
 	#print  (abs(y2 - y1)/abs(x2 - x1)), 'slope', y1, y2, x1, x2
   	return (abs(y2 - y1)/abs(x2 - x1))

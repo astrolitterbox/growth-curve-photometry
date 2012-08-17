@@ -8,7 +8,13 @@ import numpy as np
 #import db
 import matplotlib.pyplot as plt
 import matplotlib.font_manager
- 
+import numpy as np
+
+
+
+x1,x2,n,m,b = 0.,300.,1000,1.,0.
+x = np.r_[x1:x2:n*1j]  
+
 
 class PlotTitles:
     def __init__(self, title, xlabel, ylabel):
@@ -24,11 +30,11 @@ class GraphData:
         self.legend = legend
 
 class Plots:
-    imgDir = './img/'        
+    imgDir = './img/analysis/'        
     def plotLogHist(self, graphDataList, filename, plotTitles, bins, *args):
       bins=10**np.arange(*bins)     
       s = plt.figure()
-      ax = s.add_subplot(111)
+      ax = s.add_subplot(111)      
       try:
         args[0]
       except IndexError:
@@ -77,10 +83,12 @@ class Plots:
       else:  
           v = list(args[0])
           ax.axis(v)
+
       prop = matplotlib.font_manager.FontProperties(size=8)     
       for gd in graphDataList:
           p1 = ax.plot(gd.data[0], gd.data[1], '.', markersize=10, color=gd.colour, mec=gd.colour, alpha = 0.9) 
           plt.legend([p1[0]], gd.legend,  loc=0, markerscale=1, fancybox=True, labelspacing = 0.2, prop=prop, shadow=True)
+      plt.plot(x, m*x + b, color='r', alpha = 0.6)
       plt.title(plotTitles.title)
       plt.xlabel = plotTitles.xlabel
       plt.ylabel = plotTitles.ylabel

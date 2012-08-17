@@ -92,13 +92,13 @@ class Interpolation():
       maskFile = pyfits.open(maskFilename)
       mask = maskFile[0].data
       if rot != 0:
-	imageData = Interpolation.rotateYourOwl(imageData, 3)
-	mask = Interpolation.rotateYourOwl(mask, 3)
+	imageData = Interpolation.rotateYourOwl(imageData, rot)
+	mask = Interpolation.rotateYourOwl(mask, rot)
 
       maskedImg = np.ma.array(imageData, mask = mask)
       NANMask =  maskedImg.filled(np.NaN)
       filled = inpaint.replace_nans(NANMask, 100, 0.1, 2, 'idw')
-      filled = Interpolation.rotateYourOwl(filled, 1)
+      filled = Interpolation.rotateYourOwl(filled, 4-rot)
       hdu = pyfits.PrimaryHDU(filled, header = head)
       hdu.writeto(dataDir+'/filled/'+outputFilename)
     return log
@@ -137,10 +137,10 @@ def main():
   #  print 'i', i
   #  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
-  Interpolation.runInpainting(maskFile, listFile, dataDir, 8, 1, log)
+  Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   
   
-  #  print GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+  #print GalaxyParameters.getSDSSUrl(listFile, dataDir, 815)
   #np.savetxt('errorlog.txt', log)  
   #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)

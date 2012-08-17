@@ -55,6 +55,15 @@ def removeLimits(array, inputShape):
   print gc
   return array[gc]
 '''
+
+
+
+def getPixelEllipseLength(isoA, axisRatio):
+  length = len(draw_ellipse((2000, 2000), 1000, 1000, 0, isoA, axisRatio)[0])
+  print length, 'LLLLLLLLLLLLLLLLLLLLLLLL', get_ellipse_circumference(isoA, axisRatio)
+  return length
+
+
 def get_ellipse_circumference(isoA, axisRatio):
   #Ramanujan's second approximation
   a = isoA
@@ -69,9 +78,10 @@ def draw_ellipse(inputShape, y0, x0, pa, isoA, axisRatio):
 	#print isoA, axisRatio, 'a, axisRatio'
 	nPoints = get_ellipse_circumference(isoA, axisRatio)
 	#passing an index array for edge clipping as the first argument
-	return rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,nPoints))
-
-
+	
+	#print nPoints*2, 'npoints /////////////////////////////////////////////////////////'
+	#print len(rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,nPoints*2))[0])
+	return rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,nPoints*2))
 
 def rejectDuplicates(ellipseCoords):
   #taking care of the duplicate indices: 
@@ -100,7 +110,7 @@ def main():
   
   
   
-  
+  getPixelEllipseLength(150, 0.9)
 
   
   #print X, 'a'

@@ -15,6 +15,7 @@ import inpaint
 from astLib import astWCS
 import numpy as np
 import sdss_photo_check as sdss
+import img_scale
 import plot_survey as plot
 #import photometry as phot
 import readAtlas
@@ -220,7 +221,7 @@ class Photometry():
       distance = 1
       Npix=1
       fluxData = np.empty((np.max(distances), 4))
-      limitCriterion = 0.01*skySD
+      limitCriterion = 0.012*skySD
       #while abs(growthSlope) > 0.01*skySD:
       #while distance < 120:
       while Photometry.checkLimitCriterion(fluxData, distance-1, limitCriterion) != 1:
@@ -270,7 +271,7 @@ class Photometry():
 #	    print 'skySD', skySD
 #	    print sky_rms, 'sky rms'
 	    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
-	    limitCriterion = 0.01*skySD
+	    limitCriterion = 0.012*skySD
 	    #while abs(growthSlope) > 1*skySD*Npix:
 	    #while abs(growthSlope) > 0.01*skySD:
 	    #while isoA < 120:  
@@ -323,10 +324,17 @@ class Photometry():
 	      #print fluxData[isoA, 2], 'cum flux pp'
 	      isoA = isoA +1
 	    fluxData = fluxData[0:isoA-2,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
+	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0]
+	    print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
+	    # --------------------------------------- writing an ellipse of counted points, testing only
+	    #elliptical mask f
 	    
-	    outputImage[currentPixels] = 600
+	    #hdu = pyfits.PrimaryHDU(ellipseMask)
+	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
+    
+	    outputImage[currentPixels] = 300
    
-	    return (fluxData, outputImage) 
+	    return (flux, fluxData, outputImage) 
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion):
@@ -417,8 +425,10 @@ class Photometry():
 
     # --------------------------------------- starting ellipse GC photometry
     print 'ELLIPTICAL APERTURE'
-    fluxData, outputImage = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
-    totalFlux = fluxData[fluxData.shape[0]-1, 1]   
+    flux, fluxData, outputImage = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
+    totalFlux = flux
+    otherFlux = fluxData[fluxData.shape[0]-1, 1]   
+    print 't', totalFlux, 'o', otherFlux
     elMag = Photometry.calculateFlux(totalFlux, listFile, i)
     elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]
     #print 'ELLL?', fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)[0]][0][0], '\n', fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]
@@ -427,14 +437,17 @@ class Photometry():
     
     
     # --------------------- writing output jpg file with both outermost annuli  
-    outputImage[np.where(distances == circRadius)] = 600
+    outputImage[np.where(distances == circRadius)] = 300
+    outputImage = np.log(outputImage)
     scipy.misc.bytescale(outputImage, cmin=None, cmax=None, high=255, low=0)
-    scipy.misc.imsave('img/'+CALIFA_ID+'.jpg', outputImage)
+    
+    scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
     #hdu.writeto(outputName) 
     
+
     
     # ------------------------------------- formatting output row
     output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
@@ -443,10 +456,6 @@ class Photometry():
     
     
     
-    #elliptical mask for total magnitude
-    #hdu = pyfits.PrimaryHDU(ellipseMask)
-
-    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
     #inputImage[halfLightRadius] = 1000
     
 
@@ -469,22 +478,23 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 938
  
-  output = Photometry.calculateGrowthCurve(listFile, dataDir, 160)
+  #output = Photometry.calculateGrowthCurve(listFile, dataDir, 2)
 
-  '''
-    for i in range(56, 200):
-      try:
+  
+  
+  for i in range(88, 100):
+    try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
       print i, 'a'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
       utils.writeOut(output)
-      except IOError as err:
+    except IOError as err:
       print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
       output = [str(i+1), 'File not found', err]
       utils.writeOut(output)
       pass
-  ''' 
+   
 if __name__ == "__main__":
   main()
 

@@ -15,7 +15,7 @@ import inpaint
 from astLib import astWCS
 import numpy as np
 import sdss_photo_check as sdss
-import img_scale
+import imtools
 import plot_survey as plot
 #import photometry as phot
 import readAtlas
@@ -356,7 +356,8 @@ class Photometry():
   def calculateGrowthCurve(listFile, dataDir, i):
     CALIFA_ID = str(i+1)
     inputImage = Photometry.getInputFile(listFile, dataDir, i)
-    dbDir = '../db/'
+#    dbDir = '../db/'
+    dbDir = ''	
 #    print 'i', i
     center = Photometry.getCenter(listFile, i, dataDir)
     distances = Photometry.createDistanceArray(listFile, i, dataDir)
@@ -410,7 +411,7 @@ class Photometry():
     
     
     
-   
+
     
     # --------------------------------------- starting GC photometry in circular annuli
     print 'CIRCULAR APERTURE'
@@ -437,11 +438,13 @@ class Photometry():
     
     
     # --------------------- writing output jpg file with both outermost annuli  
+        
     outputImage[np.where(distances == circRadius)] = 300
-    outputImage = np.log(outputImage)
-    scipy.misc.bytescale(outputImage, cmin=None, cmax=None, high=255, low=0)
+    outputImage = inputImage
+    outputImage, cdf = imtools.histeq(outputImage)
     
-    scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)
+    #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
+    scipy.misc.imsave('img/output/'+CALIFA_ID+'_imsave.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -482,7 +485,7 @@ def main():
 
   
   
-  for i in range(88, 100):
+  for i in range(0, 5):
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)

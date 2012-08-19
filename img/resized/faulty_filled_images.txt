@@ -1,0 +1,168 @@
+check fits:
+
+9 #bad mask? second bright object
+20 #bad mask? second bright object
+
+38 #bad mask? second bright object
+40 #bad mask? second bright object
+44 #bad mask? second bright object
+
+50 #bad mask? second bright object
+52 #bad mask? second bright object
+
+66 #distorted
+73 #bad mask? second bright object
+108
+137
+143
+148
+157
+171
+174
+176
+186
+197
+223
+227
+241 ???
+248
+
+248 -- 249 ??? overlap?
+163-164 ??? overlap?
+253
+281
+294
+299
+306
+312
+355 ?? distorted?
+357
+366
+389 ?? bad sky?
+390
+410
+417 -- bad mask?
+429 -- why dark?
+436
+444-445 -- overlap?
+453 -- bad sky?
+464 -- 463
+466
+472
+475-476
+479-480
+486-487
+497-498
+510- 511 #bright object, overlap?
+536-537
+545 #galaxy not in image?
+563
+568
+569-570
+597-598
+633-634
+646
+649
+667 -- massively masked, is the galaxy ok?
+671 -- galaxy not totally within image?
+682
+689 -- black?
+696 -- galaxy not totally w/in image?
+760 -- -- galaxy not totally w/in image?
+762
+766-767
+794 -- unmasked?
+806 -- galaxy doesn't fit into image, distorted
+816 -- unmasked?
+827 -- black
+831
+880
+887 -- unmasked?
+890 -- other objects?
+931 -- other galaxy?
+936 -- other galaxy?
+
+badly distorted:
+
+78
+64 #bad mask? second bright object, distorted
+46 #bad mask? second bright object, distorted 
+22 ##bad mask? second bright object, distorted galaxy
+123
+135
+170
+202 #sky crept into the galaxy
+244
+289
+314
+426
+434
+437
+460
+514
+520
+552
+558
+587
+600
+654
+680
+686
+715
+751
+795
+796
+801
+812
+819
+870
+873
+882-883 -- overlap?
+894
+897
+
+
+bad masks:
+104 #overflow
+120 
+138
+225
+283
+237
+257
+331
+335
+379
+532
+535
+541
+566
+579
+592
+662
+684
+707
+736
+753
+789
+791
+809
+822
+851
+853
+876
+892
+898
+902
+908
+911
+917
+928
+930
+
+
+#the MICE: NGC4676_mask_r.fits #unmasked 577
+#fpC-004649-r6-0063.fit.gz -- 939 ^ the MICE
+
+NGC5947, 938, fpC-003180-r1-0170.fit.gz
+

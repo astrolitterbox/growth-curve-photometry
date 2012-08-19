@@ -467,8 +467,8 @@ class Photometry():
 def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
-  dataDir = '../data'
-  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  #dataDir = '../data'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
 #  dataDir = '../data/'
   fitsdir = dataDir+'SDSS'
@@ -481,9 +481,10 @@ def main():
   noOfGalaxies = 938
  
   #output = Photometry.calculateGrowthCurve(listFile, dataDir, 2)
-
+  for i in range(937, 938):
+  	print 	GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
   
-  
+  exit()
   for i in range(0, 938):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)

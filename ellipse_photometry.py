@@ -356,9 +356,8 @@ class Photometry():
   def calculateGrowthCurve(listFile, dataDir, i):
     CALIFA_ID = str(i+1)
     inputImage = Photometry.getInputFile(listFile, dataDir, i)
-#    dbDir = '../db/'
-    dbDir = ''	
-#    print 'i', i
+    dbDir = '../db/'
+
     center = Photometry.getCenter(listFile, i, dataDir)
     distances = Photometry.createDistanceArray(listFile, i, dataDir)
     #hdu = pyfits.PrimaryHDU(distances)
@@ -468,10 +467,10 @@ class Photometry():
 def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
-  
-#  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  dataDir = '../data'
+  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
-  dataDir = '../data/'
+#  dataDir = '../data/'
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
@@ -485,18 +484,25 @@ def main():
 
   
   
-  for i in range(0, 5):
+  for i in range(0, 938):
     try:
-      print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+      #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+      plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
       print i, 'a'
-      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output)
+      #output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+      #utils.writeOut(output)
     except IOError as err:
       print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
       output = [str(i+1), 'File not found', err]
-      utils.writeOut(output)
+      #utils.writeOut(output)
       pass
+
+def plotFilled(inputImage, i):
+    CALIFA_ID = str(i+1)
+    outputImage = inputImage
+    outputImage, cdf = imtools.histeq(outputImage)
+    scipy.misc.imsave('img/output/filled/'+CALIFA_ID+'_imsave.jpg', outputImage)
    
 if __name__ == "__main__":
   main()

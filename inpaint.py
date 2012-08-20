@@ -196,19 +196,27 @@ by ``x`` and ``y``
     
     
 #get the number of non-NaN neighbours
-def makeNeighbourArray(inputArray, mask):
+def makeNeighbourArray(inputArray):
 	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]
 	tree = scipy.spatial.KDTree(zip(y.ravel(), x.ravel()))
 	neighbourArray = -1*np.ones((inputArray.shape)) 
 
 	for i, x in np.ndenumerate(inputArray):
-		if mask[i] == True:
+		if np.isnan(x) == True:
 			#print i, mask[i]
 #			print inputArray[tree.data[0]]
 			pts = np.array(([i]))
 			distances, ind = tree.query(pts, k = 5, p =1)
+
 			neighbours = distances[np.where(distances == 1)]
-			print np.isfinit(inputArray[tree.data[ind]]), 'ind'			
+			ind = ind[np.where(distances == 1)]
+			for i in range(0, ind.shape[0]):			
+				print inputArray[tree.data[ind][i][0], tree.data[ind][i][1]], 'ia'
+				
+			#print ind, 'ind'
+			
+			print tree.data[ind][0][0], 'ind'			
+			
 			#print NoOfNeighbours
 			#print ind, 'ind'
 			neighbourArray[i] = neighbours
@@ -217,16 +225,16 @@ def makeNeighbourArray(inputArray, mask):
 def main():
 		
 
-	b = np.array([[0.2, 0.22, 33, 12], [0, 0 ,0, 33], [0.2,4, 0.22, 45]])
+	b = np.array([[0.2, 0.22, 33, 12], [0, np.nan,np.nan, 33], [0.2,4, 0.22, 45]])
 	
 
 	#print y.ravel(), x.ravel()
 	#exit()
 	#print tree.data
-	mask = np.array([[False, False, False, False], [False, True ,False, False], [False,False, False, False]])
-	inputArray = np.ma.array(b, mask=mask)
+	#mask = np.array([[False, False, False, False], [False, True ,False, False], [False,False, False, False]])
+	inputArray = b
 	print inputArray
-	makeNeighbourArray(inputArray, mask)		
+	makeNeighbourArray(inputArray)		
 	
 	exit()
 

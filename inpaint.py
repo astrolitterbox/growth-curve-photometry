@@ -208,7 +208,7 @@ def makeNeighbourArray(inputArray, mask):
 			pts = np.array(([i]))
 			distances, ind = tree.query(pts, k = 5, p =1)
 			neighbours = distances[np.where(distances == 1)]
-			print inputArray[tree.data[ind]], 'ind'			
+			print np.isfinit(inputArray[tree.data[ind]]), 'ind'			
 			#print NoOfNeighbours
 			#print ind, 'ind'
 			neighbourArray[i] = neighbours

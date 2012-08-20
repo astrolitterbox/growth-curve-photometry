@@ -197,46 +197,55 @@ by ``x`` and ``y``
     
 #get the number of non-NaN neighbours
 def makeNeighbourArray(inputArray):
+	kernSize = 2
+	kernel = utils.gauss_kern(kernSize)
+	print kernel
 	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]
 	tree = scipy.spatial.KDTree(zip(y.ravel(), x.ravel()))
-	neighbourArray = -1*np.ones((inputArray.shape)) 
+	neighbourArray = -1*np.ones((inputArray.shape), dtype = int) 
 
 	for i, x in np.ndenumerate(inputArray):
 		if np.isnan(x) == True:
 			#print i, mask[i]
-#			print inputArray[tree.data[0]]
+			#print inputArray[tree.data[0]]
 			pts = np.array(([i]))
 			distances, ind = tree.query(pts, k = 5, p =1)
-
 			neighbours = distances[np.where(distances == 1)]
-			ind = ind[np.where(distances == 1)]
-			for i in range(0, ind.shape[0]):			
-				print inputArray[tree.data[ind][i][0], tree.data[ind][i][1]], 'ia'
+			noOfNeighbours = len(neighbours)
+			indices = ind[np.where(distances == 1)]
+			for j in range(0, indices.shape[0]):			
+				if np.isnan(inputArray[tree.data[indices][j][0], tree.data[indices][j][1]]):
+					#print 'nan'
+					noOfNeighbours-=1
+			#print ind, 'ind'
+			neighbourArray[i] = noOfNeighbours
+	
+	maxNeighbours = np.max(neighbourArray)
+	print maxNeighbours, 'mn', '***********************************'
+	while np.max(neighbourArray) == maxNeighbours:
+			currentPixels = np.where(neighbourArray == maxNeighbours)
+			print currentPixels[0].shape, 'sha'
+			for ind, x in np.ndenumerate(inputArray[currentPixels]):
+				distances, indices = tree.query(pts, k = 25, p = 2)
 				
-			#print ind, 'ind'
-			
-			print tree.data[ind][0][0], 'ind'			
-			
-			#print NoOfNeighbours
-			#print ind, 'ind'
-			neighbourArray[i] = neighbours
-	return neighbourArray
-
+				indices = indices[np.where((distances <= 2))][1:]
+				distances = distances[np.where((distances <= 2))][1:]
+				pixelVal = 0 #value of the pixel being interpolated over
+				nPixUsed = 0 #effective number of pixels used
+				for j in range(0, indices.shape[0]):
+					print distances[j], j
+					pixelVal+= inputArray[tree.data[indices][j][0], tree.data[indices][j][1]]*(2 - distances[j])
+					print 'pixVal+', inputArray[tree.data[indices][j][0], tree.data[indices][j][1]], 'weight', (2 - distances[j])
+					nPixUsed+= (2 - distances[j])
+				print pixelVal, nPixUsed, 'out'
+				exit()	
 def main():
-		
-
-	b = np.array([[0.2, 0.22, 33, 12], [0, np.nan,np.nan, 33], [0.2,4, 0.22, 45]])
-	
-
-	#print y.ravel(), x.ravel()
-	#exit()
-	#print tree.data
-	#mask = np.array([[False, False, False, False], [False, True ,False, False], [False,False, False, False]])
+	b = np.array([[np.nan, 0.22, 33, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,4, 0.22, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
 	inputArray = b
-	print inputArray
-	makeNeighbourArray(inputArray)		
+	neighbourArray = makeNeighbourArray(inputArray)		
+
+	#print np.max(neighbourArray)
 	
-	exit()
 
 if __name__ == "__main__":
   main()	

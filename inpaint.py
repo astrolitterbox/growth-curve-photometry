@@ -12,6 +12,8 @@ import utils
 #cimport numpy as np
 #cimport cython
 
+import scipy.spatial
+
 DTYPEf = np.float64
 #ctypedef np.float64_t DTYPEf_t
 
@@ -81,10 +83,10 @@ a copy of the input array, where NaN elements have been replaced.
         raise ValueError( 'method not valid. Should be one of `localmean` or idw.')
     
     # fill new array with input elements
-    for i in range(array.shape[0]):
-        for j in range(array.shape[1]):
-            filled[i,j] = array[i,j]
-
+    #for i in range(array.shape[0]):
+    #    for j in range(array.shape[1]):
+    #        filled[i,j] = array[i,j]
+    filled = array	 #why loop through the array?
     # make several passes
     # until we reach convergence
     for it in range(max_iter):
@@ -193,5 +195,40 @@ by ``x`` and ``y``
     return r
     
     
-#cdef extern from "math.h":
- #   double sin(double)
+#get the number of non-NaN neighbours
+def makeNeighbourArray(inputArray, mask):
+	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]
+	tree = scipy.spatial.KDTree(zip(y.ravel(), x.ravel()))
+	neighbourArray = -1*np.ones((inputArray.shape)) 
+
+	for i, x in np.ndenumerate(inputArray):
+		if mask[i] == True:
+			#print i, mask[i]
+#			print inputArray[tree.data[0]]
+			pts = np.array(([i]))
+			distances, ind = tree.query(pts, k = 5, p =1)
+			neighbours = distances[np.where(distances == 1)]
+			print inputArray[tree.data[ind]], 'ind'			
+			#print NoOfNeighbours
+			#print ind, 'ind'
+			neighbourArray[i] = neighbours
+	return neighbourArray
+
+def main():
+		
+
+	b = np.array([[0.2, 0.22, 33, 12], [0, 0 ,0, 33], [0.2,4, 0.22, 45]])
+	
+
+	#print y.ravel(), x.ravel()
+	#exit()
+	#print tree.data
+	mask = np.array([[False, False, False, False], [False, True ,False, False], [False,False, False, False]])
+	inputArray = np.ma.array(b, mask=mask)
+	print inputArray
+	makeNeighbourArray(inputArray, mask)		
+	
+	exit()
+
+if __name__ == "__main__":
+  main()	

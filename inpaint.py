@@ -11,7 +11,7 @@ import numpy as np
 import utils
 #cimport numpy as np
 #cimport cython
-
+import pyfits
 import scipy.spatial
 
 DTYPEf = np.float64
@@ -197,19 +197,15 @@ by ``x`` and ``y``
     
 #get the number of non-NaN neighbours
 def makeNeighbourArray(inputArray):
-	kernSize = 2
-	kernel = utils.gauss_kern(kernSize)
-	print kernel
 	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]
 	tree = scipy.spatial.KDTree(zip(y.ravel(), x.ravel()))
 	neighbourArray = -1*np.ones((inputArray.shape), dtype = int) 
-
 	for i, x in np.ndenumerate(inputArray):
 		if np.isnan(x) == True:
 			#print i, mask[i]
 			#print inputArray[tree.data[0]]
 			pts = np.array(([i]))
-			distances, ind = tree.query(pts, k = 5, p =1)
+			distances, ind = tree.query(pts, k = 5, p = 1) #Manhattan distances
 			neighbours = distances[np.where(distances == 1)]
 			noOfNeighbours = len(neighbours)
 			indices = ind[np.where(distances == 1)]
@@ -219,33 +215,68 @@ def makeNeighbourArray(inputArray):
 					noOfNeighbours-=1
 			#print ind, 'ind'
 			neighbourArray[i] = noOfNeighbours
-	
-	maxNeighbours = np.max(neighbourArray)
-	print maxNeighbours, 'mn', '***********************************'
-	while np.max(neighbourArray) == maxNeighbours:
-			currentPixels = np.where(neighbourArray == maxNeighbours)
-			print currentPixels[0].shape, 'sha'
-			for ind, x in np.ndenumerate(inputArray[currentPixels]):
-				distances, indices = tree.query(pts, k = 25, p = 2)
-				
-				indices = indices[np.where((distances <= 2))][1:]
-				distances = distances[np.where((distances <= 2))][1:]
+	return neighbourArray 
+			
+def fill(inputArray, neighbourArray):
+	maxNeighbours = np.max(neighbourArray)	
+	kernSize = 2
+	kernel = utils.gauss_kern(kernSize)
+	#print kernel
+	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]
+	tree = scipy.spatial.KDTree(zip(y.ravel(), x.ravel()))
+	for ind, x in np.ndenumerate(inputArray): 		
+			if neighbourArray[ind] == maxNeighbours:
+				#print ind, 'ind', x, 'mn'
+				pts = np.array(([ind]))
+				distances, indices = tree.query(pts, k = 25, p = 2)			
+				print distances, len(distances[0])
+				indices = indices[np.where((distances <= np.sqrt(8)))][1:]				
+				distances = distances[np.where((distances <= np.sqrt(8)))][1:]
+				#print distances, 'DDD'
 				pixelVal = 0 #value of the pixel being interpolated over
 				nPixUsed = 0 #effective number of pixels used
-				for j in range(0, indices.shape[0]):
-					print distances[j], j
-					pixelVal+= inputArray[tree.data[indices][j][0], tree.data[indices][j][1]]*(2 - distances[j])
-					print 'pixVal+', inputArray[tree.data[indices][j][0], tree.data[indices][j][1]], 'weight', (2 - distances[j])
-					nPixUsed+= (2 - distances[j])
-				print pixelVal, nPixUsed, 'out'
-				exit()	
+				print len(indices), len(distances)
+				print kernel
+				for j in range(0, len(indices)-1):
+					print distances[j], j, 'jth distance, j'
+					if distances[j] == 0:
+						weight = kernel[2, 2]
+					elif distances[j] == 1:
+						weight = kernel[2, 1]
+					elif distances[j] == np.sqrt(2):
+						weight = kernel[1, 1]
+					elif distances[j] == 2:
+						weight = kernel[2, 0]
+					elif distances[j] == np.sqrt(5):
+						weight = kernel[1, 0]
+					elif distances[j] == np.sqrt(8):
+						weight = kernel[0, 0]
+					else:
+						print 'wtf?', distances[j]
+					if np.isfinite(inputArray[tree.data[indices][j][0], tree.data[indices][j][1]]):				
+						pixelVal+= inputArray[tree.data[indices][j][0], tree.data[indices][j][1]]*weight
+						print pixelVal, 'pixval'
+						nPixUsed+= weight
+				inputArray[ind] = pixelVal/nPixUsed
+				print inputArray[ind], pixelVal, nPixUsed				
+	return inputArray		
+
+				
 def main():
-	b = np.array([[np.nan, 0.22, 33, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,4, 0.22, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
-	inputArray = b
-	neighbourArray = makeNeighbourArray(inputArray)		
-
-	#print np.max(neighbourArray)
-	
-
+	b = np.array([[2, 0.22, np.nan, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, np.nan, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
+	image = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
+	mask = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/MASKS/UGC00005_mask_r.fits')[0].data
+      	inputArray = np.ma.array(image, mask = mask)
+	inputArray = inputArray.filled(np.NaN)
+      	print 'masked'
+	neighbourArray = makeNeighbourArray(inputArray)	
+	maxNeighbours = np.max(neighbourArray)
+	print maxNeighbours, 'maxneighbours'
+	while np.max(neighbourArray) > 0:
+		c = fill(inputArray, neighbourArray)
+		print c
+		neighbourArray = makeNeighbourArray(c)
+     	hdu = pyfits.PrimaryHDU(c, header = head)
+      	hdu.writeto('filled.fits')
 if __name__ == "__main__":
   main()	

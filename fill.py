@@ -63,7 +63,17 @@ class GalaxyParameters:
      print NedName
      maskFile = dataDir+'/MASKS/'+NedName+'_mask_r.fits'
      return maskFile
+  @staticmethod
+  def getNedName(listFile, simpleFile, ID):
+    ret = GalaxyParameters()
+    with open(simpleFile, 'rb') as f:
+      NEDNAME_col = 2
+      mycsv = csv.reader(f)
+      mycsv = list(mycsv)	
+      ret.NedName = string.strip(mycsv[ID][NEDNAME_col])
+    return ret
   
+
   
   
 #class Inpaint():  
@@ -137,10 +147,11 @@ def main():
   #  print 'i', i
   #  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
-  Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
+  #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   
   
-  #print GalaxyParameters.getSDSSUrl(listFile, dataDir, 815)
+  print GalaxyParameters.getSDSSUrl(listFile, dataDir, 1)
+  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 1)
   #np.savetxt('errorlog.txt', log)  
   #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)

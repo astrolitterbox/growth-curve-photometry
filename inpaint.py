@@ -203,11 +203,11 @@ def makeNeighbourArray(inputArray, tree):
 			#print i, mask[i]
 			#print inputArray[tree.data[0]]
 			pts = np.array(([i]))
-			print 'before querying the tree'
+			#print 'before querying the tree'
 			distances, ind = tree.query(pts, k = 5, p = 1) #Manhattan distances
 			neighbours = distances[np.where(distances == 1)]
 			noOfNeighbours = len(neighbours)
-			print 'got neighbours'
+			#print 'got neighbours'
 			indices = ind[np.where(distances == 1)]
 			for j in range(0, indices.shape[0]):			
 				if np.isnan(inputArray[tree.data[indices][j][0], tree.data[indices][j][1]]):
@@ -215,6 +215,7 @@ def makeNeighbourArray(inputArray, tree):
 					noOfNeighbours-=1
 			#print ind, 'ind'
 			neighbourArray[i] = noOfNeighbours
+			print 'neighbour array done'
 	return neighbourArray 
 			
 def fill(inputArray, neighbourArray, tree):
@@ -227,7 +228,8 @@ def fill(inputArray, neighbourArray, tree):
 			if neighbourArray[ind] == maxNeighbours:
 				print ind, 'ind', x, 'mn'
 				pts = np.array(([ind]))
-				distances, indices = tree.query(pts, k = 25, p = 2)			
+				distances, indices = tree.query(pts, k = 25, p = 2)
+				print 'kalbinam medį vidurį ciklo'			
 				print distances, len(distances[0])
 				indices = indices[np.where((distances <= np.sqrt(8)))][1:]				
 				distances = distances[np.where((distances <= np.sqrt(8)))][1:]
@@ -258,26 +260,44 @@ def fill(inputArray, neighbourArray, tree):
 						nPixUsed+= weight
 				inputArray[ind] = pixelVal/nPixUsed
 				print inputArray[ind], pixelVal, nPixUsed				
-	return inputArray		
-
-				
+				try:
+					neighbourArray[ind[0]-1, ind[1]]-= 1
+				except IndexError:
+					pass
+				try:
+					neighbourArray[ind[0], ind[1] - 1]-= 1
+				except IndexError:
+					pass
+				try:	
+					neighbourArray[ind[0]+1, ind[1]]-= 1
+				except IndexError:
+					pass
+				try:	
+					neighbourArray[ind[0], ind[1]+1]-= 1
+				except IndexError:
+					pass
+	return inputArray, neighbourArray
+																	
 def main():
 	b = np.array([[2, 0.22, np.nan, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, np.nan, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
 	image = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
 	mask = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/MASKS/UGC00005_mask_r.fits')[0].data
-      	inputArray = np.ma.array(image, mask = mask)
+        inputArray = np.ma.array(image, mask = mask)
 	inputArray = inputArray.filled(np.NaN)
 	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]
 	tree = scipy.spatial.KDTree(zip(y.ravel(), x.ravel()))
-      	print 'tree formed'
+	print 'tree formed', tree.data
+#      	c = np.array([3, 1, 3, 4, 5, 2])
+ #     	print tree.query(c, k = 5, p = 1), 'tk'
+
 	neighbourArray = makeNeighbourArray(inputArray, tree)	
 	maxNeighbours = np.max(neighbourArray)
 	print maxNeighbours, 'maxneighbours'
 	while np.max(neighbourArray) > 0:
-		c = fill(inputArray, neighbourArray, tree)
+		c, neighbourArray = fill(inputArray, neighbourArray, tree)
 		print c
-		neighbourArray = makeNeighbourArray(c, tree)
-     	hdu = pyfits.PrimaryHDU(c, header = head)
-      	hdu.writeto('filled2.fits')
+		
+     	#hdu = pyfits.PrimaryHDU(c, header = head)
+      	#hdu.writeto('filled2.fits')
 if __name__ == "__main__":
   main()	

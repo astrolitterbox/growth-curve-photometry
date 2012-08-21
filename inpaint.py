@@ -194,36 +194,34 @@ by ``x`` and ``y``
                             r[I,J] = r[I,J] + image[i,j] * np.sin( pi*(i-x[I,J]) )*np.sin( pi*(j-y[I,J]) )/( pi*pi*(i-x[I,J])*(j-y[I,J]))
     return r
     
-def neighbors(x, y):
-    return np.array([(x-1, y), (x, y-1), (x+1, y), (x, y+1)])
+def neighbors(inputArray, y, x):
+	shape = inputArray.shape
+	out = []		
+	if ((y - 1) >= 0):
+		if np.isfinite(inputArray[y-1, x]): 
+			out.append((y - 1, x))
+	if ((x - 1) >= 0):
+		if np.isfinite(inputArray[y, x -1]): 
+			out.append((y, x - 1))
+	if ((y + 1) < shape[0]):
+		if np.isfinite(inputArray[y+1, x]): 
+			out.append((y+1, x))
+	if ((x + 1) < shape[1]): 
+		if np.isfinite(inputArray[y, x +1]): 
+			out.append((y, x + 1))		
+	return np.array(len(out))
     
     
     
 #get the number of non-NaN neighbours
 def makeNeighbourArray(inputArray):
-	neighbourArray = -1*np.ones((inputArray.shape))
-	print np.where(np.isnan(inputArray))[0].shape[0]
-	neighbourArray[np.where(np.isnan(inputArray))] = 1
-	ind =  (np.where(np.isnan(inputArray))[0], np.where(np.isnan(inputArray))[1])
-	print ind[0], ind[1]
-	neighbourArray[ind] = 0
-	#check all four indices:
-	print np.where(np.isfinite(inputArray[[ind[0]-1], [ind[1]]]))
+	print inputArray.shape
+	ind = zip(*np.where(np.isnan(inputArray)))
+	neighb = np.concatenate([neighbors(inputArray, *i) for i in ind])
 
 
-	neighbourArray[np.where(np.isfinite(inputArray[ind[0]-1, ind[1]]))] = 3
-	
 	exit()
-		
-	if (((ind[1] - 1) >= 0) & np.isfinite(inputArray[ind[0], ind[1] - 1])): 
-		neighbourArray[ind]+= 1
-	if (((ind[0] + 1) < (inputArray.shape[0] - 1)) & np.isfinite(inputArray[ind[0]+1, ind[1]])): 
-		neighbourArray[ind]+= 1
-	if (((ind[1] + 1) < (inputArray.shape[1] - 1)) & np.isfinite(inputArray[ind[0], ind[1]+1])): 
-		neighbourArray[ind]+= 1
-	print 'neighbourArray complete'			
-	return neighbourArray
-		
+
 		
 def fill(inputArray, neighbourArray):
 	maxNeighbours = np.max(neighbourArray)

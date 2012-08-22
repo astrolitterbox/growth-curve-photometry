@@ -215,25 +215,33 @@ def fill(inputArray, neighbourArray):
 	  inputArray[i] = getWeightedAvg(inputArray, i[0], i[1])
 
 	return inputArray	
-														
-def main():
-	#inputArray = np.array([[2, 0.22, 6, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
-	image = pyfits.open('../data/SDSS/fpC-004517-r5-0107.fit.gz')[0].data - 1000 #soft bias
-	#head = pyfits.open('/work2/simona/data/SDSS/fpC-001035-r1-0149.fit.gz')[0].header
-	mask = pyfits.open('../data/MASKS/UGC04416_mask_r.fits')[0].data
-        inputArray = np.ma.array(image, mask = mask)
-	inputArray = inputArray.filled(np.NaN)
 
+
+def replace_nans(inputArray):
 	neighbourArray = -1*np.ones((inputArray.shape), dtype = int)
 	neighbourArray = makeNeighbourArray(inputArray)
-	
-	print np.max(neighbourArray), 'maxneighbours'
 	while (len(np.where(np.isnan(inputArray))[0]) > 0):
 		inputArray = fill(inputArray, neighbourArray)
 		neighbourArray = makeNeighbourArray(inputArray)
 		print np.max(neighbourArray), 'max'
-		#print inputArray	
-     	hdu = pyfits.PrimaryHDU(inputArray)
-      	hdu.writeto('filled_201.fits')
-if __name__ == "__main__":
-  main()	
+	return inputArray
+
+
+
+
+
+
+#def main():
+	#inputArray = np.array([[2, 0.22, 6, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
+#	image = pyfits.open('../data/SDSS/fpC-004517-r5-0107.fit.gz')[0].data - 1000 #soft bias
+#	head = pyfits.open('/work2/simona/data/SDSS/fpC-004517-r5-0107.fit.gz')[0].header
+#	mask = pyfits.open('../data/MASKS/UGC04416_mask_r.fits')[0].data
+#        inputArray = np.ma.array(image, mask = mask)
+#	inputArray = inputArray.filled(np.NaN)
+#
+#	neighbourArray = -1*np.ones((inputArray.shape), dtype = int)
+#	neighbourArray = makeNeighbourArray(inputArray)
+#	
+#	print np.max(neighbourArray), 'maxneighbours'
+#if __name__ == "__main__":
+#  main()	

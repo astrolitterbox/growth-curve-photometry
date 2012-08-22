@@ -85,13 +85,13 @@ class Interpolation():
     return np.rot90(inputArray, n)
   
   @staticmethod
-  def runInpainting(maskFile, listFile, dataDir, ID, rot, log):
+  def runInpainting(maskFile, listFile, dataDir, ID, log):
     maskFilename = utils.getMask(maskFile, ID)
     sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
     outputFilename = utils.createOutputFilename(sdssFilename)
     print 'output filename', outputFilename
     try:
-      with open(dataDir+'/filled/'+outputFilename) as f: pass
+      with open(dataDir+'/filled2/'+outputFilename) as f: pass
       print 'skipping', ID
     except IOError as e:
       print 'inpainting', ID
@@ -101,17 +101,12 @@ class Interpolation():
       head = sdssImage[0].header
       maskFile = pyfits.open(maskFilename)
       mask = maskFile[0].data
-      if rot != 0:
-	imageData = Interpolation.rotateYourOwl(imageData, rot)
-	mask = Interpolation.rotateYourOwl(mask, rot)
-
       maskedImg = np.ma.array(imageData, mask = mask)
       NANMask =  maskedImg.filled(np.NaN)
-      filled = inpaint.replace_nans(NANMask, 100, 0.1, 2, 'idw')
-      filled = Interpolation.rotateYourOwl(filled, 4-rot)
-      hdu = pyfits.PrimaryHDU(filled, header = head)
-      hdu.writeto(dataDir+'/filled/'+outputFilename)
-    return log
+      filled = inpaint.replace_nans(NANMask)
+      hdu = pyfits.PrimaryHDU(filled)
+      hdu.writeto(dataDir+'/filled2/'+outputFilename)
+      return log
     
     
 
@@ -139,19 +134,14 @@ def main():
   #print Astrometry.getCenterCoords(listFile, 0)
   
   log = []
-  #for i in range(766, 938):  
-  #  print i, 'galaxy'
-  
-  
-  #for i in range(780, 938):
-  #  print 'i', i
-  #  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
+  for i in range(0, 938):  
+      Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   
   
-  print GalaxyParameters.getSDSSUrl(listFile, dataDir, 201)
-  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 201)
+  #print GalaxyParameters.getSDSSUrl(listFile, dataDir, 201)
+  #print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 201)
   #np.savetxt('errorlog.txt', log)  
   #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)

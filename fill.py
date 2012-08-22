@@ -13,7 +13,7 @@ import numpy as np
 import sdss_photo_check as sdss
 import plot_survey as plot
 #import photometry as phot
-from sgolay2d import sgolay2d
+
 import readAtlas
 #import circle
 import db

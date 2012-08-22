@@ -27,7 +27,7 @@ check fits:
 241 ???
 248
 
-248 -- 249 ??? overlap?
+248 -- 249 ??? overlap? -- close galaxies, OK
 163-164 ??? overlap?
 253
 281
@@ -42,7 +42,7 @@ check fits:
 390
 410
 417 -- bad mask?
-429 -- why dark?
+429 -- why dark? OK
 436
 444-445 -- overlap?
 453 -- bad sky?
@@ -123,9 +123,9 @@ badly distorted:
 
 
 bad masks:
-104 #overflow
-120 
-138
+104 #overflow OK?
+120 OK?
+138 OK?
 225
 283
 237

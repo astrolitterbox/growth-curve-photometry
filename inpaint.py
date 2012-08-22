@@ -387,7 +387,7 @@ def getWeightedAvg(inputArray, y, x):
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
-		print pixVal/weightSum
+
 		return pixVal/weightSum
 		
 	  
@@ -399,8 +399,8 @@ def fill(inputArray, neighbourArray):
 
 	
 	ind = zip(*np.where(neighbourArray == maxNeighbours))
-	np.random.shuffle(ind)
-	print len(np.where(neighbourArray == maxNeighbours)[0]), 'nans left out of', len(np.where(np.isnan(inputArray))[0])
+
+	print 'working on',  len(np.where(neighbourArray == maxNeighbours)[0]), 'nan pixels out of', len(np.where(np.isnan(inputArray))[0]),' left'
 	for i in ind:
 	  inputArray[i] = getWeightedAvg(inputArray, i[0], i[1])
 
@@ -408,9 +408,9 @@ def fill(inputArray, neighbourArray):
 														
 def main():
 	#inputArray = np.array([[2, 0.22, 6, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
-	image = pyfits.open('/work2/simona/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
+	image = pyfits.open('/work2/simona/data/SDSS/fpC-005071-r4-0085.fit.gz')[0].data - 1000 #soft bias
 	#head = pyfits.open('/work2/simona/data/SDSS/fpC-001035-r1-0149.fit.gz')[0].header
-	mask = pyfits.open('/work2/simona/data/MASKS/UGC00005_mask_r.fits')[0].data
+	mask = pyfits.open('/work2/simona/data/MASKS/NGC2596_mask_r.fits')[0].data
         inputArray = np.ma.array(image, mask = mask)
 	inputArray = inputArray.filled(np.NaN)
 
@@ -424,6 +424,6 @@ def main():
 		print np.max(neighbourArray), 'max'
 		#print inputArray	
      	hdu = pyfits.PrimaryHDU(inputArray)
-      	hdu.writeto('filled_1.fits')
+      	hdu.writeto('filled_202.fits')
 if __name__ == "__main__":
   main()	

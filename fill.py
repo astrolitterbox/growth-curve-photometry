@@ -150,8 +150,8 @@ def main():
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   
   
-  print GalaxyParameters.getSDSSUrl(listFile, dataDir, 1)
-  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 1)
+  print GalaxyParameters.getSDSSUrl(listFile, dataDir, 202)
+  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 202)
   #np.savetxt('errorlog.txt', log)  
   #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)

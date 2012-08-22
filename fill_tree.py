@@ -263,8 +263,8 @@ def fill(inputArray, neighbourArray, tree):
 				
 def main():
 	b = np.array([[2, 0.22, np.nan, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, np.nan, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
-	image = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
-	mask = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/MASKS/UGC00005_mask_r.fits')[0].data
+	image = pyfits.open('/work2/simona/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
+	mask = pyfits.open('/work2/simona/data/MASKS/UGC00005_mask_r.fits')[0].data
       	inputArray = np.ma.array(image, mask = mask)
 	inputArray = inputArray.filled(np.NaN)
 	y, x = np.mgrid[0:inputArray.shape[0], 0:inputArray.shape[1]]

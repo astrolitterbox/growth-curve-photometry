@@ -194,7 +194,7 @@ by ``x`` and ``y``
                             r[I,J] = r[I,J] + image[i,j] * np.sin( pi*(i-x[I,J]) )*np.sin( pi*(j-y[I,J]) )/( pi*pi*(i-x[I,J])*(j-y[I,J]))
     return r
     
-def neighbors(inputArray, y, x):
+def neighbours(y, x, inputArray):
 	shape = inputArray.shape
 	out = []		
 	if ((y - 1) >= 0):
@@ -208,79 +208,77 @@ def neighbors(inputArray, y, x):
 			out.append((y+1, x))
 	if ((x + 1) < shape[1]): 
 		if np.isfinite(inputArray[y, x +1]): 
-			out.append((y, x + 1))		
-	return np.array(len(out))
+			out.append((y, x + 1))
+	#print len(out)		
+	return len(out)
     
     
     
 #get the number of non-NaN neighbours
 def makeNeighbourArray(inputArray):
-	print inputArray.shape
+	neighbourArray = -1*np.ones((inputArray.shape))
+	#print inputArray.shape
 	ind = zip(*np.where(np.isnan(inputArray)))
-	neighb = np.concatenate([neighbors(inputArray, *i) for i in ind])
+	#neighb = np.concatenate([neighbors(*i) for i in ind])
+	for i in ind:
+	  #print i
+	  neighbourArray[i] = neighbours(i[0], i[1], inputArray)
+	#neighbourArray[i] = neighbours(inputArray, *i) for i in ind
+	return neighbourArray
 
-
-	exit()
-
-		
-def fill(inputArray, neighbourArray):
-	maxNeighbours = np.max(neighbourArray)
-	print maxNeighbours
-	kernSize = 2
-	kernel = utils.gauss_kern(kernSize)	
-	for i in range(0, np.where(neighbourArray == maxNeighbours)[0].shape[0]): #looping through all pixels with maximum number of neighbours
-		ind =  (np.where(neighbourArray == maxNeighbours)[0][i], np.where(neighbourArray == maxNeighbours)[1][i])		
+def getWeightedAvg(inputArray, y, x):
+		kernSize = 2
+		kernel = utils.gauss_kern(kernSize)	  
 		pixVal = 0 #initialising, pixel value for inpainting
-		print i
 		weightSum = 0 #initialising, value for later normalisation
 		#4 adjacent pixels at dist 2 with weight = kernel[2, 0]
 		try:	
-			if np.isfinite(inputArray[ind[0]-2, ind[1]]):
-				pixVal+= inputArray[ind[0]-2, ind[1]] * kernel[2, 0]
+			if np.isfinite(inputArray[y-2, x]):
+				pixVal+= inputArray[y-2, x] * kernel[2, 0]
 				weightSum+= kernel[2, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+2, ind[1]]):
-				pixVal+= inputArray[ind[0]+2, ind[1]] * kernel[2, 0]
+			if np.isfinite(inputArray[y+2, x]):
+				pixVal+= inputArray[y+2, x] * kernel[2, 0]
 				weightSum+= kernel[2, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0], ind[1]+2]):
-				pixVal+= inputArray[ind[0], ind[1]+2] * kernel[2, 0]
+			if np.isfinite(inputArray[y, x+2]):
+				pixVal+= inputArray[y, x+2] * kernel[2, 0]
 				weightSum+= kernel[2, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0], ind[1]-2]):
-				pixVal+= inputArray[ind[0], ind[1]-2] * kernel[2, 0]
+			if np.isfinite(inputArray[y, x-2]):
+				pixVal+= inputArray[y, x-2] * kernel[2, 0]
 				weightSum+= kernel[2, 0]
 		except IndexError:
 			pass
 
 		#4 adjacent pixels at dist 1 with weight = kernel[2, 1]
 		try:	
-			if np.isfinite(inputArray[ind[0]-1, ind[1]]):
-				pixVal+= inputArray[ind[0]-1, ind[1]] * kernel[2, 1]
+			if np.isfinite(inputArray[y-1, x]):
+				pixVal+= inputArray[y-1, x] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+1, ind[1]]):
-				pixVal+= inputArray[ind[0]+1, ind[1]] * kernel[2, 1]
+			if np.isfinite(inputArray[y+1, x]):
+				pixVal+= inputArray[y+1, x] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0], ind[1]+1]):
-				pixVal+= inputArray[ind[0], ind[1]+1] * kernel[2, 1]
+			if np.isfinite(inputArray[y, x+1]):
+				pixVal+= inputArray[y, x+1] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0], ind[1]-1]):
-				pixVal+= inputArray[ind[0], ind[1]-1] * kernel[2, 1]
+			if np.isfinite(inputArray[y, x-1]):
+				pixVal+= inputArray[y, x-1] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
 		except IndexError:
 			pass
@@ -288,52 +286,52 @@ def fill(inputArray, neighbourArray):
 		#4 diagonal pixels with weight = kernel[1, 1]
 
 		try:	
-			if np.isfinite(inputArray[ind[0]-1, ind[1]-1]):
-				pixVal+= inputArray[ind[0]-1, ind[1]-1] * kernel[1, 1]
+			if np.isfinite(inputArray[y-1, x-1]):
+				pixVal+= inputArray[y-1, x-1] * kernel[1, 1]
 				weightSum+= kernel[1, 1]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+1, ind[1]-1]):
-				pixVal+= inputArray[ind[0]+1, ind[1]-1] * kernel[1, 1]
+			if np.isfinite(inputArray[y+1, x-1]):
+				pixVal+= inputArray[y+1, x-1] * kernel[1, 1]
 				weightSum+= kernel[1, 1]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+1, ind[1]+1]):
-				pixVal+= inputArray[ind[0]+1, ind[1]+1] * kernel[1, 1]
+			if np.isfinite(inputArray[y+1, x+1]):
+				pixVal+= inputArray[y+1, x+1] * kernel[1, 1]
 				weightSum+= kernel[1, 1]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]-1, ind[1]+1]):
-				pixVal+= inputArray[ind[0]-1, ind[1]+1] * kernel[1, 1]
+			if np.isfinite(inputArray[y-1, x+1]):
+				pixVal+= inputArray[y-1, x+1] * kernel[1, 1]
 				weightSum+= kernel[1, 1]
 		except IndexError:
 			pass
 
 		#4 diagonal pixels with weight = kernel[0, 0]	
 		try:	
-			if np.isfinite(inputArray[ind[0]-2, ind[1]-2]):
-				pixVal+= inputArray[ind[0]-2, ind[1]-2] * kernel[0, 0]
+			if np.isfinite(inputArray[y-2, x-2]):
+				pixVal+= inputArray[y-2, x-2] * kernel[0, 0]
 				weightSum+= kernel[0, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+2, ind[1]-2]):
-				pixVal+= inputArray[ind[0]+2, ind[1]-2] * kernel[0, 0]
+			if np.isfinite(inputArray[y+2, x-2]):
+				pixVal+= inputArray[y+2, x-2] * kernel[0, 0]
 				weightSum+= kernel[0, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+2, ind[1]+2]):
-				pixVal+= inputArray[ind[0]+2, ind[1]+2] * kernel[0, 0]
+			if np.isfinite(inputArray[y+2, x+2]):
+				pixVal+= inputArray[y+2, x+2] * kernel[0, 0]
 				weightSum+= kernel[0, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]-2, ind[1]+2]):
-				pixVal+= inputArray[ind[0]-2, ind[1]+2] * kernel[0, 0]
+			if np.isfinite(inputArray[y-2, x+2]):
+				pixVal+= inputArray[y-2, x+2] * kernel[0, 0]
 				weightSum+= kernel[0, 0]
 		except IndexError:
 			pass
@@ -341,63 +339,78 @@ def fill(inputArray, neighbourArray):
 		
 		#8 adjacent pixels with weight = kernel[1, 0]		
 		try:	
-			if np.isfinite(inputArray[ind[0]-2, ind[1]-1]):
-				pixVal+= inputArray[ind[0]-2, ind[1]-1] * kernel[1, 0]
+			if np.isfinite(inputArray[y-2, x-1]):
+				pixVal+= inputArray[y-2, x-1] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+2, ind[1]-1]):
-				pixVal+= inputArray[ind[0]+2, ind[1]-1] * kernel[1, 0]
+			if np.isfinite(inputArray[y+2, x-1]):
+				pixVal+= inputArray[y+2, x-1] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+2, ind[1]+1]):
-				pixVal+= inputArray[ind[0]+2, ind[1]+1] * kernel[1, 0]
+			if np.isfinite(inputArray[y+2, x+1]):
+				pixVal+= inputArray[y+2, x+1] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]-2, ind[1]+1]):
-				pixVal+= inputArray[ind[0]-2, ind[1]+1] * kernel[1, 0]
+			if np.isfinite(inputArray[y-2, x+1]):
+				pixVal+= inputArray[y-2, x+1] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		# -- just swapping 2 and 1 in y, x:
 		try:	
-			if np.isfinite(inputArray[ind[0]-1, ind[1]-2]):
-				pixVal+= inputArray[ind[0]-1, ind[1]-2] * kernel[1, 0]
+			if np.isfinite(inputArray[y-1, x-2]):
+				pixVal+= inputArray[y-1, x-2] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+1, ind[1]-2]):
-				pixVal+= inputArray[ind[0]+1, ind[1]-2] * kernel[1, 0]
+			if np.isfinite(inputArray[y+1, x-2]):
+				pixVal+= inputArray[y+1, x-2] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]+1, ind[1]+2]):
-				pixVal+= inputArray[ind[0]+1, ind[1]+2] * kernel[1, 0]
+			if np.isfinite(inputArray[y+1, x+2]):
+				pixVal+= inputArray[y+1, x+2] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
 		try:	
-			if np.isfinite(inputArray[ind[0]-1, ind[1]+2]):
-				pixVal+= inputArray[ind[0]-1, ind[1]+2] * kernel[1, 0]
+			if np.isfinite(inputArray[y-1, x+2]):
+				pixVal+= inputArray[y-1, x+2] * kernel[1, 0]
 				weightSum+= kernel[1, 0]
 		except IndexError:
 			pass
-			
-		inputArray[ind] = pixVal/weightSum
-#		print inputArray
-	return inputArray, makeNeighbourArray(inputArray)	
+		print pixVal/weightSum
+		return pixVal/weightSum
+		
+	  
+
+		
+def fill(inputArray, neighbourArray):
+	maxNeighbours = np.max(neighbourArray)
+	
+
+	
+	ind = zip(*np.where(neighbourArray == maxNeighbours))
+	np.random.shuffle(ind)
+	print len(np.where(neighbourArray == maxNeighbours)[0]), 'nans left out of', len(np.where(np.isnan(inputArray))[0])
+	for i in ind:
+	  inputArray[i] = getWeightedAvg(inputArray, i[0], i[1])
+
+	return inputArray	
 														
 def main():
 	#inputArray = np.array([[2, 0.22, 6, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
-	image = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
-	mask = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/MASKS/UGC00005_mask_r.fits')[0].data
+	image = pyfits.open('/work2/simona/data/SDSS/fpC-006371-r6-0151.fit.gz')[0].data - 1000 #soft bias
+	#head = pyfits.open('/work2/simona/data/SDSS/fpC-001035-r1-0149.fit.gz')[0].header
+	mask = pyfits.open('/work2/simona/data/MASKS/UGC00005_mask_r.fits')[0].data
         inputArray = np.ma.array(image, mask = mask)
 	inputArray = inputArray.filled(np.NaN)
 
@@ -405,10 +418,12 @@ def main():
 	neighbourArray = makeNeighbourArray(inputArray)
 	
 	print np.max(neighbourArray), 'maxneighbours'
-	while np.max(neighbourArray) > 0:
-		inputArray, neighbourArray = fill(inputArray, neighbourArray)
-		print inputArray	
-     	hdu = pyfits.PrimaryHDU(inputArray, header = head)
-      	hdu.writeto('filled_a.fits')
+	while (len(np.where(np.isnan(inputArray))[0]) > 0):
+		inputArray = fill(inputArray, neighbourArray)
+		neighbourArray = makeNeighbourArray(inputArray)
+		print np.max(neighbourArray), 'max'
+		#print inputArray	
+     	hdu = pyfits.PrimaryHDU(inputArray)
+      	hdu.writeto('filled_1.fits')
 if __name__ == "__main__":
   main()	

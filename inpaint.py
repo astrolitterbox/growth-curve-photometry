@@ -3,38 +3,25 @@ import numpy as np
 import utils
 import pyfits
 
-    
-def neighbours(y, x, inputArray):
-	shape = inputArray.shape
-	out = []		
-	if ((y - 1) >= 0):
-		if np.isfinite(inputArray[y-1, x]): 
-			out.append((y - 1, x))
-	if ((x - 1) >= 0):
-		if np.isfinite(inputArray[y, x -1]): 
-			out.append((y, x - 1))
-	if ((y + 1) < shape[0]):
-		if np.isfinite(inputArray[y+1, x]): 
-			out.append((y+1, x))
-	if ((x + 1) < shape[1]): 
-		if np.isfinite(inputArray[y, x +1]): 
-			out.append((y, x + 1))
-	#print len(out)		
-	return len(out)
-    
-    
-    
 #get the number of non-NaN neighbours
 def makeNeighbourArray(inputArray):
-	neighbourArray = -1*np.ones((inputArray.shape))
-	#print inputArray.shape
-	ind = zip(*np.where(np.isnan(inputArray)))
-	#neighb = np.concatenate([neighbors(*i) for i in ind])
-	for i in ind:
-	  #print i
-	  neighbourArray[i] = neighbours(i[0], i[1], inputArray)
-	#neighbourArray[i] = neighbours(inputArray, *i) for i in ind
-	return neighbourArray
+	neighbourArray = -1* np.ones((inputArray.shape))
+	nans = np.zeros((neighbourArray.shape), dtype=bool)
+	nans[np.where(np.isnan(inputArray))] = 1
+	neighbourArray[np.where(np.isnan(inputArray))] = 0
+	for shift in (-1, 1):
+		for axis in (0, 1):
+			nans_shifted = np.roll(nans, shift=shift, axis = axis)
+		        idx=~nans_shifted * nans
+			neighbourArray[idx] = neighbourArray[idx]+1
+	#since we don't care about negative neighbourArray values anyway:
+	neighbourArray[0, :] = neighbourArray[0, :] - 1
+	neighbourArray[-1, :] = neighbourArray[-1, :] - 1
+	neighbourArray[:, 0] = neighbourArray[:, 0] - 1
+	neighbourArray[:, -1] = neighbourArray[:, -1] - 1
+	print 'na ready'
+	return neighbourArray	
+
 
 def getWeightedAvg(inputArray, y, x):
 		kernSize = 2

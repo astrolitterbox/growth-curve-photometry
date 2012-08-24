@@ -56,7 +56,7 @@ class GalaxyParameters:
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
      sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
-     return '../data/filled/'+utils.createOutputFilename(sdssFilename)
+     return dataDir+'/filled2/'+utils.createOutputFilename(sdssFilename)
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
      NedName = GalaxyParameters.getNedName(listFile, simpleFile, ID).NedName
@@ -86,9 +86,9 @@ class Interpolation():
   
   @staticmethod
   def runInpainting(maskFile, listFile, dataDir, ID, log):
-    maskFilename = utils.getMask(maskFile, ID)
+    maskFilename = dataDir+utils.getMask(maskFile, ID)
     sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
-    outputFilename = utils.createOutputFilename(sdssFilename)
+    outputFilename = utils.createOutputFilename(sdssFilename, dataDir)
     print 'output filename', outputFilename
     try:
       with open(dataDir+'/filled2/'+outputFilename) as f: pass
@@ -112,13 +112,14 @@ class Interpolation():
 
 def main():
   iso25D = 40 / 0.396
-  listFile = '../data/SDSS_photo_match.csv'
-  fitsDir = '../data/SDSS/'
-  dataDir = '../data'
-  outputFile = '../data/growthCurvePhotometry.csv'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data/'
+  outputFile = dataDir+'/growthCurvePhotometry.csv'
+  listFile = dataDir+'/SDSS_photo_match.csv'
+  fitsDir = dataDir+'/SDSS/'
+
   imgDir = 'img/'
-  simpleFile = '../data/CALIFA_mother_simple.csv'
-  maskFile = '../data/maskFilenames.csv'
+  simpleFile = dataDir+'/CALIFA_mother_simple.csv'
+  maskFile = dataDir+'/maskFilenames.csv'
   #noOfGalaxies = 938
   #i = 0
   #inputFile = Photometry.getInputFile(listFile, dataDir, i)
@@ -134,7 +135,7 @@ def main():
   #print Astrometry.getCenterCoords(listFile, 0)
   
   log = []
-  for i in range(0, 938):  
+  for i in range(505, 515):  
       Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)

@@ -75,7 +75,7 @@ def tostring(val, nmin=None, nmax=None):
     return vstr        
 
 def checkFilenames(noOfGalaxies, listFile, dataDir, simpleFile):
-  with open('../data/maskFilenames.csv', 'wb') as f:
+  with open(dataDir+'/maskFilenames.csv', 'wb') as f:
     writer = csv.writer(f)
     maskFilenames = []
     for i in range(0, noOfGalaxies):
@@ -100,8 +100,8 @@ def getMask(maskFile, ID):
      fname = string.strip(mycsv[ID][1])
    return fname  
    
-def createOutputFilename(sdssFilename):
-  sdssFilename = sdssFilename.lstrip('../data/SDSS/')
+def createOutputFilename(sdssFilename, dataDir):
+  sdssFilename = sdssFilename.lstrip(dataDir+'/SDSS/')
   outputFilename = sdssFilename[:-3]+'s'
   return outputFilename
   

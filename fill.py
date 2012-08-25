@@ -135,7 +135,7 @@ def main():
   #print Astrometry.getCenterCoords(listFile, 0)
   
   log = []
-  for i in range(505, 515):  
+  for i in range(515, 545):  
       Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)

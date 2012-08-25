@@ -94,9 +94,8 @@ class Astrometry():
     centerCoords = (GalaxyParameters.SDSS(listFile, ID).ra, GalaxyParameters.SDSS(listFile, ID).dec)
     return centerCoords
   @staticmethod
-  def getPixelCoords(listFile, ID, dataDir):
-    
-    WCS=astWCS.WCS(GalaxyParameters.getFilledUrl(listFile, dataDir, ID))
+  def getPixelCoords(listFile, ID, dataDir):   
+    WCS=astWCS.WCS(GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)) #changed -- was filledUrl. I don't write coords to my masks..
     centerCoords = Astrometry.getCenterCoords(listFile, ID)
     print 'centerCoords', centerCoords
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
@@ -468,9 +467,8 @@ def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
   #dataDir = '../data'
-  dataDir = '../data'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
-#  dataDir = '../data/'
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
@@ -480,7 +478,7 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 939
  
-  for i in range(0, 500):
+  for i in range(0, 600):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
@@ -488,7 +486,7 @@ def main():
       print i, 'a'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
       utils.writeOut(output)
-      #plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
+      plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
     except IOError as err:
       print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
       output = [str(i+1), 'File not found', err]

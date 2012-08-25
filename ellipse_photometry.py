@@ -466,8 +466,8 @@ class Photometry():
 def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
-  #dataDir = '../data'
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  dataDir = '../data'
+  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'

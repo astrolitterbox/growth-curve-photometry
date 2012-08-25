@@ -60,7 +60,7 @@ def removeLimits(array, inputShape):
 
 def getPixelEllipseLength(isoA, axisRatio):
   length = len(draw_ellipse((2000, 2000), 1000, 1000, 0, isoA, axisRatio)[0])
-  print length, 'LLLLLLLLLLLLLLLLLLLLLLLL', get_ellipse_circumference(isoA, axisRatio)
+  #print length, 'LLLLLLLLLLLLLLLLLLLLLLLL', get_ellipse_circumference(isoA, axisRatio)
   return length
 
 
@@ -90,7 +90,7 @@ def rejectDuplicates(ellipseCoords):
   
   u, indices = np.unique(ellipseCoords, return_index=True)
   
-  print ellipseCoords.shape[0] - ellipseCoords[indices].shape[0], 'Duplicate points rejected'
+  #print ellipseCoords.shape[0] - ellipseCoords[indices].shape[0], 'Duplicate points rejected'
   
   
   ellipseCoords = ellipseCoords[indices]

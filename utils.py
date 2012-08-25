@@ -7,7 +7,7 @@ import itertools
 
 
 def writeOut(output):
-   f = open('gc_photometry.csv','aw')
+   f = open('gc2.csv','aw')
    w = csv.writer(f, delimiter=',')
    w.writerow(output)
    f.close()

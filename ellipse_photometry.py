@@ -65,7 +65,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/filled/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      fpCFile = dataDir+'/filled2/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -221,7 +221,7 @@ class Photometry():
       distance = 1
       Npix=1
       fluxData = np.empty((np.max(distances), 4))
-      limitCriterion = 0.012*skySD
+      limitCriterion = 0.01*skySD
       #while abs(growthSlope) > 0.01*skySD:
       #while distance < 120:
       while Photometry.checkLimitCriterion(fluxData, distance-1, limitCriterion) != 1:
@@ -271,7 +271,7 @@ class Photometry():
 #	    print 'skySD', skySD
 #	    print sky_rms, 'sky rms'
 	    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
-	    limitCriterion = 0.012*skySD
+	    limitCriterion = 0.01*skySD
 	    #while abs(growthSlope) > 1*skySD*Npix:
 	    #while abs(growthSlope) > 0.01*skySD:
 	    #while isoA < 120:  
@@ -443,7 +443,7 @@ class Photometry():
     outputImage, cdf = imtools.histeq(outputImage)
     
     #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave('img/output/'+CALIFA_ID+'_imsave.jpg', outputImage)
+    scipy.misc.imsave('img/snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -468,7 +468,7 @@ def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
   #dataDir = '../data'
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  dataDir = '../data'
 
 #  dataDir = '../data/'
   fitsdir = dataDir+'SDSS'
@@ -478,32 +478,28 @@ def main():
   imgDir = 'img/'
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
-  noOfGalaxies = 938
+  noOfGalaxies = 939
  
-  #output = Photometry.calculateGrowthCurve(listFile, dataDir, 2)
-  for i in range(937, 938):
-  	print 	GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-  
-  exit()
-  for i in range(0, 938):
+  for i in range(0, 500):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
-      plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
+
       print i, 'a'
-      #output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      #utils.writeOut(output)
+      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+      utils.writeOut(output)
+      #plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
     except IOError as err:
       print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
       output = [str(i+1), 'File not found', err]
-      #utils.writeOut(output)
+      utils.writeOut(output)
       pass
 
 def plotFilled(inputImage, i):
     CALIFA_ID = str(i+1)
     outputImage = inputImage
     outputImage, cdf = imtools.histeq(outputImage)
-    scipy.misc.imsave('img/output/filled/'+CALIFA_ID+'_imsave.jpg', outputImage)
+    scipy.misc.imsave('img/output/filled2/'+CALIFA_ID+'_image.jpg', outputImage)
    
 if __name__ == "__main__":
   main()

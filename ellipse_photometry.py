@@ -183,29 +183,30 @@ class Photometry():
        gradientRingWidth = 13
        if start >= end:
 	 start = end
+	 print 'narrow gradient'
 	 end = end - gradientRingWidth	  
        startFlux = 0
        startNpix = 0
        endFlux = 0
        endNpix = 0       
        
-       print start, end, 'start and end'   
-       
-       
-       
+       print start, end, 'start and end', skyMean, 'skyMean'   
+
        for i in range(0, gradientRingWidth):
-#	    	#
+		elStart = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]
+	    	startFlux += np.sum(elStart) - elStart.shape[0]*skyMean	    	   		    	
+	    	startNpix += elStart.shape[0]#ellipse.get_ellipse_circumference(start-i, ba)  #*skyMean -- WHY?	   
+	    	elEnd = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]
 	    	
-	    	startFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]) - inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)].shape[0]*skyMean
-	    	
-	    	
-	    	startNpix += ellipse.get_ellipse_circumference(start-i, ba)*skyMean
-	    	endFlux += np.sum(inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]) - ellipse.get_ellipse_circumference(end-i, ba)*skyMean
-	    	endNpix += ellipse.get_ellipse_circumference(end-i, ba)*skyMean
+	    	endFlux += np.sum(elEnd) - elEnd.shape[0]*skyMean
+	    	endNpix += elEnd.shape[0]  #*skyMean -- WHY?
+       
        startFlux = startFlux/startNpix
        endFlux = endFlux/endNpix
-       ringLength = ellipse.get_ellipse_circumference(end-(gradientRingWidth - 1)/2, ba) 
-       gradient = utils.getSlope(startFlux, endFlux, start, end)
+       print startFlux, 'startFlux', endFlux, 'endFlux'
+       #ringLength = ellipse.get_ellipse_circumference(end-(gradientRingWidth - 1)/2, ba) 
+       #gradient = utils.getSlope(startFlux, endFlux+startFlux, start, end)
+       gradient = (endFlux-startFlux)/(end-start)
        #skyErr = (startFlux - endFlux)/(gradientRingWidth*ringLength)
        print gradient, 'gradient'#, skyErr, 'mean flux difference per pixel'
        return gradient  #skyErr
@@ -270,7 +271,7 @@ class Photometry():
 #	    print 'skySD', skySD
 #	    print sky_rms, 'sky rms'
 	    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
-	    limitCriterion = 0.01*skySD
+	    limitCriterion = 0.001*skySD
 	    #while abs(growthSlope) > 1*skySD*Npix:
 	    #while abs(growthSlope) > 0.01*skySD:
 	    #while isoA < 120:  
@@ -298,9 +299,9 @@ class Photometry():
 #	      print 'ellipse pixels flux', currentFlux, 'difference masks flux', currentFlux2
 	      #if (isoA)%30==0:
 	      #	outputImage[currentPixels] = 1000
-	      growthSlope = utils.getSlope(oldFlux/previousNpix, currentFlux/Npix, isoA-1, isoA)
+	      growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
 	      
-	      #print 'slope', growthSlope,'crit', limitCriterion, 'isoA', isoA
+	      print 'slope', growthSlope,'crit', limitCriterion, 'isoA', isoA
 	      #cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
 	      #print 'cumulative Flux', cumulativeFlux      
 	      #print 'flux in ellipse', np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0]
@@ -341,10 +342,11 @@ class Photometry():
     
     try:      
       n = fluxData[distance-4:distance+1, 3].shape[0]
+      nPix = fluxData[distance-4:distance+1, 5]
+      print np.abs(np.sum(fluxData[distance-4:distance+1, 3])), 'avg', np.abs(limitCriterion*(np.sum(nPix))), 'lim', distance, 'dist'
       
-      #print abs(np.sum(fluxData[distance-4:distance, 3])), 'avg', n*limitCriterion, 'lim', distance, 'dist', fluxData[distance, 3], 'slope'
-      if abs(np.sum(fluxData[distance-4:distance+1, 3])) < n*limitCriterion:
-	print 'limit reached!', distance
+      if (np.abs(np.sum(fluxData[distance-4:distance+1, 3])) < np.abs(limitCriterion*(np.sum(nPix)))):
+	print 'limit reached!', distance, limitCriterion*nPix
 	out = 1
     except IndexError as e:
       print 'indexError', distance, e
@@ -376,10 +378,10 @@ class Photometry():
     
     #fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba)
     #isoA = fluxData.shape[0]
-    isoA = 180
-    print 'starting to calculate sky gradient...'	
+    isoA = 230
+    print 'starting to calculate sky gradient...', skySD	
     print 'isoA', isoA -1
-
+    
     start = isoA-3 + 50
 
     oldSky =  skyMean
@@ -389,28 +391,26 @@ class Photometry():
       skyMean = oldSky
     else:      
       skyErr = 1 #init
-      while skyErr > 0.1*skySD:
+      while abs(skyErr) > 0.0001: #abs(0.01*skySD):
 	  skyErr = Photometry.getSkyGradient(start, end, center, inputImage, pa, ba, skyMean)
-	  skyMean -= skyErr
+	  skyMean += skyErr
 	  print skyMean, 'skyMean'    
 
    
     #print 'old sky mean', skyMean, 'building the GC with new skyMean', skyMean   	
-  
+    
     if  math.isnan(skyMean):
       output = ['unable to get the sky value', GalaxyParameters.getSDSSUrl(listFile, dataDir, i), GalaxyParameters.getFilledUrl(listFile, dataDir, i)]
       return output
-    
-    #print 'start HLR debug...'
-    #print fluxData[:,-1], 'cumulativeFlux'
-    
-    #totalNpix = np.sum(fluxData[5])
+      
+    #skyMean = 131
+    #oldSky = 130
     
     
     
     
 
-    
+    '''
     # --------------------------------------- starting GC photometry in circular annuli
     print 'CIRCULAR APERTURE'
     circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
@@ -420,7 +420,7 @@ class Photometry():
     
     circHLR = np.where(np.round(circFluxData[:,1]/fluxInCirc, 1) == 0.5)[0][0]
     circMag = Photometry.calculateFlux(fluxInCirc, listFile, i)
-
+   '''
 
     # --------------------------------------- starting ellipse GC photometry
     print 'ELLIPTICAL APERTURE'
@@ -437,7 +437,7 @@ class Photometry():
     
     # --------------------- writing output jpg file with both outermost annuli  
         
-    outputImage[np.where(distances == circRadius)] = 300
+    #outputImage[np.where(distances == circRadius)] = 300
     outputImage = inputImage
     outputImage, cdf = imtools.histeq(outputImage)
     
@@ -451,8 +451,9 @@ class Photometry():
 
     
     # ------------------------------------- formatting output row
-    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
-    return output
+    #output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
+    print skyMean, oldSky, 'sky'
+    #return output
     
     
     
@@ -466,8 +467,8 @@ class Photometry():
 def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
-  dataDir = '../data'
-  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  #dataDir = '../data'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
@@ -478,7 +479,7 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 939
  
-  for i in range(0, 600):
+  for i in range(800, 801):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)

@@ -7,7 +7,7 @@ import itertools
 
 
 def writeOut(output):
-   f = open('gc_test.csv','aw')
+   f = open('gc_out.csv','aw')
    w = csv.writer(f, delimiter=',')
    w.writerow(output)
    f.close()

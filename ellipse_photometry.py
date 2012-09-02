@@ -392,23 +392,23 @@ class Photometry():
     
 def main():
   iso25D = 40 / 0.396
-  listFile = '../data/SDSS_photo_match.csv'
-  dataDir = '../data'
-  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
+  #dataDir = '../data'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
-  outputFile = '../data/growthCurvePhotometry.csv'
+  listFile = dataDir+'/SDSS_photo_match.csv'
+  outputFile = dataDir+'/gc_out.csv'
   imgDir = 'img/'
-  simpleFile = '../data/CALIFA_mother_simple.csv'
-  maskFile = '../data/maskFilenames.csv'
+  simpleFile = dataDir+'/CALIFA_mother_simple.csv'
+  maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
  
-  for i in range(813, 938):
+  for i in range(879, 880):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-      print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+      #print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
 
       print i, 'a'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
@@ -424,7 +424,7 @@ def plotFilled(inputImage, i):
     CALIFA_ID = str(i+1)
     outputImage = inputImage
     outputImage, cdf = imtools.histeq(outputImage)
-    scipy.misc.imsave('img/new_plots/'+CALIFA_ID+'_image.jpg', outputImage)
+    scipy.misc.imsave('img/output/'+CALIFA_ID+'_image.jpg', outputImage)
    
 if __name__ == "__main__":
   main()

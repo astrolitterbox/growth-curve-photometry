@@ -91,9 +91,9 @@ class Interpolation():
     outputFilename = utils.createOutputFilename(sdssFilename, dataDir)
     print 'output filename', outputFilename
     try:
-      with open(dataDir+'/filled2/'+outputFilename) as f: pass
-      print 'skipping', ID
-    except IOError as e:
+      #with open(dataDir+'/filled2/'+outputFilename) as f: pass
+      #print 'skipping', ID
+    #except IOError as e:
       print 'inpainting', ID
       sdssImage = pyfits.open(sdssFilename)
       imageData = sdssImage[0].data
@@ -118,7 +118,8 @@ class Interpolation():
 
 def main():
   iso25D = 40 / 0.396
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data/'
+  #dataDir = '/media/46F4A27FF4A2713B_/work2/data/'
+  dataDir = '../data'
   outputFile = dataDir+'/growthCurvePhotometry.csv'
   listFile = dataDir+'/SDSS_photo_match.csv'
   fitsDir = dataDir+'/SDSS/'
@@ -141,9 +142,8 @@ def main():
   #print Astrometry.getCenterCoords(listFile, 0)
   
   log = []
-
-  for i in range(633, 634):  
-      Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
+  for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266)):  
+      Interpolation.runInpainting(maskFile, listFile, dataDir, x, log)
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   

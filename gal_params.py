@@ -85,11 +85,19 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
 		
-  i = 879				
+  i = 318				
     
   print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i)
   #print GalaxyParameters.getFilledUrl(listFile, dataDir, i)
   print GalaxyParameters.getNedName(listFile, simpleFile, i)
+
+  import os
+  os.system("gqview "+"/home/opit/Desktop/PhD/dev/growth-curve-photometry/img/snapshots/"+str(i+1)+"_gc-50%.jpg")
+  
+  os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file "+ GalaxyParameters.getSDSSUrl(listFile, dataDir, i) +" -file  "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i) +" -match frames")
+  #os.system("gimp "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i))
+
+  exit()
 
   import pyfits
   
@@ -105,12 +113,6 @@ def main():
   mask =   mask[-700:,0:451]
   hdu = pyfits.PrimaryHDU(mask)
   hdu.writeto('norm/'+maskFile)  
-  exit()
-  import os
-  os.system("gqview "+"/home/opit/Desktop/PhD/dev/growth-curve-photometry/img/snapshots/"+str(i+1)+"_gc-50%.jpg")
-  
-  os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file "+ GalaxyParameters.getSDSSUrl(listFile, dataDir, i) +" -file  "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i) +" -match frames")
-  #os.system("gimp "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i))
 
 if __name__ == "__main__":
   main()

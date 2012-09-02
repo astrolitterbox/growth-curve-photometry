@@ -90,28 +90,27 @@ class Interpolation():
     sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
     outputFilename = utils.createOutputFilename(sdssFilename, dataDir)
     print 'output filename', outputFilename
-    try:
+    #try:
       #with open(dataDir+'/filled2/'+outputFilename) as f: pass
       #print 'skipping', ID
     #except IOError as e:
-      print 'inpainting', ID
-      sdssImage = pyfits.open(sdssFilename)
-      imageData = sdssImage[0].data
-      imageData = imageData - 1000 #soft bias subtraction, comment out if needed
-      head = sdssImage[0].header
-      maskFile = pyfits.open(maskFilename)
-      print 'MASK', maskFilename
-      mask = maskFile[0].data
-      maskedImg = np.ma.array(imageData, mask = mask)
-      NANMask =  maskedImg.filled(np.NaN)
-      filled = inpaint.replace_nans(NANMask)
-      hdu = pyfits.PrimaryHDU(filled)
-      if os.path.exists(dataDir+'/filled3/'+outputFilename):
-      	outputFilename = outputFilename+"B"
-      	hdu.writeto(dataDir+'/filled3/'+outputFilename)      
-      else:
-      	hdu.writeto(dataDir+'/filled3/'+outputFilename)
-      	
+    print 'inpainting', ID
+    sdssImage = pyfits.open(sdssFilename)
+    imageData = sdssImage[0].data
+    imageData = imageData - 1000 #soft bias subtraction, comment out if needed
+    head = sdssImage[0].header
+    maskFile = pyfits.open(maskFilename)
+    print 'MASK', maskFilename
+    mask = maskFile[0].data
+    maskedImg = np.ma.array(imageData, mask = mask)
+    NANMask =  maskedImg.filled(np.NaN)
+    filled = inpaint.replace_nans(NANMask)
+    hdu = pyfits.PrimaryHDU(filled)
+    if os.path.exists(dataDir+'/filled3/'+outputFilename):
+    	outputFilename = outputFilename+"B"
+    	hdu.writeto(dataDir+'/filled3/'+outputFilename)      
+    else:
+      	hdu.writeto(dataDir+'/filled3/'+outputFilename)      	
     return log
     
     

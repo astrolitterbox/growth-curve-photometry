@@ -54,7 +54,7 @@ class GalaxyParameters:
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
      sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
-     return '../data/filled/'+utils.createOutputFilename(sdssFilename)
+     return dataDir+"/filled2/"+utils.createOutputFilename(sdssFilename, dataDir)
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
      NedName = GalaxyParameters.getNedName(listFile, simpleFile, ID).NedName
@@ -69,6 +69,7 @@ class GalaxyParameters:
       mycsv = csv.reader(f)
       mycsv = list(mycsv)	
       ret.NedName = string.strip(mycsv[ID][NEDNAME_col])
+      print ret.NedName
     return ret
   
     
@@ -77,16 +78,39 @@ def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
   fitsDir = '../data/SDSS/'
-  dataDir = '../data'
+  #dataDir = '../data'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
   outputFile = '../data/growthCurvePhotometry.csv'
   imgDir = 'img/'
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
+		
+  i = 879				
+    
+  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i)
+  #print GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+  print GalaxyParameters.getNedName(listFile, simpleFile, i)
+
+  import pyfits
   
-  print GalaxyParameters.getSDSSUrl(listFile, dataDir, 576)
-  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 576)
-  print GalaxyParameters.getNedName(listFile, simpleFile, 938)
-  print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 938)
+  imgFile = pyfits.open(GalaxyParameters.getSDSSUrl(listFile, dataDir, i))
+  img = imgFile[0].data
+  img = img[-700:,0:451]
+  hdu = pyfits.PrimaryHDU(img)
+  hdu.writeto('norm/'+imgFile)  
+  
+  
+  maskFile = pyfits.open(GalaxyParameters.getMaskUrl(listFile, dataDir, i))
+  mask = maskFile[0].data
+  mask =   mask[-700:,0:451]
+  hdu = pyfits.PrimaryHDU(mask)
+  hdu.writeto('norm/'+maskFile)  
+  exit()
+  import os
+  os.system("gqview "+"/home/opit/Desktop/PhD/dev/growth-curve-photometry/img/snapshots/"+str(i+1)+"_gc-50%.jpg")
+  
+  os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file "+ GalaxyParameters.getSDSSUrl(listFile, dataDir, i) +" -file  "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i) +" -match frames")
+  #os.system("gimp "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i))
 
 if __name__ == "__main__":
   main()

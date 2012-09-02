@@ -181,10 +181,7 @@ class Photometry():
        #take means of (2n - 1) elliptical annuli as input fluxes for gradient search
        
        gradientRingWidth = 13
-       if start >= end:
-	 start = end
-	 print 'narrow gradient'
-	 end = end - gradientRingWidth	  
+
        startFlux = 0
        startNpix = 0
        endFlux = 0
@@ -211,39 +208,7 @@ class Photometry():
        print gradient, 'gradient'#, skyErr, 'mean flux difference per pixel'
        return gradient  #skyErr
   
-  @staticmethod
-  def circularFlux(inputImage, center,  distances, skyMean):
-      sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
-      skySD = np.std(sky)
-      growthSlope = 200 #init
-      oldFlux = inputImage[center[0], center[1]]
-      currentFlux = inputImage[center] - skyMean	
-      distance = 1
-      Npix=1
-      fluxData = np.empty((np.max(distances), 4))
-      limitCriterion = 0.01*skySD
-      #while abs(growthSlope) > 0.01*skySD:
-      #while distance < 120:
-      while Photometry.checkLimitCriterion(fluxData, distance-1, limitCriterion) != 1:
-	oldFlux = currentFlux
-	previousNpix = Npix
-	
-	Npix = inputImage[np.where(distances==distance)].shape[0]
-	
-	currentFlux = np.sum(inputImage[np.where(distances==distance)]) - skyMean*Npix
-	growthSlope = utils.getSlope(oldFlux/previousNpix, currentFlux/Npix, (distance-1), distance)
-	
-	fluxData[distance, 0] = distance
-	fluxData[distance, 1] = np.sum(inputImage[np.where(distances<=distance)]) - skyMean*inputImage[np.where(distances<=distance)].shape[0]
-	fluxData[distance, 2] = np.sum(inputImage[np.where(distances==distance)]) - skyMean*Npix
-	fluxData[distance, 3] = growthSlope
-	#print 'old flux', oldFlux, 'currentFlux', currentFlux, 'distance', distance, 'slope', growthSlope, 'skySD', skySD
-	
-	distance+=1        
-     # print np.sum(inputImage[np.where(distances<distance)]) - skyMean*inputImage[np.where(distances<distance)].shape[0], 'SUM'
-      fluxData = fluxData[0:distance-2,:]      
-      return fluxData
-        
+
   
   @staticmethod
   def buildGrowthCurve(inputImage, center,  distances, skyMean, pa, ba, CALIFA_ID):
@@ -252,69 +217,25 @@ class Photometry():
 	    fluxData = np.empty((np.max(distances), 6))
 	    currentPixels = center
 	    currentFlux = inputImage[center] - skyMean	
-#	    print 'center', center
-	    cumulativeFlux = inputImage[center[0], center[1]] - skyMean #central pixel, sky subtracted: initialising
-#	    print 'center[1]', center[1], 'center', center
 	    isoA = 1 #initialising    
 	    Npix = 1
-	    cumulNpix = 1
 	    totalNpix = 1		
 	    oldFlux = inputImage[center[0], center[1]]
 	    growthSlope = 200
-	    meanFlux = inputImage[center[0], center[1]]
-#	    print 'central flux', meanFlux
 	    outputImage = inputImage
-	    #print np.where(distances > int(round(Photometry.iso25D)))[0].shape, 'np.where(distances > int(round(iso25D)))[0].shape'
-	    #the square root of the average of the squared deviations from the mean
 	    skySD = np.std(sky)
-	    #sky_rms = np.sqrt(np.sum((sky-skyMean)**2)/len(sky))
-#	    print 'skySD', skySD
-#	    print sky_rms, 'sky rms'
-	    cumulativeFlux = inputImage[center[0], center[1]]-skyMean
-	    limitCriterion = 0.001*skySD
-	    #while abs(growthSlope) > 1*skySD*Npix:
-	    #while abs(growthSlope) > 0.01*skySD:
-	    #while isoA < 120:  
-	    #fluxData[1, 3] = 20 #init
-	    #print 'passing array', fluxData[1, 3]
+	    limitCriterion = 0.01*skySD
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion) != 1:
-	      
-#	      print 'major axis', isoA
 	      previousNpix = Npix
 	      oldEllipseMask = ellipseMask
-	      #oldFlux = np.sum(inputImage[np.where(oldEllipseMask == 1)]) - previousNpix*skyMean
 	      oldFlux = currentFlux#currentFlux/previousNpix
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
 	      ellipseMask[currentPixels] = 1
-	      #print 'sky', round(skyMean, 2), 'flux', round(meanFlux, 2)
 	      Npix = inputImage[currentPixels].shape[0]      
 	      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
-	      cumulNpix = cumulNpix+ Npix
-#	      print totalNpix, 'totalNpix', cumulNpix, 'sum of ellipse pixels', Npix, 'Npix'
-	      previousCumulativeFlux = cumulativeFlux
-	      cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean		
-	      meanFlux = cumulativeFlux/Npix #mean sky-subtracted flux per pixel at a certain isoA      
 	      currentFlux = np.sum(inputImage[currentPixels]) - skyMean*Npix
-	      currentFlux2 = cumulativeFlux - oldFlux
-#	      print 'ellipse pixels flux', currentFlux, 'difference masks flux', currentFlux2
-	      #if (isoA)%30==0:
-	      #	outputImage[currentPixels] = 1000
 	      growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
-	      
-	      print 'slope', growthSlope,'crit', limitCriterion, 'isoA', isoA
-	      #cumulativeFlux = np.sum(inputImage[np.where(ellipseMask == 1)]) - totalNpix*skyMean
-	      #print 'cumulative Flux', cumulativeFlux      
-	      #print 'flux in ellipse', np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0]
-	      #print 'meanFlux', meanFlux
-	      #totalNpix = len(inputImage[np.where(distances < distance)])
-	      #  print 'oldFlux - meanFlux', oldFlux - meanFlux
-	      #rms = np.sqrt((np.sum(inputImage[currentPixels]**2))/Npix)
-	      #print rms, 'rms'
-	      SN = meanFlux/skySD
-	      #print 'SIGNAL TO NOISE', SN
-
-	      #stDev = np.sqrt(np.sum((inputImage[currentPixels] - meanFlux)**2)/Npix)/Npix
-	      #print stDev, 'stDev'
+	      print 'isoA', isoA, 'Npix', Npix
 	      fluxData[isoA, 0] = isoA
 	      fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0] #sky-subtracted cumulative flux
 	      fluxData[isoA, 2] = currentFlux/Npix #sky-subtracted flux per pixel
@@ -323,30 +244,25 @@ class Photometry():
 	      fluxData[isoA, 5] = Npix
 	      #print fluxData[isoA, 2], 'cum flux pp'
 	      isoA = isoA +1
-	    fluxData = fluxData[0:isoA-2,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
+	    fluxData = fluxData[0:isoA-1,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
 	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0]
 	    print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 	    # --------------------------------------- writing an ellipse of counted points, testing only
-	    #elliptical mask f
-	    
 	    #hdu = pyfits.PrimaryHDU(ellipseMask)
 	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-    
-	    outputImage[currentPixels] = 300
-   
-	    return (flux, fluxData, outputImage) 
+	    print fluxData[:, 5]
+	    return (flux, fluxData) 
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion):
-    out = 0
-    
+    out = 0    
     try:      
       n = fluxData[distance-4:distance+1, 3].shape[0]
-      nPix = fluxData[distance-4:distance+1, 5]
-      print np.abs(np.sum(fluxData[distance-4:distance+1, 3])), 'avg', np.abs(limitCriterion*(np.sum(nPix))), 'lim', distance, 'dist'
-      
-      if (np.abs(np.sum(fluxData[distance-4:distance+1, 3])) < np.abs(limitCriterion*(np.sum(nPix)))):
-	print 'limit reached!', distance, limitCriterion*nPix
+      nPix = np.sum(fluxData[distance-4:distance+1, 5])
+
+      print np.sum(np.abs(fluxData[distance-4:distance+1, 3]))/nPix, 'avg', limitCriterion, 'criterion', distance, 'dist'
+      if np.sum(np.abs(fluxData[distance-4:distance+1, 3]))/nPix < limitCriterion:
+	print 'limit reached!', distance, nPix
 	out = 1
     except IndexError as e:
       print 'indexError', distance, e
@@ -368,8 +284,8 @@ class Photometry():
     skySD = np.std(sky)
     #i+1 in the next line reflects the fact that CALIFA id's start with 1
     pa = db.dbUtils.getFromDB('PA', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
-#    print 'pa', pa
     ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
+    #ba = 1
     #r_mag = db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
     #r_e = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
     #lucy_re = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0]#parsing tuples
@@ -379,6 +295,7 @@ class Photometry():
     #fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba)
     #isoA = fluxData.shape[0]
     isoA = 230
+
     print 'starting to calculate sky gradient...', skySD	
     print 'isoA', isoA -1
     
@@ -389,14 +306,16 @@ class Photometry():
     end = Photometry.findClosestEdge(distances, center)
     if end < Photometry.iso25D:
       skyMean = oldSky
+    elif start >= end:
+      skyMean = oldSky
     else:      
-      skyErr = 1 #init
-      while abs(skyErr) > 0.0001: #abs(0.01*skySD):
-	  skyErr = Photometry.getSkyGradient(start, end, center, inputImage, pa, ba, skyMean)
-	  skyMean += skyErr
-	  print skyMean, 'skyMean'    
+      #skyErr = 1 #init
+      #while abs(skyErr) > 0.001: #abs(0.01*skySD):
+      skyErr = Photometry.getSkyGradient(start, end, center, inputImage, pa, ba, skyMean)
+      skyMean += skyErr
+      print skyMean, 'skyMean'    
 
-   
+
     #print 'old sky mean', skyMean, 'building the GC with new skyMean', skyMean   	
     
     if  math.isnan(skyMean):
@@ -410,39 +329,54 @@ class Photometry():
     
     
 
-    '''
+    
     # --------------------------------------- starting GC photometry in circular annuli
     print 'CIRCULAR APERTURE'
-    circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
+    #circFlux, circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
+    circFlux, circFluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, 1, str(i+1))
     circRadius = circFluxData.shape[0]
-    
-    fluxInCirc = np.sum(inputImage[np.where(distances <= circRadius)]) - skyMean*(inputImage[np.where(distances <= circRadius)]).shape[0]
-    
-    circHLR = np.where(np.round(circFluxData[:,1]/fluxInCirc, 1) == 0.5)[0][0]
-    circMag = Photometry.calculateFlux(fluxInCirc, listFile, i)
-   '''
+    print circRadius, 'circle radius'
+    otherFlux = circFluxData[-1, 1]   
+    print 'fluxes: mask:', circFlux, 'sum', otherFlux    
+    try:
+	    circHLR = np.where(np.round(circFluxData[:,1]/circFlux, 1) == 0.5)[0][0]
+    except IndexError as e:
+	    circHLR = str(e)
+	    
+    circMag = Photometry.calculateFlux(circFlux, listFile, i)
 
+    
+    #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
+    #scipy.misc.imsave('img/new_snapshots/'+str(i+1)+'_gc.jpg', outputImage)
+
+    
     # --------------------------------------- starting ellipse GC photometry
     print 'ELLIPTICAL APERTURE'
-    flux, fluxData, outputImage = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
+    flux, fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
     totalFlux = flux
     otherFlux = fluxData[fluxData.shape[0]-1, 1]   
-    print 't', totalFlux, 'o', otherFlux
+    elMajAxis = fluxData.shape[0]
+    #print 't', totalFlux, 'o', otherFlux
     elMag = Photometry.calculateFlux(totalFlux, listFile, i)
-    elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]
-    #print 'ELLL?', fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)[0]][0][0], '\n', fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]
+    try:
+    	elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]    
+    except IndexError as e:
+	elHLR = e
     plotGrowthCurve.plotGrowthCurve(fluxData, CALIFA_ID)
-
+  
     
     
     # --------------------- writing output jpg file with both outermost annuli  
-        
-    #outputImage[np.where(distances == circRadius)] = 300
     outputImage = inputImage
-    outputImage, cdf = imtools.histeq(outputImage)
+    circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
+    elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, ba)    
+    outputImage[circpix] = 500
+    outputImage[elPix] = 500
     
+    outputImage, cdf = imtools.histeq(outputImage)
+        
     #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave('img/snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
+    scipy.misc.imsave('img/new_snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -451,24 +385,16 @@ class Photometry():
 
     
     # ------------------------------------- formatting output row
-    #output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
+    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
     print skyMean, oldSky, 'sky'
-    #return output
-    
-    
-    
-    
-    #inputImage[halfLightRadius] = 1000
-    
-
-    #return outputImage
+    return output
     
     
 def main():
   iso25D = 40 / 0.396
   listFile = '../data/SDSS_photo_match.csv'
-  #dataDir = '../data'
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  dataDir = '../data'
+  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
 
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
@@ -479,7 +405,7 @@ def main():
   maskFile = '../data/maskFilenames.csv'
   noOfGalaxies = 939
  
-  for i in range(800, 801):
+  for i in range(813, 938):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
@@ -487,7 +413,7 @@ def main():
       print i, 'a'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
       utils.writeOut(output)
-      plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
+#      plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
     except IOError as err:
       print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
       output = [str(i+1), 'File not found', err]
@@ -498,7 +424,7 @@ def plotFilled(inputImage, i):
     CALIFA_ID = str(i+1)
     outputImage = inputImage
     outputImage, cdf = imtools.histeq(outputImage)
-    scipy.misc.imsave('img/output/filled2/'+CALIFA_ID+'_image.jpg', outputImage)
+    scipy.misc.imsave('img/new_plots/'+CALIFA_ID+'_image.jpg', outputImage)
    
 if __name__ == "__main__":
   main()

@@ -7,14 +7,14 @@ import itertools
 
 
 def writeOut(output):
-   f = open('gc2.csv','aw')
+   f = open('gc_test.csv','aw')
    w = csv.writer(f, delimiter=',')
    w.writerow(output)
    f.close()
 
 def getSlope(y1, y2, x1, x2):
 	#print  (abs(y2 - y1)/abs(x2 - x1)), 'slope', y1, y2, x1, x2
-  	return (abs(y2 - y1)/abs(x2 - x1))
+  	return (y2 - y1)/(x2 - x1)
 
 def createIndexArray(inputShape):
   shape = (inputShape[0]*inputShape[1], 2)
@@ -176,3 +176,4 @@ def nmgy2mag(nmgy, ivar=None):
         return mag
 
   
+np.savetxt('gauss.csv', gauss_kern(2, sizey=None))

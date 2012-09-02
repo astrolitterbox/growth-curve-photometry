@@ -3,27 +3,40 @@ import numpy as np
 import utils
 import pyfits
 
+    
+def neighbours(y, x, inputArray):
+	shape = inputArray.shape
+	out = []		
+	if ((y - 1) >= 0):
+		if np.isfinite(inputArray[y-1, x]): 
+			out.append((y - 1, x))
+	if ((x - 1) >= 0):
+		if np.isfinite(inputArray[y, x -1]): 
+			out.append((y, x - 1))
+	if ((y + 1) < shape[0]):
+		if np.isfinite(inputArray[y+1, x]): 
+			out.append((y+1, x))
+	if ((x + 1) < shape[1]): 
+		if np.isfinite(inputArray[y, x +1]): 
+			out.append((y, x + 1))
+	#print len(out)		
+	return len(out)
+    
+    
+    
 #get the number of non-NaN neighbours
 def makeNeighbourArray(inputArray):
-	neighbourArray = -1* np.ones((inputArray.shape))
-	nans = np.zeros((neighbourArray.shape), dtype=bool)
-	nans[np.where(np.isnan(inputArray))] = 1
-	neighbourArray[np.where(np.isnan(inputArray))] = 0
-	for shift in (-1, 1):
-		for axis in (0, 1):
-			nans_shifted = np.roll(nans, shift=shift, axis = axis)
-		        idx=~nans_shifted * nans
-			neighbourArray[idx] = neighbourArray[idx]+1
-	#since we don't care about negative neighbourArray values anyway:
-	neighbourArray[0, :] = neighbourArray[0, :] - 1
-	neighbourArray[-1, :] = neighbourArray[-1, :] - 1
-	neighbourArray[:, 0] = neighbourArray[:, 0] - 1
-	neighbourArray[:, -1] = neighbourArray[:, -1] - 1
-	print 'na ready'
-	return neighbourArray	
+	neighbourArray = -1*np.ones((inputArray.shape))
+	#print inputArray.shape
+	ind = zip(*np.where(np.isnan(inputArray)))
+	#neighb = np.concatenate([neighbors(*i) for i in ind])
+	for i in ind:
+	  #print i
+	  neighbourArray[i] = neighbours(i[0], i[1], inputArray)
+	#neighbourArray[i] = neighbours(inputArray, *i) for i in ind
+	return neighbourArray
 
-
-def getWeightedAvg(inputArray, y, x, neighbourArray):
+def getWeightedAvg(inputArray, y, x):
 		kernSize = 2
 		kernel = utils.gauss_kern(kernSize)	  
 		pixVal = 0 #initialising, pixel value for inpainting
@@ -59,32 +72,24 @@ def getWeightedAvg(inputArray, y, x, neighbourArray):
 			if np.isfinite(inputArray[y-1, x]):
 				pixVal+= inputArray[y-1, x] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
-				if (neighbourArray[y-1, x] < 4 and neighbourArray[y-1, x] >= 0):
-					neighbourArray[y-1, x]+=1
 		except IndexError:
 			pass
 		try:	
 			if np.isfinite(inputArray[y+1, x]):
 				pixVal+= inputArray[y+1, x] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
-				if (neighbourArray[y+1, x]<4 and neighbourArray[y+1, x] >= 0):
-					neighbourArray[y+1, x]+=1
 		except IndexError:
 			pass
 		try:	
 			if np.isfinite(inputArray[y, x+1]):
 				pixVal+= inputArray[y, x+1] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
-				if (neighbourArray[y, x+1] < 4 and neighbourArray[y, x+1] >= 0): 
-					neighbourArray[y, x+1]+=1
 		except IndexError:
 			pass
 		try:	
 			if np.isfinite(inputArray[y, x-1]):
 				pixVal+= inputArray[y, x-1] * kernel[2, 1]
 				weightSum+= kernel[2, 1]
-				if (neighbourArray[y, x-1] < 4 and neighbourArray[y, x-1] >= 0):
-					neighbourArray[y, x-1]+=1
 		except IndexError:
 			pass
 
@@ -193,7 +198,7 @@ def getWeightedAvg(inputArray, y, x, neighbourArray):
 		except IndexError:
 			pass
 
-		return pixVal/weightSum, neighbourArray
+		return pixVal/weightSum
 		
 	  
 
@@ -207,15 +212,17 @@ def fill(inputArray, neighbourArray):
 
 	print 'working on',  len(np.where(neighbourArray == maxNeighbours)[0]), 'nan pixels out of', len(np.where(np.isnan(inputArray))[0]),' left'
 	for i in ind:
-	  inputArray[i], neighbourArray = getWeightedAvg(inputArray, i[0], i[1], neighbourArray)
-	return inputArray, neighbourArray	
+	  inputArray[i] = getWeightedAvg(inputArray, i[0], i[1])
+
+	return inputArray	
 
 
 def replace_nans(inputArray):
 	neighbourArray = -1*np.ones((inputArray.shape), dtype = int)
 	neighbourArray = makeNeighbourArray(inputArray)
 	while (len(np.where(np.isnan(inputArray))[0]) > 0):
-		inputArray, neighbourArray = fill(inputArray, neighbourArray)
+		inputArray = fill(inputArray, neighbourArray)
+		neighbourArray = makeNeighbourArray(inputArray)
 		print np.max(neighbourArray), 'max'
 	return inputArray
 
@@ -224,20 +231,17 @@ def replace_nans(inputArray):
 
 
 
-def main():
+#def main():
 	#inputArray = np.array([[2, 0.22, 6, 12, 10, 1], [2, 0, 1, 2, 33, 1], [2, 0.2,np.nan, np.nan, 1, 45],  [1, 0.2,4, 0.22, 1, 2],  [2, 0.2,4, 0.22, 1, 4], [1, 0.2,4, 0.22, 1, 2]])
-	image = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/SDSS/fpC-004517-r5-0107.fit.gz')[0].data - 1000 #soft bias
+#	image = pyfits.open('../data/SDSS/fpC-004517-r5-0107.fit.gz')[0].data - 1000 #soft bias
 #	head = pyfits.open('/work2/simona/data/SDSS/fpC-004517-r5-0107.fit.gz')[0].header
-	mask = pyfits.open('/media/46F4A27FF4A2713B_/work2/data/MASKS/UGC04416_mask_r.fits')[0].data
-        inputArray = np.ma.array(image, mask = mask)
-	inputArray = inputArray.filled(np.NaN)
-	outputArray = replace_nans(inputArray)
-	hdu = pyfits.PrimaryHDU(outputArray)
-	hdu.writeto('output.fits')
+#	mask = pyfits.open('../data/MASKS/UGC04416_mask_r.fits')[0].data
+#        inputArray = np.ma.array(image, mask = mask)
+#	inputArray = inputArray.filled(np.NaN)
 #
 #	neighbourArray = -1*np.ones((inputArray.shape), dtype = int)
 #	neighbourArray = makeNeighbourArray(inputArray)
 #	
 #	print np.max(neighbourArray), 'maxneighbours'
-if __name__ == "__main__":
-  main()	
+#if __name__ == "__main__":
+#  main()	

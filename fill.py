@@ -100,12 +100,18 @@ class Interpolation():
       imageData = imageData - 1000 #soft bias subtraction, comment out if needed
       head = sdssImage[0].header
       maskFile = pyfits.open(maskFilename)
+      print 'MASK', maskFilename
       mask = maskFile[0].data
       maskedImg = np.ma.array(imageData, mask = mask)
       NANMask =  maskedImg.filled(np.NaN)
       filled = inpaint.replace_nans(NANMask)
       hdu = pyfits.PrimaryHDU(filled)
-      hdu.writeto(dataDir+'/filled2/'+outputFilename)
+      if os.path.exists(dataDir+'/filled3/'+outputFilename):
+      	outputFilename = outputFilename+"B"
+      	hdu.writeto(dataDir+'/filled3/'+outputFilename)      
+      else:
+      	hdu.writeto(dataDir+'/filled3/'+outputFilename)
+      	
       return log
     
     
@@ -136,7 +142,7 @@ def main():
   
   log = []
 
-  for i in range(300, 938):  
+  for i in range(633, 634):  
       Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)

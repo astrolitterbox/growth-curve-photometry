@@ -141,8 +141,10 @@ def main():
   #print Astrometry.getCenterCoords(listFile, 0)
   
   log = []
-  for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266)):  
-      Interpolation.runInpainting(maskFile, listFile, dataDir, x, log)
+  #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266)):  
+      
+  for i, x in enumerate((591, 540, 655, 136, 172, 173, 304, 512, 578, 147, 170, 185, 245, 175, 567, 706)):  
+	  Interpolation.runInpainting(maskFile, listFile, dataDir, x, log)
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   

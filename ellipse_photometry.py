@@ -376,7 +376,7 @@ class Photometry():
     outputImage, cdf = imtools.histeq(outputImage)
         
     #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave('img/new_snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
+    scipy.misc.imsave('img/new_snapshots/fixed/'+CALIFA_ID+'_gc.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -393,8 +393,8 @@ class Photometry():
 def main():
   iso25D = 40 / 0.396
 
-  #dataDir = '../data'
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  dataDir = '../data'
+  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
@@ -405,7 +405,25 @@ def main():
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
  
-  for i in range(879, 880):
+  #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266, 591, 540, 655, 136, 172, 173, 304, 512, 578, 147, 170, 185, 245, 175, 567, 706)):  
+  for i in range(577, 578):    
+    try:
+      print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
+      print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+      print i, 'i'
+      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+      utils.writeOut(output)
+    except IOError as err:
+      print 'err', err
+      output = [str(i+1), 'File not found', err]
+      utils.writeOut(output)
+      pass   
+ 
+ 
+ 
+ 
+  exit()
+  for i in range(88, 89):
     try:
       #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       #print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
@@ -424,7 +442,7 @@ def plotFilled(inputImage, i):
     CALIFA_ID = str(i+1)
     outputImage = inputImage
     outputImage, cdf = imtools.histeq(outputImage)
-    scipy.misc.imsave('img/output/'+CALIFA_ID+'_image.jpg', outputImage)
+    scipy.misc.imsave('img/output/fixed/'+CALIFA_ID+'_image.jpg', outputImage)
    
 if __name__ == "__main__":
   main()

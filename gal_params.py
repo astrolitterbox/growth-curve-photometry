@@ -12,7 +12,7 @@ import sdss_photo_check as sdss
 import plot_survey as plot
 #import photometry as phot
 
-import readAtlas
+#import readAtlas
 #import circle
 import db
 import os
@@ -85,16 +85,17 @@ def main():
   simpleFile = '../data/CALIFA_mother_simple.csv'
   maskFile = '../data/maskFilenames.csv'
 		
-  i = 318				
+  i = 938
+ 
     
   print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i)
-  #print GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+  print GalaxyParameters.getFilledUrl(listFile, dataDir, i)
   print GalaxyParameters.getNedName(listFile, simpleFile, i)
 
   import os
-  os.system("gqview "+"/home/opit/Desktop/PhD/dev/growth-curve-photometry/img/snapshots/"+str(i+1)+"_gc-50%.jpg")
+  #os.system("gwenview "+"/home/opit/Desktop/PhD/dev/growth-curve-photometry/img/snapshots/"+str(i+1)+"_gc-50%.jpg")
   
-  os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file "+ GalaxyParameters.getSDSSUrl(listFile, dataDir, i) +" -file  "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i) +" -match frames")
+  #os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file "+ GalaxyParameters.getSDSSUrl(listFile, dataDir, i) +" -file  "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i) +" -match frames")
   #os.system("gimp "+ GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, i))
 
   exit()

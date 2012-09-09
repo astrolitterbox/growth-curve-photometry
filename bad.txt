@@ -1,0 +1,59 @@
+827 - nan circ
+541 - /media/46F4A27FF4A2713B_/work2/data/MASKS/IC3305_mask_r.fits -- didn't help, mask still not ok (circ)
+
+895 - nan circ
+885 - nan circ
+
+873 - nan circ
+
+
+
+545 -- big galaxy, maybe outside -- OK
+
+
+
+
+
+419  -- all fine with it
+
+
+17 - high SDSS sky, normal otherwise
+578 - big galaxy, high SDSS sky, all normal
+799 - big galaxy, all normal
+577 - MICE B, large galaxy, all normal
+428 - big galaxy, all normal
+388 - big galaxy, all normal
+719 - no circ mag, radius too big
+116 - high SDSS sky, no circ mag, radius too big
+129 - no circ mag, radius too big, outside image, high SDSS sky
+398 - no circ mag, radius too big, outside image, high SDSS sky
+235 - no circ quantities, outer radius outside of image
+687 -- visually ok, numbers ok
+153 - too small circ mag and hl radius, high SDSS sky
+296 - too small circ mag and hl radius, high SDSS sky
+783 - too small circ mag and hl radius
+471 - high SDSS sky, too small circ hlr
+383 - too small circ mag and hl radius
+166 - small circ radius
+56 - large circ radius
+395 - small circ radius
+175 - high SDSS sky, small circ radius 
+176 - numbers ok, visually wrong mask
+652 - too big circ mag, why is that? ok otherwise
+
+572 - circ hlr too small
+629 - no circ hlr. why?
+467 - no circ hlr. why?
+361 - circ hlr too small
+396 - circ hlr too small
+220 - circ hlr too small
+683 - circ hlr too small
+514 - circ hlr too small
+441 - circ hlr too small
+579 - circ hlr too small
+473 - too large radii
+649 - too large radii
+278 - too large radii
+172 - circular radius out of limits, too large
+260 - large galaxy
+452 - large galaxy

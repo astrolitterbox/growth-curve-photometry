@@ -4,19 +4,14 @@ import numpy as np
 import utils
 #print head
 import collections
+import db
+
+dbDir = '../db/'
 
 #print atlasData.field('IAUNAME')
 
 
-'''
-    #getting Sloan Atlas data:
-    ra = utils.convert(db.dbUtils.getFromDB('ra', dbDir+'CALIFA.sqlite', 'mothersample'))[77:161]
-    print ra, 'ra'
-    dec = utils.convert(db.dbUtils.getFromDB('dec', dbDir+'CALIFA.sqlite', 'mothersample'))[77:161]  
-    Atlas_mag = readAtlas.find_in_atlas('NMGY', ra, dec, 3, np.arange(77, 161, 1))
-    Atlas_mag[:, 3] = utils.nmgy2mag(Atlas_mag[:, 3])
-    np.savetxt('atlas_magnitudes.txt', Atlas_mag)
-'''
+
 
 
 def find_mag(ra, dec):
@@ -50,7 +45,7 @@ def find_in_atlas(arg, ra, dec, roundParam, spiralID):
 	return atlasData.field(arg)[i]
       #else:
 	#print '''
-    ret = np.empty((len(ra), 4))
+    ret = np.empty((len(ra), 5))
     for i in range(0, len(ra)):
       
       decs = np.where(np.round(atlasData.field('DEC'), roundParam) == round(dec[i], roundParam))
@@ -67,11 +62,13 @@ def find_in_atlas(arg, ra, dec, roundParam, spiralID):
 	ret[i][1] =  atlasData.field('ra')[overlap]
 	ret[i][2] = atlasData.field('dec')[overlap]      
 	ret[i][3] =  atlasData.field(arg)[overlap][0][r_band]
+	ret[i][4] = atlasData.field('SERSIC_TH50')[overlap]
 	
       else:
 	ret[i][1] =  ra[i]
 	ret[i][2] = dec[i]
 	ret[i][3] = 0
+	ret[i][4] = 0
       ret[i][0] = spiralID[i]
       print 'id', ret[i]
     
@@ -79,3 +76,18 @@ def find_in_atlas(arg, ra, dec, roundParam, spiralID):
     return ret
     #print np.where((np.round(atlasData.field('RA'), 3) == round(ra, 3)))# and np.round(atlasData.field('DEC'), 3) == round(dec, 3)))
     #print np.where(np.round(atlasData.field('RA'), 3) == round(ra, 3))]#.field(arg)
+
+
+
+'''
+
+    #getting Sloan Atlas data:
+ra = utils.convert(db.dbUtils.getFromDB('ra', dbDir+'CALIFA.sqlite', 'mothersample'))
+print ra, 'ra', len(ra), len(np.arange(1, 940, 1))
+
+dec = utils.convert(db.dbUtils.getFromDB('dec', dbDir+'CALIFA.sqlite', 'mothersample'))
+Atlas_mag = find_in_atlas('NMGY', ra, dec, 3, np.arange(1, 940, 1))
+Atlas_mag[:, 3] = utils.nmgy2mag(Atlas_mag[:, 3])
+np.savetxt('atlas_magnitudes.txt', Atlas_mag, fmt=('%i', '%f8', '%f8', '%f4', '%f4'))
+
+'''

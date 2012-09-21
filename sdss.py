@@ -86,41 +86,7 @@ def getShiftedImage(img, shift):
 
 
 
-csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
-#f = csv.writer(open('pix.txt', 'w'), delimiter=',')
-for row in csvReader:
-      #print '********************************', row[0]      
-      ID = string.strip(row[0])
-      ra = string.strip(row[1])
-      dec = string.strip(row[2])
-      run = string.strip(row[3])
-      rerun = string.strip(row[4])
-      camcol = string.strip(row[5])
-      field = string.strip(row[6])
-      runstr = run2string(run)
-      field_str = field2string(field)
-      #print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
-      #os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
-      #os.system('pwd')
-      try:
-	print ID
-	gz = gzip.open('fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz')
-	imgFile = pyfits.open(gz, mode='readonly')
-	print 'getting header info...'
-	rgz = gzip.open('../fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
-	imgFiler = pyfits.open(rgz, mode='readonly')
-	WCSr=astWCS.WCS('../fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')	
-	WCS=astWCS.WCS('fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz')
-	band_center = WCS.wcs2pix(WCS.getCentreWCSCoords()[0], WCS.getCentreWCSCoords()[1]) #'other band image center coords in r image coordinate system'
-	r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1]) #'r center coords in r image coordinate system'
-	shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
-	print type(shift)
-	shift = [ceil(shift[0]), ceil(shift[1])]
-	print shift, img.shape
-	a= getShiftedImage(img, shift)
 
-      except IOError:
-	print ID,  'is missing'
 	
     
       

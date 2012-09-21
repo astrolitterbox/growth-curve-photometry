@@ -13,12 +13,12 @@ import numpy as np
 import sdss_photo_check as sdss
 import plot_survey as plot
 #import photometry as phot
-
+from math import ceil
 import readAtlas
 #import circle
 import db
 import os
-
+import sdss
 
 class GalaxyParameters:
   @staticmethod
@@ -31,6 +31,7 @@ class GalaxyParameters:
     rerun_col = 8
     camcol_col = 9
     field_col = 10
+    band = 'g'
     with open(listFile, 'rb') as f:
 	mycsv = csv.reader(f)
 	mycsv = list(mycsv)	
@@ -51,12 +52,12 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/SDSS/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+      fpCFile = dataDir+'/SDSS/'+band+'fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
       return fpCFile
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
      sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
-     return dataDir+'/filled2/'+utils.createOutputFilename(sdssFilename)
+     return dataDir+filledDir+utils.createOutputFilename(sdssFilename)
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
      NedName = GalaxyParameters.getNedName(listFile, simpleFile, ID).NedName
@@ -89,6 +90,7 @@ class Interpolation():
     maskFilename = dataDir+utils.getMask(maskFile, ID)
     sdssFilename = GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)
     outputFilename = utils.createOutputFilename(sdssFilename, dataDir)
+    outputDir = dataDir+'/filled'
     print 'output filename', outputFilename
     #try:
       #with open(dataDir+'/filled2/'+outputFilename) as f: pass
@@ -102,30 +104,110 @@ class Interpolation():
     maskFile = pyfits.open(maskFilename)
     print 'MASK', maskFilename
     mask = maskFile[0].data
-    maskedImg = np.ma.array(imageData, mask = mask)
-    NANMask =  maskedImg.filled(np.NaN)
-    filled = inpaint.replace_nans(NANMask)
-    hdu = pyfits.PrimaryHDU(filled)
-    if os.path.exists(dataDir+'/filled3/'+outputFilename):
-    	outputFilename = outputFilename+"B"
-    	hdu.writeto(dataDir+'/filled3/'+outputFilename)      
-    else:
-      	hdu.writeto(dataDir+'/filled3/'+outputFilename)      	
+    callInpaint(imageData, mask, outputDir)	
     return log
     
-    
+  @staticmethod
+  def callInpaint(img, mask, outputFilename):
+      maskedImg = np.ma.array(img, mask = mask)
+      NANMask =  maskedImg.filled(np.NaN)
+      filled = inpaint.replace_nans(NANMask)
+      #outputFilename = utils.createOutputFilename(sdssFilename, dataDir)
+      hdu = pyfits.PrimaryHDU(filled)
+
+      if os.path.exists(outputFilename):
+	  print outputFilename
+	  outputFilename = outputFilename+"B"
+	  hdu.writeto(outputFilename)      
+      else:
+	  hdu.writeto(outputFilename)   
+      
 
 def main():
   iso25D = 40 / 0.396
   #dataDir = '/media/46F4A27FF4A2713B_/work2/data/'
   dataDir = '../data'
+  band = 'g'
   outputFile = dataDir+'/growthCurvePhotometry.csv'
   listFile = dataDir+'/SDSS_photo_match.csv'
   fitsDir = dataDir+'/SDSS/'
-
-  imgDir = 'img/'
+  filledDir = 'filled_g/'
+  imgDir = 'img/g/'
   simpleFile = dataDir+'/CALIFA_mother_simple.csv'
-  maskFile = dataDir+'/maskFilenames.csv'
+  maskFile = dataDir+'/maskFilenames.csv'  
+  dataFile = 'list_g.txt'
+
+  csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
+  #f = csv.writer(open('pix.txt', 'w'), delimiter=',')
+  for row in csvReader:
+	  #print '********************************', row[0]      
+	  ID = string.strip(row[0])
+	  ra = string.strip(row[1])
+	  dec = string.strip(row[2])
+	  run = string.strip(row[3])
+	  rerun = string.strip(row[4])
+	  camcol = string.strip(row[5])
+	  field = string.strip(row[6])
+	  runstr = sdss.run2string(run)
+	  field_str = sdss.field2string(field)
+	  #print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
+	  #os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
+	  #os.system('pwd')
+	
+	  print ID
+	  gz = gzip.open(fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz')
+	  imgFile = pyfits.open(gz, mode='readonly')
+	  img = imgFile[0].data
+	  print 'getting header info...'
+	  rgz = gzip.open(fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
+	  imgFiler = pyfits.open(rgz, mode='readonly')
+	  maskFile = pyfits.open(GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, int(ID)-1))
+	  mask = maskFile[0].data
+	  WCSr=astWCS.WCS(fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')	
+	  WCS=astWCS.WCS(fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz')
+	  band_center = WCS.wcs2pix(WCS.getCentreWCSCoords()[0], WCS.getCentreWCSCoords()[1]) #'other band image center coords in r image coordinate system'
+	  r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1]) #'r center coords in r image coordinate system'
+	  shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
+	  print type(shift)
+	  #note the swap in coords:
+	  shift = [ceil(shift[1]), ceil(shift[0])]
+	  print shift, img.shape
+	  img = sdss.getShiftedImage(img, shift)
+	  mask = sdss.getShiftedImage(mask, shift)
+	  outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+	  Interpolation.callInpaint(img, mask, outputFilename)
+	  exit()
+	
+#  for i in range(0, 1)):  
+#  	  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   #noOfGalaxies = 938
   #i = 0
   #inputFile = Photometry.getInputFile(listFile, dataDir, i)
@@ -140,11 +222,10 @@ def main():
   #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
   #print Astrometry.getCenterCoords(listFile, 0)
   
-  log = []
+  #log = []
   #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266)):  
       
-  for i, x in enumerate((591, 540, 655, 136, 172, 173, 304, 512, 578, 147, 170, 185, 245, 175, 567, 706)):  
-	  Interpolation.runInpainting(maskFile, listFile, dataDir, x, log)
+
   
   #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
   

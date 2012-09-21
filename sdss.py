@@ -42,7 +42,8 @@ def tostring(val, nmin=None, nmax=None):
 	return vstr
     if nmax is not None:
         if val > nmax:
-            raise ValueError("Number ranges higher than max value of %s\n" % nmax)
+            raise ValueError("Number ranges higher than 
+            max value of %s\n" % nmax)
     if nmax is not None:
         nlen = len(str(nmax))
         vstr = str(val).zfill(nlen)
@@ -63,9 +64,24 @@ def getShiftedImage(img, shift):
     print 'zero x shift'
     shift[1] = -1*(img.shape[1])
     print shift, 'shift' 
-  '''  
-  if (shift[0] > 0):
-    
+   
+  if (shift[0] > 0):  
+    if (shift[1] > 0): #(+, +) case
+      print 'plus plus'
+      ret = img[0:-shift[0], 0:-shift[1]]
+    else: #(+, -)
+      print 'plus minus'
+      ret = img[0:-shift[0], -(shift[1]):]
+  if (shift[0] <= 0):
+    if (shift[1] > 0): #(-, +) case
+      print 'minus plus'
+      ret = img[-(shift[0]):, 0:-shift[1]]
+    else: #(-, -) case
+      print 'negative', img.shape, shift[0]
+      ret = img[-(shift[0]):, -(shift[1]):]
+      '''
+      
+  if (shift[0] > 0):  
     if (shift[1] > 0): #(+, +) case
       print 'plus plus'
       ret = img[0:-shift[0], 0:-shift[1]]

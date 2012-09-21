@@ -114,7 +114,7 @@ class Interpolation():
       filled = inpaint.replace_nans(NANMask)
       #outputFilename = utils.createOutputFilename(sdssFilename, dataDir)
       hdu = pyfits.PrimaryHDU(filled)
-
+      
       if os.path.exists(outputFilename):
 	  print outputFilename
 	  outputFilename = outputFilename+"B"
@@ -158,6 +158,8 @@ def main():
 	  gz = gzip.open(fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz')
 	  imgFile = pyfits.open(gz, mode='readonly')
 	  img = imgFile[0].data
+	  head = imgFile[0].header
+
 	  print 'getting header info...'
 	  rgz = gzip.open(fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
 	  imgFiler = pyfits.open(rgz, mode='readonly')
@@ -169,13 +171,20 @@ def main():
 	  r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1]) #'r center coords in r image coordinate system'
 	  shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
 	  print type(shift)
-	  #note the swap in coords:
+	  
 	  shift = [ceil(shift[1]), ceil(shift[0])]
 	  print shift, img.shape
 	  img = sdss.getShiftedImage(img, shift)
 	  mask = sdss.getShiftedImage(mask, shift)
 	  outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-	  Interpolation.callInpaint(img, mask, outputFilename)
+	  hdu = pyfits.PrimaryHDU(img, header=head)
+
+	  hdu.writeto('img.fits')
+	  mhdu = pyfits.PrimaryHDU(mask, header=head)
+
+	  mhdu.writeto('mask.fits')
+
+	  #Interpolation.callInpaint(img, mask, outputFilename)
 	  exit()
 	
 #  for i in range(0, 1)):  

@@ -146,61 +146,64 @@ def main():
   #f = csv.writer(open('pix.txt', 'w'), delimiter=',')
   for row in csvReader:
 	  #print '********************************', row[0]      
-	  ID = string.strip(row[0])
-	  ra = string.strip(row[1])
-	  dec = string.strip(row[2])
-	  run = string.strip(row[3])
-	  rerun = string.strip(row[4])
-	  camcol = string.strip(row[5])
-	  field = string.strip(row[6])
-	  runstr = sdss.run2string(run)
-	  field_str = sdss.field2string(field)
-	  #print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
-	  #os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
-	  #os.system('pwd')
+	ID = string.strip(row[0])
+	if ID > 1:		  
+		  ra = string.strip(row[1])
+		  dec = string.strip(row[2])
+		  run = string.strip(row[3])
+		  rerun = string.strip(row[4])
+		  camcol = string.strip(row[5])
+		  field = string.strip(row[6])
+		  runstr = sdss.run2string(run)
+		  field_str = sdss.field2string(field)
+		  #print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
+		  #os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
+		  #os.system('pwd')
 	
-	  print ID
-	  inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
-	  gz = gzip.open(inFile)
-	  imgFile = pyfits.open(gz)
-	  img = imgFile[0].data
-	  head = imgFile[0].header
+		  print ID
+		  inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
+		  gz = gzip.open(inFile)
+		  imgFile = pyfits.open(gz)
+		  img = imgFile[0].data
+		  head = imgFile[0].header
 
-	  print 'getting header info...'
-	  rFile = fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
-	  rgz = gzip.open(rFile)
-	  imgFiler = pyfits.open(rgz)
-	  
-	  maskFile = pyfits.open(GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, int(ID)-1))
-	  
-	  mask = maskFile[0].data
-	  print mask.shape
-	  WCSr=astWCS.WCS(rFile)	
-	  WCS=astWCS.WCS(inFile)
-	  band_center = WCS.wcs2pix(WCS.getCentreWCSCoords()[0], WCS.getCentreWCSCoords()[1]) #'other band image center coords in r image coordinate system'		
-	  r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1]) #'r center coords in r image coordinate system'
-	  
-	  shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
-	  print type(shift)
-	  #note the swap!
-	  shift = [ceil(shift[1]), ceil(shift[0])]
-	  print shift, img.shape
-	  img = sdss.getShiftedImage(img, shift)
-	  mask = sdss.getShiftedImage(mask, [-1*shift[0], -1*shift[1]])
+		  print 'getting header info...'
+		  rFile = fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+		  rgz = gzip.open(rFile)
+		  imgFiler = pyfits.open(rgz)
+		  
+		  maskFile = pyfits.open(GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, int(ID)-1))
+		  
+		  mask = maskFile[0].data
+		  print mask.shape
+		  WCSr=astWCS.WCS(rFile)	
+		  WCS=astWCS.WCS(inFile)
+		  band_center = WCS.wcs2pix(WCS.getCentreWCSCoords()[0], WCS.getCentreWCSCoords()[1]) #'other band image center coords in r image coordinate system'		
+		  r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1]) #'r center coords in r image coordinate system'
+		  
+		  shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
+		  print type(shift)
+		  #note the swap!
+		  shift = [ceil(shift[1]), ceil(shift[0])]
+		  print shift, img.shape
+		  img = sdss.getShiftedImage(img, shift)
+		  mask = sdss.getShiftedImage(mask, [-1*shift[0], -1*shift[1]])
 		
-	  
-	  outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-	  #hdu = pyfits.PrimaryHDU(img, header=head)
+		  
+		  outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+		  #hdu = pyfits.PrimaryHDU(img, header=head)
 
-	  #hdu.writeto('img.fits')
-	  #mhdu = pyfits.PrimaryHDU(mask, header=head)
+		  #hdu.writeto('img.fits')
+		  #mhdu = pyfits.PrimaryHDU(mask, header=head)
 
-	  #mhdu.writeto('mask.fits')
-	  #os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file 'img.fits'  -file mask.fits  -match frames")
+		  #mhdu.writeto('mask.fits')
+		  #os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file 'img.fits'  -file mask.fits  -match frames")
 
 	
-	  Interpolation.callInpaint(img, mask, outputFilename)
-
+		  Interpolation.callInpaint(img, mask, outputFilename)
+	else:
+	print 'passing', ID
+	pass
 	
 #  for i in range(0, 1)):  
 #  	  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)

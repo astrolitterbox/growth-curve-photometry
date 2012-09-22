@@ -113,7 +113,7 @@ class Interpolation():
     outputImage, cdf = imtools.histeq(outputImage)
     scipy.misc.imsave('img/g/'+CALIFA_ID+'_image.jpg', outputImage)  
   @staticmethod
-  def callInpaint(img, mask, outputFilename):
+  def callInpaint(img, mask, outputFilename, i):
       maskedImg = np.ma.array(img, mask = mask)
       NANMask =  maskedImg.filled(np.NaN)
       filled = inpaint.replace_nans(NANMask)
@@ -200,7 +200,7 @@ def main():
 		  #os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file 'img.fits'  -file mask.fits  -match frames")
 
 	
-		  Interpolation.callInpaint(img, mask, outputFilename)
+		  Interpolation.callInpaint(img, mask, outputFilename, ID)
 	else:
 		  print 'passing', ID
 		  pass

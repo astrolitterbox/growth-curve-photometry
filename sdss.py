@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+	# -*- coding: utf-8 -*-
 import os
 import pyfits
 import csv
@@ -42,8 +42,7 @@ def tostring(val, nmin=None, nmax=None):
 	return vstr
     if nmax is not None:
         if val > nmax:
-            raise ValueError("Number ranges higher than 
-            max value of %s\n" % nmax)
+            raise ValueError("Number ranges higher than max value of %s\n" % nmax)
     if nmax is not None:
         nlen = len(str(nmax))
         vstr = str(val).zfill(nlen)
@@ -55,7 +54,7 @@ def tostring(val, nmin=None, nmax=None):
 
 
 def getShiftedImage(img, shift):     
-  '''
+
   if (shift[0] == 0):
     print 'zero y shift'
     shift[0] = -1*(img.shape[0])
@@ -79,22 +78,7 @@ def getShiftedImage(img, shift):
     else: #(-, -) case
       print 'negative', img.shape, shift[0]
       ret = img[-(shift[0]):, -(shift[1]):]
-      '''
-      
-  if (shift[0] > 0):  
-    if (shift[1] > 0): #(+, +) case
-      print 'plus plus'
-      ret = img[0:-shift[0], 0:-shift[1]]
-    else: #(+, -)
-      print 'plus minus'
-      ret = img[0:-shift[0], -(shift[1]):]
-  if (shift[0] <= 0):
-    if (shift[1] > 0): #(-, +) case
-      print 'minus plus'
-      ret = img[-(shift[0]):, 0:-shift[1]]
-    else: #(-, -) case
-      print 'negative', img.shape, shift[0]
-      ret = img[-(shift[0]):, -(shift[1]):]
+
       
   print ret.shape
   return ret	  

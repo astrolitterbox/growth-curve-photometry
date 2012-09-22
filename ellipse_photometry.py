@@ -65,7 +65,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/filled2/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      fpCFile = dataDir+'/filled/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -192,6 +192,7 @@ class Photometry():
        for i in range(0, gradientRingWidth):
 		elStart = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]
 	    	startFlux += np.sum(elStart) - elStart.shape[0]*skyMean	    	   		    	
+
 	    	startNpix += elStart.shape[0]#ellipse.get_ellipse_circumference(start-i, ba)  #*skyMean -- WHY?	   
 	    	elEnd = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]
 	    	
@@ -230,6 +231,7 @@ class Photometry():
 	      oldEllipseMask = ellipseMask
 	      oldFlux = currentFlux#currentFlux/previousNpix
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
+	      ellipse.getPixelEllipseLength(isoA, ba)
 	      ellipseMask[currentPixels] = 1
 	      Npix = inputImage[currentPixels].shape[0]      
 	      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
@@ -325,11 +327,7 @@ class Photometry():
     #skyMean = 131
     #oldSky = 130
     
-    
-    
-    
-
-    
+  
     # --------------------------------------- starting GC photometry in circular annuli
     print 'CIRCULAR APERTURE'
     #circFlux, circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
@@ -351,6 +349,7 @@ class Photometry():
 
     
     # --------------------------------------- starting ellipse GC photometry
+    '''
     print 'ELLIPTICAL APERTURE'
     flux, fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
     totalFlux = flux
@@ -363,7 +362,7 @@ class Photometry():
     except IndexError as e:
 	elHLR = e
     plotGrowthCurve.plotGrowthCurve(fluxData, CALIFA_ID)
-  
+    '''
     
     
     # --------------------- writing output jpg file with both outermost annuli  
@@ -393,8 +392,8 @@ class Photometry():
 def main():
   iso25D = 40 / 0.396
 
-  dataDir = '../data'
-  #dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  #dataDir = '../data'
+  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
   fitsdir = dataDir+'SDSS'
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
@@ -406,7 +405,7 @@ def main():
   noOfGalaxies = 939
  
   #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266, 591, 540, 655, 136, 172, 173, 304, 512, 578, 147, 170, 185, 245, 175, 567, 706)):  
-  for i in range(577, 578):    
+  for i in range(115, 116):    
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)

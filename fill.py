@@ -108,7 +108,7 @@ class Interpolation():
     return log
   @staticmethod  
   def plotFilled(inputImage, i):
-    CALIFA_ID = str(i+1)
+    CALIFA_ID = str(int(i)+1)
     outputImage = inputImage
     outputImage, cdf = imtools.histeq(outputImage)
     scipy.misc.imsave('img/g/'+CALIFA_ID+'_image.jpg', outputImage)  
@@ -147,7 +147,7 @@ def main():
   for row in csvReader:
 	#print '********************************', row[0]      
 	ID = string.strip(row[0])
-	if int(ID) > 1:		  
+	if int(ID) > 3:		  
 		  ra = string.strip(row[1])
 		  dec = string.strip(row[2])
 		  run = string.strip(row[3])

@@ -150,7 +150,7 @@ def main():
   for row in csvReader:
 	#print '********************************', row[0]      
 	ID = string.strip(row[0])
-	if int(ID) >=22:		  
+	if int(ID) >=450:		  
 		  ra = string.strip(row[1])
 		  dec = string.strip(row[2])
 		  run = string.strip(row[3])
@@ -159,9 +159,9 @@ def main():
 		  field = string.strip(row[6])
 		  runstr = sdss.run2string(run)
 		  field_str = sdss.field2string(field)
-		  #print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
-		  #os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
-		  #os.system('pwd')
+		  print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
+		  os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
+		  os.system('pwd')
 	
 		  print ID
 		  inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'

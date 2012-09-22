@@ -2,7 +2,7 @@
 import numpy as np
 import string
 import csv
-import scipy
+#import scipy
 import itertools
 
 
@@ -109,15 +109,18 @@ def createOutputFilename(sdssFilename, dataDir):
   
 def gauss_kern(size, sizey=None):
     """ Returns a normalized 2D gauss kernel array for convolutions """
-    size = int(size)
-    if not sizey:
-        sizey = size
-    else:
-        sizey = int(sizey)
-    x, y = scipy.mgrid[-size:size+1, -sizey:sizey+1]
-    g = scipy.exp(-(x**2/float(size)+y**2/float(sizey)))
-    return g / g.max()
-  
+    #size = int(size)
+    #if not sizey:
+    #    sizey = size
+    #else:
+    #    sizey = int(sizey)
+    #x, y = scipy.mgrid[-size:size+1, -sizey:sizey+1]
+    #g = scipy.exp(-(x**2/float(size)+y**2/float(sizey)))
+    #return g / g.max()
+    g = np.genfromtxt('gauss.csv')
+    
+    return g
+
 def nmgy2mag(nmgy, ivar=None):
     """
     Taken from http://sdsspy.googlecode.com/hg/sdsspy/util.py

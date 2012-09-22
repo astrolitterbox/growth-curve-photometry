@@ -2,7 +2,7 @@
 import os
 import pyfits
 import csv
-import numpy
+import numpy as np
 import string
 import gzip
 from astLib import astWCS
@@ -34,7 +34,7 @@ def field2string(fields):
 
 
 def tostring(val, nmin=None, nmax=None):
-    if not numpy.isscalar(val):
+    if not np.isscalar(val):
         return [tostring(v,nmin,nmax) for v in val]
     if isinstance(val, (str,unicode)):
 	nlen = len(str(nmax))
@@ -57,11 +57,11 @@ def getShiftedImage(img, shift):
 
   if (shift[0] == 0):
     print 'zero y shift'
-    shift[0] = -1*(img.shape[0])
+    shift[0] = 0
     print shift, 'shift'
   if (shift[1] == 0):
     print 'zero x shift'
-    shift[1] = -1*(img.shape[1])
+    shift[1] = 0
     print shift, 'shift' 
    
   if (shift[0] > 0):  
@@ -84,11 +84,16 @@ def getShiftedImage(img, shift):
   return ret	  
   
 
+'''
+img = np.ones((5, 5))
+img[2, 2] = 3
+print img
+shift = [-1, -2]
 
-
-
+ret = getShiftedImage(img, shift)
+print ret
 	
-    
+'''    
       
       
       

@@ -202,8 +202,8 @@ def main():
 	
 		  Interpolation.callInpaint(img, mask, outputFilename)
 	else:
-	print 'passing', ID
-	pass
+		  print 'passing', ID
+		  pass
 	
 #  for i in range(0, 1)):  
 #  	  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)

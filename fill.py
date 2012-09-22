@@ -160,16 +160,16 @@ def main():
 	  #os.system('pwd')
 	
 	  print ID
-	  inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit'
-	  #gz = gzip.open(inFile)
-	  imgFile = pyfits.open(inFile)
+	  inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
+	  gz = gzip.open(inFile)
+	  imgFile = pyfits.open(gz)
 	  img = imgFile[0].data
 	  head = imgFile[0].header
 
 	  print 'getting header info...'
-	  rFile = fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit'
-	  #rgz = gzip.open(rFile)
-	  imgFiler = pyfits.open(rFile)
+	  rFile = fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+	  rgz = gzip.open(rFile)
+	  imgFiler = pyfits.open(rgz)
 	  
 	  maskFile = pyfits.open(GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, int(ID)-1))
 	  
@@ -200,8 +200,7 @@ def main():
 
 	
 	  Interpolation.callInpaint(img, mask, outputFilename)
-	  
-	  exit()
+
 	
 #  for i in range(0, 1)):  
 #  	  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)

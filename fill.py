@@ -106,7 +106,12 @@ class Interpolation():
     mask = maskFile[0].data
     callInpaint(imageData, mask, outputDir)	
     return log
-    
+  @staticmethod  
+  def plotFilled(inputImage, i):
+    CALIFA_ID = str(i+1)
+    outputImage = inputImage
+    outputImage, cdf = imtools.histeq(outputImage)
+    scipy.misc.imsave('img/g/'+CALIFA_ID+'_image.jpg', outputImage)  
   @staticmethod
   def callInpaint(img, mask, outputFilename):
       maskedImg = np.ma.array(img, mask = mask)
@@ -121,7 +126,7 @@ class Interpolation():
 	  hdu.writeto(outputFilename)      
       else:
 	  hdu.writeto(outputFilename)   
-      
+      Interpolation.plotFilled(inputImage, i)
 
 def main():
   iso25D = 40 / 0.396
@@ -195,6 +200,7 @@ def main():
 
 	
 	  Interpolation.callInpaint(img, mask, outputFilename)
+	  
 	  exit()
 	
 #  for i in range(0, 1)):  

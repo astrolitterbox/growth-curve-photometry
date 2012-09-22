@@ -437,11 +437,7 @@ def main():
       utils.writeOut(output)
       pass
 
-def plotFilled(inputImage, i):
-    CALIFA_ID = str(i+1)
-    outputImage = inputImage
-    outputImage, cdf = imtools.histeq(outputImage)
-    scipy.misc.imsave('img/output/fixed/'+CALIFA_ID+'_image.jpg', outputImage)
+
    
 if __name__ == "__main__":
   main()

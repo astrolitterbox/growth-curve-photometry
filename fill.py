@@ -145,9 +145,9 @@ def main():
   csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
   #f = csv.writer(open('pix.txt', 'w'), delimiter=',')
   for row in csvReader:
-	  #print '********************************', row[0]      
+	#print '********************************', row[0]      
 	ID = string.strip(row[0])
-	if ID > 1:		  
+	if int(ID) > 1:		  
 		  ra = string.strip(row[1])
 		  dec = string.strip(row[2])
 		  run = string.strip(row[3])

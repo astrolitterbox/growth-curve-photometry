@@ -11,16 +11,16 @@ import inpaint
 from astLib import astWCS
 import numpy as np
 import sdss_photo_check as sdss
-import plot_survey as plot
+#import plot_survey as plot
 #import photometry as phot
 from math import ceil
-import readAtlas
+#import readAtlas
 #import circle
-import db
+#import db
 import os
 import sdss
-import imtools
-import scipy.misc
+#import imtools
+#import scipy.misc
 
 
 class GalaxyParameters:
@@ -113,8 +113,8 @@ class Interpolation():
   def plotFilled(inputImage, i):
     CALIFA_ID = str(int(i)+1)
     outputImage = inputImage
-    outputImage, cdf = imtools.histeq(outputImage)
-    scipy.misc.imsave('img/g/'+CALIFA_ID+'_image.jpg', outputImage)  
+    #outputImage, cdf = imtools.histeq(outputImage)
+    #scipy.misc.imsave('img/g/'+CALIFA_ID+'_image.jpg', outputImage)  
   @staticmethod
   def callInpaint(img, mask, outputFilename, i):
       maskedImg = np.ma.array(img, mask = mask)
@@ -129,7 +129,7 @@ class Interpolation():
 	  hdu.writeto(outputFilename)      
       else:
 	  hdu.writeto(outputFilename)   
-      Interpolation.plotFilled(filled, i)
+      #Interpolation.plotFilled(filled, i)
 
 def main():
   iso25D = 40 / 0.396
@@ -150,7 +150,7 @@ def main():
   for row in csvReader:
 	#print '********************************', row[0]      
 	ID = string.strip(row[0])
-	if int(ID) >=450:		  
+	if int(ID) >=457:		  
 		  ra = string.strip(row[1])
 		  dec = string.strip(row[2])
 		  run = string.strip(row[3])
@@ -160,8 +160,8 @@ def main():
 		  runstr = sdss.run2string(run)
 		  field_str = sdss.field2string(field)
 		  print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz'
-		  os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
-		  os.system('pwd')
+		  os.system('wget -P '+fitsDir+band+' http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-g'+camcol+'-'+field_str+'.fit.gz')     
+		  os.system('wget -P '+fitsDir+'r/ http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
 	
 		  print ID
 		  inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'

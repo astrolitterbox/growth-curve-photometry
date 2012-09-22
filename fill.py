@@ -126,7 +126,7 @@ class Interpolation():
 	  hdu.writeto(outputFilename)      
       else:
 	  hdu.writeto(outputFilename)   
-      Interpolation.plotFilled(inputImage, i)
+      Interpolation.plotFilled(filled, i)
 
 def main():
   iso25D = 40 / 0.396

@@ -150,7 +150,7 @@ def main():
   for row in csvReader:
 	#print '********************************', row[0]      
 	ID = string.strip(row[0])
-	if int(ID) > 5:		  
+	if int(ID) >=22:		  
 		  ra = string.strip(row[1])
 		  dec = string.strip(row[2])
 		  run = string.strip(row[3])

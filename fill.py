@@ -150,7 +150,7 @@ def main():
   for row in csvReader:
 	#print '********************************', row[0]      
 	ID = string.strip(row[0])
-	if int(ID) >=457:		  
+	if int(ID) >=576:		  
 		  ra = string.strip(row[1])
 		  dec = string.strip(row[2])
 		  run = string.strip(row[3])
@@ -202,9 +202,15 @@ def main():
 		  #mhdu.writeto('mask.fits')
 		  #os.system("/home/opit/Desktop/ds9  -zoom 0.3 -scale mode 99.5 -file 'img.fits'  -file mask.fits  -match frames")
 		  info = (ID, shift)
-		  f.writerow(info)		
-		  Interpolation.callInpaint(img, mask, outputFilename, ID)
+		  try:
+		    Interpolation.callInpaint(img, mask, outputFilename, ID)
+		    utils.writeOut(info)
+		  except IOError as e:
+		    utils.writeOut((ID, e))
+		    pass
 	else:
+		  print 'passing', ID		  
+		  pass
 		  print 'passing', ID
 		  pass
 	

@@ -1,0 +1,8 @@
+fill.py -- 1
+fill2.py -- 250
+fill3.py -- 500
+fill4.py -- 750
+
+
+setBand()
+ returns the SDSS band value

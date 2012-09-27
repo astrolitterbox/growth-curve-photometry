@@ -155,7 +155,7 @@ def main():
 
   csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
   
-  '''
+ 
   for row in csvReader:
 
 	ID = int(string.strip(row[0]))
@@ -168,7 +168,7 @@ def main():
 	runstr = sdss.run2string(run)
 	field_str = sdss.field2string(field)
 	outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-
+	'''
 	try:
 	  f = open(GalaxyParameters.getSDSSUrl(listFile, dataDir, ID-1))
 	  print 'it is here', ID - 1
@@ -186,15 +186,17 @@ def main():
 	  print e, 'r', ID - 1
 	  os.system('wget -P '+fitsDir+'r/ http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
 	  pass
-
+'''
    #checking output file
 	try:
 	  f = open(outputFilename)
 	  print 'musu', ID
 	except IOError as e:
-	  utils.writeOut(str(ID))
+	  utils.writeOut(str(ID), 'missing.txt')
 	  pass
-	  '''	  
+  
+ 
+	  
   missing = np.genfromtxt('missing.csv')
   for row in csvReader:
     
@@ -262,73 +264,6 @@ def main():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  #noOfGalaxies = 938
-  #i = 0
-  #inputFile = Photometry.getInputFile(listFile, dataDir, i)
-  #distances = Photometry.createDistanceArray(listFile, i, dataDir)
-  #inputImage = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-  
-  #center = Photometry.getCenter(listFile, i, dataDir)
-  #distances = Photometry.createDistanceArray(listFile, i, dataDir)
-  
-  #Photometry.createDistanceArray(listFile, i, dataDir, center)
-  #Photometry.circleContours(inputFile, distances, center, iso25D)
-  #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
-  #print Astrometry.getCenterCoords(listFile, 0)
-  
-  #log = []
-  #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266)):  
-      
-
-  
-  #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
-  
-  
-  #print GalaxyParameters.getSDSSUrl(listFile, dataDir, 201)
-  #print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 201)
-  #np.savetxt('errorlog.txt', log)  
-  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
-  #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
-  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
-  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
-  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
-  #print readAtlas.find_mag(ra, dec)
-  
-  #center = Astrometry.getPixelCoords(listFile, i, dataDir)
-  #print inputImage.shape
-  #inputImage = utils.get_cutout(center, inputImage, 500)
-  #circle.main(inputImage)  
-  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
-  #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
-  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
-  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
-  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
-  #hdu = pyfits.PrimaryHDU(inputImage)
-  #hdu.writeto('input.fits')
-  #print readAtlas.find_mag(ra, dec)
 
 if __name__ == "__main__":
   main()

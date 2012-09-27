@@ -57,7 +57,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/SDSS/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+      fpCFile = dataDir+'/SDSS/r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
       return fpCFile
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
@@ -65,7 +65,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/filled/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      fpCFile = dataDir+'/filled2/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -258,7 +258,7 @@ class Photometry():
 	    # --------------------------------------- writing an ellipse of counted points, testing only
 	    #hdu = pyfits.PrimaryHDU(ellipseMask)
 	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    np.savetxt('growth_curves/gc_profile'+CALIFA_ID+'.csv', fluxData, header='isoA, cumulative flux, flux per pixel, rate of change per pixel, flux in current ellipse, no of pixels in current ellipse, sky subtracted flux in current ellipse')	
+	    np.savetxt('growth_curves/gc_profile'+CALIFA_ID+'.csv', fluxData)	
 	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
@@ -364,10 +364,10 @@ class Photometry():
     
 def main():
   iso25D = 40 / 0.396
-
-  #dataDir = '../data'
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
-  fitsdir = dataDir+'SDSS'
+  band = 'r'
+  dataDir = '../data'
+ # dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  fitsdir = dataDir+'SDSS'+band
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
   listFile = dataDir+'/SDSS_photo_match.csv'

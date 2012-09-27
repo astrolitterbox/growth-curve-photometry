@@ -6,8 +6,8 @@ import scipy
 import itertools
 
 
-def writeOut(output):
-   f = open('fixed_gc.csv','aw')
+def writeOut(output, filename='log.csv'):
+   f = open(filename,'aw')
    w = csv.writer(f, delimiter=',')
    w.writerow(output)
    f.close()

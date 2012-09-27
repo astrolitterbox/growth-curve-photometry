@@ -192,10 +192,8 @@ class Photometry():
        for i in range(0, gradientRingWidth):
 		elStart = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]
 	    	startFlux += np.sum(elStart) - elStart.shape[0]*skyMean	    	   		    	
-
 	    	startNpix += elStart.shape[0]#ellipse.get_ellipse_circumference(start-i, ba)  #*skyMean -- WHY?	   
 	    	elEnd = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]
-	    	
 	    	endFlux += np.sum(elEnd) - elEnd.shape[0]*skyMean
 	    	endNpix += elEnd.shape[0]  #*skyMean -- WHY?
        
@@ -215,7 +213,7 @@ class Photometry():
   def buildGrowthCurve(inputImage, center,  distances, skyMean, pa, ba, CALIFA_ID):
 	    ellipseMask = np.zeros((inputImage.shape))	    
             sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
-	    fluxData = np.empty((np.max(distances), 6))
+	    fluxData = np.empty((np.max(distances), 7))
 	    currentPixels = center
 	    currentFlux = inputImage[center] - skyMean	
 	    isoA = 1 #initialising    
@@ -225,46 +223,56 @@ class Photometry():
 	    growthSlope = 200
 	    outputImage = inputImage
 	    skySD = np.std(sky)
-	    limitCriterion = 0.01*skySD
-	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion) != 1:
+	    limitCriterion = 0.0002*skySD
+	    width = 20
+	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
-	      oldEllipseMask = ellipseMask
-	      oldFlux = currentFlux#currentFlux/previousNpix
+	      oldFlux = currentFlux	      
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
 	      ellipse.getPixelEllipseLength(isoA, ba)
 	      ellipseMask[currentPixels] = 1
 	      Npix = inputImage[currentPixels].shape[0]      
 	      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
-	      currentFlux = np.sum(inputImage[currentPixels]) - skyMean*Npix
+	      currentFlux = np.sum(inputImage[currentPixels])
+	      
 	      growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
 	      print 'isoA', isoA, 'Npix', Npix
 	      fluxData[isoA, 0] = isoA
-	      fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0] #sky-subtracted cumulative flux
-	      fluxData[isoA, 2] = currentFlux/Npix #sky-subtracted flux per pixel
-	      fluxData[isoA, 3] = growthSlope#currentFluxSkysub/Npix #mean sky-subtracted flux per pixel at some isoA
-	      fluxData[isoA, 4] = ellipse.get_ellipse_circumference(isoA, ba)
+	      fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)])# cumulative flux
+	      fluxData[isoA, 2] = currentFlux/Npix 
+	      fluxData[isoA, 3] = growthSlope/Npix
+	      fluxData[isoA, 4] = currentFlux #current flux
 	      fluxData[isoA, 5] = Npix
-	      #print fluxData[isoA, 2], 'cum flux pp'
+
 	      isoA = isoA +1
-	    fluxData = fluxData[0:isoA-1,:] #due to indexing and the last isoA value was incremented, so it should be subtracted 
-	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) - skyMean*inputImage[np.where(ellipseMask == 1)].shape[0]
+	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  np.mean(fluxData[isoA-width:isoA-1, 2])*inputImage[np.where(ellipseMask == 1)].shape[0]	    
+	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
+	    	
+	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
+	    fluxData[:, 1] = fluxData[:, 1]  #cumulative flux
+	    fluxData[:, 4] = fluxData[:, 4] #current flux
+	    fluxData[:, 6] = fluxData[:, 4] - gc_sky*fluxData[:, 5] #current flux, sky subtracted
+	    print inputImage[np.where(ellipseMask == 1)].shape[0], 'shape', Npix, 'npix', np.mean(fluxData[isoA-width:isoA-1, 2]), 'sky'
+	    fluxData[:, 2] = fluxData[:, 2] - gc_sky #sky-subtracted flux per pixel
 	    print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 	    # --------------------------------------- writing an ellipse of counted points, testing only
 	    #hdu = pyfits.PrimaryHDU(ellipseMask)
 	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    print fluxData[:, 5]
-	    return (flux, fluxData) 
+	    np.savetxt('growth_curves/gc_profile'+CALIFA_ID+'.csv', fluxData, header='isoA, cumulative flux, flux per pixel, rate of change per pixel, flux in current ellipse, no of pixels in current ellipse, sky subtracted flux in current ellipse')	
+	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
-  def checkLimitCriterion(fluxData, distance, limitCriterion):
-    out = 0    
+  def checkLimitCriterion(fluxData, distance, limitCriterion, width):
+    out = 0
     try:      
-      n = fluxData[distance-4:distance+1, 3].shape[0]
-      nPix = np.sum(fluxData[distance-4:distance+1, 5])
-
-      print np.sum(np.abs(fluxData[distance-4:distance+1, 3]))/nPix, 'avg', limitCriterion, 'criterion', distance, 'dist'
-      if np.sum(np.abs(fluxData[distance-4:distance+1, 3]))/nPix < limitCriterion:
-	print 'limit reached!', distance, nPix
+      n = fluxData[distance-width:distance+1, 3].shape[0]
+      nPix = np.sum(fluxData[distance-width:distance+1, 5])
+      slope = np.sum(np.abs(fluxData[distance-width:distance+1, 3]))/nPix
+      print 'slope: ', slope, 'limit: ', limitCriterion, distance, 'dist'
+      
+      if slope <= limitCriterion:
+        mean = np.mean(fluxData[distance-width:distance+1, 2])
+	print 'limit reached!', distance, nPix, mean, 'mean'
 	out = 1
     except IndexError as e:
       print 'indexError', distance, e
@@ -296,42 +304,12 @@ class Photometry():
     
     #fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba)
     #isoA = fluxData.shape[0]
-    isoA = 230
 
-    print 'starting to calculate sky gradient...', skySD	
-    print 'isoA', isoA -1
-    
-    start = isoA-3 + 50
-
-    oldSky =  skyMean
-    
-    end = Photometry.findClosestEdge(distances, center)
-    if end < Photometry.iso25D:
-      skyMean = oldSky
-    elif start >= end:
-      skyMean = oldSky
-    else:      
-      #skyErr = 1 #init
-      #while abs(skyErr) > 0.001: #abs(0.01*skySD):
-      skyErr = Photometry.getSkyGradient(start, end, center, inputImage, pa, ba, skyMean)
-      skyMean += skyErr
-      print skyMean, 'skyMean'    
-
-
-    #print 'old sky mean', skyMean, 'building the GC with new skyMean', skyMean   	
-    
-    if  math.isnan(skyMean):
-      output = ['unable to get the sky value', GalaxyParameters.getSDSSUrl(listFile, dataDir, i), GalaxyParameters.getFilledUrl(listFile, dataDir, i)]
-      return output
-      
-    #skyMean = 131
-    #oldSky = 130
-    
   
     # --------------------------------------- starting GC photometry in circular annuli
     print 'CIRCULAR APERTURE'
     #circFlux, circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
-    circFlux, circFluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, 1, str(i+1))
+    circFlux, circFluxData, gc_sky = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, 1, str(i+1))
     circRadius = circFluxData.shape[0]
     print circRadius, 'circle radius'
     otherFlux = circFluxData[-1, 1]   
@@ -344,14 +322,10 @@ class Photometry():
     circMag = Photometry.calculateFlux(circFlux, listFile, i)
 
     
-    #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    #scipy.misc.imsave('img/new_snapshots/'+str(i+1)+'_gc.jpg', outputImage)
-
-    
     # --------------------------------------- starting ellipse GC photometry
-    '''
+
     print 'ELLIPTICAL APERTURE'
-    flux, fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
+    flux, fluxData, gc_sky = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
     totalFlux = flux
     otherFlux = fluxData[fluxData.shape[0]-1, 1]   
     elMajAxis = fluxData.shape[0]
@@ -362,8 +336,7 @@ class Photometry():
     except IndexError as e:
 	elHLR = e
     plotGrowthCurve.plotGrowthCurve(fluxData, CALIFA_ID)
-    '''
-    
+ 	
     
     # --------------------- writing output jpg file with both outermost annuli  
     outputImage = inputImage
@@ -375,7 +348,7 @@ class Photometry():
     outputImage, cdf = imtools.histeq(outputImage)
         
     #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave('img/new_snapshots/fixed/'+CALIFA_ID+'_gc.jpg', outputImage)
+    scipy.misc.imsave('img/snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -384,8 +357,8 @@ class Photometry():
 
     
     # ------------------------------------- formatting output row
-    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, skyMean, oldSky]
-    print skyMean, oldSky, 'sky'
+    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, np.mean(sky),  gc_sky] 
+    #print skyMean, oldSky, 'sky'
     return output
     
     
@@ -403,9 +376,8 @@ def main():
   simpleFile = dataDir+'/CALIFA_mother_simple.csv'
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
- 
-  #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266, 591, 540, 655, 136, 172, 173, 304, 512, 578, 147, 170, 185, 245, 175, 567, 706)):  
-  for i in range(115, 116):    
+
+  for i in range(9, 25):    
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
@@ -418,26 +390,6 @@ def main():
       utils.writeOut(output)
       pass   
  
- 
- 
- 
-  exit()
-  for i in range(88, 89):
-    try:
-      #print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-      #print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
-
-      print i, 'a'
-      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output)
-#      plotFilled(Photometry.getInputFile(listFile, dataDir, i), i)
-    except IOError as err:
-      print 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' 
-      output = [str(i+1), 'File not found', err]
-      utils.writeOut(output)
-      pass
-
-
    
 if __name__ == "__main__":
   main()

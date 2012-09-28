@@ -376,18 +376,18 @@ def main():
   simpleFile = dataDir+'/CALIFA_mother_simple.csv'
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
-
-  for i in range(9, 25):    
+  # for i in enumerate([161, 163, 189, 206, 214, 248, 266, 305, 318, 436, 437, 444, 463, 475, 478, 486, 497, 510, 536, 563, 569, 597, 615, 633, 938]):    
+  for i in range(938, 940):
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output)
+      utils.writeOut(output, 'ellipse_log.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]
-      utils.writeOut(output)
+      utils.writeOut(output, 'ellipseErrors.csv')
       pass   
  
    

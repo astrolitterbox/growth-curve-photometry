@@ -25,6 +25,10 @@ import getTSFieldParameters
 import plotGrowthCurve		
 from math import isnan
 import scipy.misc 
+import numpy.lib.recfunctions
+
+
+
 
 class GalaxyParameters:
   @staticmethod
@@ -100,6 +104,8 @@ class Astrometry():
     print 'centerCoords', centerCoords
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
     print 'pixCoords', pixelCoords
+    out = [ID, centerCoords[0], centerCoords[1], pixelCoords[0], pixelCoords[1]]
+    utils.writeOut(out, 'coords.csv')
     return (pixelCoords[1], pixelCoords[0]) #y -- first, x axis -- second
   @staticmethod
   def distance2origin(y, x, center):
@@ -361,7 +367,24 @@ class Photometry():
     #print skyMean, oldSky, 'sky'
     return output
     
-    
+def getDuplicates(listFile, dataDir):
+	#for i in range(0, 939):
+	#	print i+1, GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+		
+    	fnames = np.genfromtxt('outputNames.txt', dtype='object')
+
+    	#ndtype = [('id', int), ( 'fname', str)]
+    	#fnames = fnames.view(ndtype)
+    	#du = np.lib.recfunctions.find_duplicates(fnames, key='fname', ignoremask=True, return_index=False)    
+	ids = list(fnames[:, 0])	
+	fnames = list(fnames[:, 1])	
+	u, indices = np.unique(fnames, return_index=True)
+	#print indices.shape, type(indices)
+	dupes = [int(item) for item in ids if int(item) not in list(indices)]
+	print dupes
+
+	
+	    	
 def main():
   iso25D = 40 / 0.396
 
@@ -376,7 +399,11 @@ def main():
   simpleFile = dataDir+'/CALIFA_mother_simple.csv'
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
-
+  
+  for i in range(0, 939):
+  	Astrometry.getPixelCoords(listFile, i, dataDir)
+  #getDuplicates(listFile, dataDir)
+  exit()	
   for i in range(9, 25):    
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)

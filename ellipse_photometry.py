@@ -352,7 +352,7 @@ def getDuplicates(listFile, dataDir):
 	print dupes
 
 def setBand():
-  	return 'z'	
+  	return 'u'	
   
 def getFilterNumber():
   	if setBand() == 'u':
@@ -390,11 +390,11 @@ def main():
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output, 'g_ellipse_log.csv')
+      utils.writeOut(output, band+'_ellipse_log.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, 'g_ellipseErrors.csv')
+      utils.writeOut(output, band+'_ellipseErrors.csv')
       pass   
  
    

@@ -159,7 +159,7 @@ class Photometry():
   def getInputFile(listFile, dataDir, i):
     #print 'filename:', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
-    inputImage = inputFile[0].data
+    inputImage = inputFile[0].data - 1000
     #print 'opened the input file'
     return inputImage
   @staticmethod    
@@ -285,17 +285,17 @@ class Photometry():
     # --------------------------------------- starting GC photometry in circular annuli
     print 'CIRCULAR APERTURE'
     #circFlux, circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
-    circFlux, circFluxData, gc_sky = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, 1, str(i+1))
-    circRadius = circFluxData.shape[0]
-    print circRadius, 'circle radius'
-    otherFlux = circFluxData[-1, 1]   
-    print 'fluxes: mask:', circFlux, 'sum', otherFlux    
-    try:
-	    circHLR = np.where(np.round(circFluxData[:,1]/circFlux, 1) == 0.5)[0][0]
-    except IndexError as e:
-	    circHLR = str(e)
+    #circFlux, circFluxData, gc_sky = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, 1, str(i+1))
+    #circRadius = circFluxData.shape[0]
+    #print circRadius, 'circle radius'
+    #otherFlux = circFluxData[-1, 1]   
+    #print 'fluxes: mask:', circFlux, 'sum', otherFlux    
+    #try:
+    #	    circHLR = np.where(np.round(circFluxData[:,1]/circFlux, 1) == 0.5)[0][0]
+    #except IndexError as e:
+    #	    circHLR = str(e)
 	    
-    circMag = Photometry.calculateFlux(circFlux, listFile, i)
+    #circMag = Photometry.calculateFlux(circFlux, listFile, i)
 
     
     # --------------------------------------- starting ellipse GC photometry
@@ -316,9 +316,9 @@ class Photometry():
     
     # --------------------- writing output jpg file with both outermost annuli  
     outputImage = inputImage
-    circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
+    #circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
     elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, ba)    
-    outputImage[circpix] = 500
+    #outputImage[circpix] = 500
     outputImage[elPix] = 500
     
     outputImage, cdf = imtools.histeq(outputImage)
@@ -333,7 +333,7 @@ class Photometry():
 
     
     # ------------------------------------- formatting output row
-    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, np.mean(sky),  gc_sky] 
+    output = [CALIFA_ID, elMag, elHLR, np.mean(sky),  gc_sky] 
     #print skyMean, oldSky, 'sky'
     return output
     

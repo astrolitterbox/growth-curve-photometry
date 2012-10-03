@@ -61,7 +61,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/SDSS/r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+      fpCFile = dataDir+'/SDSS/'+setBand()+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
       return fpCFile
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
@@ -69,7 +69,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/filled2/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      fpCFile = dataDir+'filled_'+band+'/filled2/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):

@@ -61,7 +61,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/SDSS/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+      fpCFile = dataDir+'/SDSS/r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
       return fpCFile
   @staticmethod
   def getFilledUrl(listFile, dataDir, ID):
@@ -69,7 +69,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(listFile, ID).field
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      fpCFile = dataDir+'/filled/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      fpCFile = dataDir+'/filled2/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -180,39 +180,7 @@ class Photometry():
   
 
   
-  @staticmethod
-  def getSkyGradient(start, end, center, inputImage, pa, ba, skyMean):
-
-       #inputIndices = utils.createIndexArray(inputImage.shape)
-       #take means of (2n - 1) elliptical annuli as input fluxes for gradient search
-       
-       gradientRingWidth = 13
-
-       startFlux = 0
-       startNpix = 0
-       endFlux = 0
-       endNpix = 0       
-       
-       print start, end, 'start and end', skyMean, 'skyMean'   
-
-       for i in range(0, gradientRingWidth):
-		elStart = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, start-i, ba)]
-	    	startFlux += np.sum(elStart) - elStart.shape[0]*skyMean	    	   		    	
-	    	startNpix += elStart.shape[0]#ellipse.get_ellipse_circumference(start-i, ba)  #*skyMean -- WHY?	   
-	    	elEnd = inputImage[ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, end-i, ba)]
-	    	endFlux += np.sum(elEnd) - elEnd.shape[0]*skyMean
-	    	endNpix += elEnd.shape[0]  #*skyMean -- WHY?
-       
-       startFlux = startFlux/startNpix
-       endFlux = endFlux/endNpix
-       print startFlux, 'startFlux', endFlux, 'endFlux'
-       #ringLength = ellipse.get_ellipse_circumference(end-(gradientRingWidth - 1)/2, ba) 
-       #gradient = utils.getSlope(startFlux, endFlux+startFlux, start, end)
-       gradient = (endFlux-startFlux)/(end-start)
-       #skyErr = (startFlux - endFlux)/(gradientRingWidth*ringLength)
-       print gradient, 'gradient'#, skyErr, 'mean flux difference per pixel'
-       return gradient  #skyErr
-  
+ 
 
   
   @staticmethod
@@ -229,7 +197,7 @@ class Photometry():
 	    growthSlope = 200
 	    outputImage = inputImage
 	    skySD = np.std(sky)
-	    limitCriterion = 0.0002*skySD
+	    limitCriterion = 0.001*skySD
 	    width = 20
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
@@ -264,7 +232,7 @@ class Photometry():
 	    # --------------------------------------- writing an ellipse of counted points, testing only
 	    #hdu = pyfits.PrimaryHDU(ellipseMask)
 	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    np.savetxt('growth_curves/gc_profile'+CALIFA_ID+'.csv', fluxData, header='isoA, cumulative flux, flux per pixel, rate of change per pixel, flux in current ellipse, no of pixels in current ellipse, sky subtracted flux in current ellipse')	
+	    np.savetxt('growth_curves/gc_profile'+CALIFA_ID+'.csv', fluxData)	
 	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
@@ -383,14 +351,28 @@ def getDuplicates(listFile, dataDir):
 	dupes = [int(item) for item in ids if int(item) not in list(indices)]
 	print dupes
 
-	
+def setBand():
+  	return 'z'	
+  
+def getFilterNumber():
+  	if setBand() == 'u':
+  		return 0
+  	elif setBand() == 'g':
+  		return 1
+  	elif setBand() == 'r':
+  		return 2
+  	elif setBand() == 'i':
+  		return 3
+  	elif setBand() == 'z':
+  		return 4
+  			
 	    	
 def main():
   iso25D = 40 / 0.396
-
-  #dataDir = '../data'
-  dataDir = '/media/46F4A27FF4A2713B_/work2/data'
-  fitsdir = dataDir+'SDSS'
+  band = setBand()
+  dataDir = '../data'
+ # dataDir = '/media/46F4A27FF4A2713B_/work2/data'
+  fitsdir = dataDir+'SDSS'+band
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
   listFile = dataDir+'/SDSS_photo_match.csv'
@@ -400,21 +382,19 @@ def main():
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
   
-  for i in range(0, 939):
-  	Astrometry.getPixelCoords(listFile, i, dataDir)
-  #getDuplicates(listFile, dataDir)
-  exit()	
-  for i in range(9, 25):    
+
+  for i in range(0, 940):    
+
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output)
+      utils.writeOut(output, 'g_ellipse_log.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]
-      utils.writeOut(output)
+      utils.writeOut(output, 'g_ellipseErrors.csv')
       pass   
  
    

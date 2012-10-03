@@ -3,8 +3,8 @@ import ellipse_photometry as e
 import pyfits
 
 
-def getParams(listFile, ID):
-      filterNumber = 2 #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
+def getParams(listFile, ID, filterNumber):
+      filterNumber = filterNumber #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
       run = e.GalaxyParameters.SDSS(listFile, ID).run
       rerun = e.GalaxyParameters.SDSS(listFile, ID).rerun
       camcol = e.GalaxyParameters.SDSS(listFile, ID).camcol

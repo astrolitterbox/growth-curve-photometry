@@ -137,7 +137,38 @@ class Interpolation():
 def setBand():
   return 'g'
 
-def checkInput(listFile, dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir):
+
+def main():
+  iso25D = 40 / 0.396
+  #dataDir = '/media/46F4A27FF4A2713B_/work2/data/'
+  dataDir = '../data'
+  band = setBand()
+  outputFile = dataDir+'/growthCurvePhotometry.csv'
+  listFile = dataDir+'/SDSS_photo_match.csv'
+  fitsDir = dataDir+'/SDSS/'
+  filledDir = 'filled_'+band+'/'
+  
+  imgDir = 'img/'+band
+  simpleFile = dataDir+'/CALIFA_mother_simple.csv'
+  maskFile = dataDir+'/maskFilenames.csv'  
+  dataFile = 'list.txt'
+
+  csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
+  
+  '''
+  for row in csvReader:
+
+	ID = int(string.strip(row[0]))
+	ra = string.strip(row[1])
+	dec = string.strip(row[2])
+	run = string.strip(row[3])
+	rerun = string.strip(row[4])
+	camcol = string.strip(row[5])
+	field = string.strip(row[6])
+	runstr = sdss.run2string(run)
+	field_str = sdss.field2string(field)
+	outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+
 	try:
 	  f = open(GalaxyParameters.getSDSSUrl(listFile, dataDir, ID-1))
 	  print 'it is here', ID - 1
@@ -156,73 +187,31 @@ def checkInput(listFile, dataDir, ID, run, rerun, camcol, runstr, band, field_st
 	  os.system('wget -P '+fitsDir+'r/ http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
 	  pass
 
-def checkOutput(dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir, filledDir):
-	outputFilename = dataDir+'/'+filledDir+'fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-	print outputFilename
+   #checking output file
 	try:
 	  f = open(outputFilename)
-	  #print 'musu', ID
+	  print 'musu', ID
 	except IOError as e:
-	  print e
-	  out = [ID]
-	  utils.writeOut(out, 'missing_g.csv')
+	  utils.writeOut(str(ID))
 	  pass
-	  
-	  
-def main():
-  iso25D = 40 / 0.396
-  #dataDir = '/media/46F4A27FF4A2713B_/work2/data/'
-  dataDir = '../data'
-  band = setBand()
-  outputFile = dataDir+'/growthCurvePhotometry.csv'
-  listFile = dataDir+'/SDSS_photo_match.csv'
-  fitsDir = dataDir+'/SDSS/'
-  filledDir = 'filled_'+band+'/'
-  
-  imgDir = 'img/'+band
-  simpleFile = dataDir+'/CALIFA_mother_simple.csv'
-  maskFile = dataDir+'/maskFilenames.csv'  
-  dataFile = 'list.txt'
-  
-  csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
-  
-  
+	  '''	  
+  missing = np.genfromtxt('missing.csv')
   for row in csvReader:
-	
-	ID = int(string.strip(row[0]))
-	ra = string.strip(row[1])
-	dec = string.strip(row[2])
-	run = string.strip(row[3])
-	rerun = string.strip(row[4])
-	camcol = string.strip(row[5])
-	field = string.strip(row[6])
-	runstr = sdss.run2string(run)
-	field_str = sdss.field2string(field)
-
-	#checkInput(listFile, dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir)
-	checkOutput(dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir, filledDir)
-  exit()
-  missing = np.genfromtxt('missing_g.csv')
-  print missing, 'missing'  
-  ID = missing	
-  csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
-  for row in csvReader:  	
-  #	ID = string.strip(row[0])
+    
+	#print '********************************', row[0]      
+	ID = string.strip(row[0])
 	#CHECK THE DELIMITERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	
-  #	if (int(ID) in x for x in missing):
-  
-  #	  print ID, 'did you check the delimiters?'
-  #for i, ID in enumerate(missing):
-  	if ID == 800:
-	  	    print 'id,', int(ID) - 1	
-		    ra = GalaxyParameters.SDSS(listFile, int(ID) - 1).ra
-		    dec = GalaxyParameters.SDSS(listFile, int(ID) - 1).dec
-		    run = GalaxyParameters.SDSS(listFile, int(ID) - 1).run
-		    rerun = GalaxyParameters.SDSS(listFile, int(ID) - 1).rerun
-		    camcol = GalaxyParameters.SDSS(listFile, int(ID) - 1).camcol		    
-		    field = GalaxyParameters.SDSS(listFile, int(ID) - 1).field
-		    runstr = GalaxyParameters.SDSS(listFile, int(ID) - 1).runstr
+	if (ID in x for x in missing):
+
+	  print ID, 'did you check the delimiters?'
+	  if int(ID) >=750:
+		    ra = string.strip(row[1])
+		    dec = string.strip(row[2])
+		    run = string.strip(row[3])
+		    rerun = string.strip(row[4])
+		    camcol = string.strip(row[5])
+		    field = string.strip(row[6])
+		    runstr = sdss.run2string(run)
 		    field_str = sdss.field2string(field)
 		    print ID
 		    inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
@@ -244,8 +233,7 @@ def main():
 		      band_center = WCS.wcs2pix(WCS.getCentreWCSCoords()[0], WCS.getCentreWCSCoords()[1]) #'other band image center coords in r image coordinate system'		
 		      r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1]) #'r center coords in r image coordinate system'		  
 		      shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
-		      print shift, 'shift'
-		      #print type(shift)
+		      print type(shift)
 		      #note the swap!
 		      shift = [ceil(shift[1]), ceil(shift[0])]
 		      print shift, img.shape
@@ -255,17 +243,92 @@ def main():
 		      print outputFilename
 
 		      info = (ID, shift, outputFilename)
-		      Interpolation.callInpaint(img, mask, outputFilename, int(ID - 1))
+		      utils.writeOut(info)
+		      Interpolation.callInpaint(img, mask, outputFilename, ID)
 		      utils.writeOut(info)
 		    
 		    except IOError as e:
-		      utils.writeOut((ID, e), 'g_photometry_errors.csv')
+		      utils.writeOut((ID, e))
 		      pass
-	else:
+	  else:
 		    print 'passing', ID		  
-         	    pass
+		    pass
 
 
+#  for i in range(0, 1)):  
+#  	  Interpolation.runInpainting(maskFile, listFile, dataDir, i, log)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  #noOfGalaxies = 938
+  #i = 0
+  #inputFile = Photometry.getInputFile(listFile, dataDir, i)
+  #distances = Photometry.createDistanceArray(listFile, i, dataDir)
+  #inputImage = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+  
+  #center = Photometry.getCenter(listFile, i, dataDir)
+  #distances = Photometry.createDistanceArray(listFile, i, dataDir)
+  
+  #Photometry.createDistanceArray(listFile, i, dataDir, center)
+  #Photometry.circleContours(inputFile, distances, center, iso25D)
+  #print GalaxyParameters.getNedName(listFile, simpleFile, 0).NedName, 'url:', GalaxyParameters.getSDSSUrl(listFile, dataDir, 0)
+  #print Astrometry.getCenterCoords(listFile, 0)
+  
+  #log = []
+  #for i, x in enumerate((479, 476, 510, 486, 597, 436, 463, 163, 444, 569, 475, 766, 248, 497, 536, 615, 319, 700, 161, 266)):  
+      
+
+  
+  #Interpolation.runInpainting(maskFile, listFile, dataDir, 826, 0, log)
+  
+  
+  #print GalaxyParameters.getSDSSUrl(listFile, dataDir, 201)
+  #print GalaxyParameters.getMaskUrl(listFile, dataDir, simpleFile, 201)
+  #np.savetxt('errorlog.txt', log)  
+  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
+  #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
+  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
+  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
+  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
+  #print readAtlas.find_mag(ra, dec)
+  
+  #center = Astrometry.getPixelCoords(listFile, i, dataDir)
+  #print inputImage.shape
+  #inputImage = utils.get_cutout(center, inputImage, 500)
+  #circle.main(inputImage)  
+  #Photometry.calculateGrowthCurve(listFile, dataDir, 4)
+  #print GalaxyParameters.getFilledUrl(listFile, dataDir, 2)
+  #print Photometry.compareWithSDSS(listFile, dataDir, 4)
+  #ra = float(GalaxyParameters.SDSS(listFile, 4).ra)
+  #dec = float(GalaxyParameters.SDSS(listFile, 4).dec)
+  #hdu = pyfits.PrimaryHDU(inputImage)
+  #hdu.writeto('input.fits')
+  #print readAtlas.find_mag(ra, dec)
 
 if __name__ == "__main__":
   main()

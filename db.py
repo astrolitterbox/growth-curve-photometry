@@ -80,11 +80,16 @@ class dbUtils:
 	
 	@staticmethod
 	def getFromDB(columns, table, view, *whereClause): 
+<<<<<<< HEAD
 	  print 'connected'
 	  conn = sqlite3.connect(table)
 	  
 	  c = conn.cursor()
 	  print 'about to select'
+=======
+	  conn = sqlite3.connect(table)
+	  c = conn.cursor()
+>>>>>>> 908aaaabb39584fb50802c576e3d4bdd14116693
 	  print 'select ' + columns + ' from ' + view + ''.join(whereClause) +' order by rowid asc'
 	  c.execute('select ' + columns + ' from ' + view + ''.join(whereClause)+' order by rowid asc')
 	  conn.commit()

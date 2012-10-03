@@ -223,7 +223,7 @@ class Photometry():
 	    growthSlope = 200
 	    outputImage = inputImage
 	    skySD = np.std(sky)
-	    limitCriterion = 0.0002*skySD
+	    limitCriterion = 0.001*skySD
 	    width = 20
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
@@ -377,17 +377,20 @@ def main():
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939
   # for i in enumerate([161, 163, 189, 206, 214, 248, 266, 305, 318, 436, 437, 444, 463, 475, 478, 486, 497, 510, 536, 563, 569, 597, 615, 633, 938]):    
-  for i in range(938, 940):
+  for i in range(869, 878):
+  #for x, i in enumerate([189, 206, 214, 305, 437, 563, 879, 937]):
+  #for x, i in enumerate([877]):
+
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output, 'ellipse_log.csv')
+      utils.writeOut(output, 'g_ellipse_log.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, 'ellipseErrors.csv')
+      utils.writeOut(output, 'g_ellipseErrors.csv')
       pass   
  
    

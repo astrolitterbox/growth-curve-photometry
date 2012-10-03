@@ -317,7 +317,7 @@ class Photometry():
     # --------------------- writing output jpg file with both outermost annuli  
     outputImage = inputImage
     #circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
-    elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, ba)    
+    elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
     #outputImage[circpix] = 500
     outputImage[elPix] = 500
     

@@ -71,7 +71,7 @@ class GalaxyParameters:
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
       band = setBand()
-      fpCFile = dataDir+'filled_'+band+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fits'
+      fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -169,7 +169,7 @@ class Photometry():
     return head	
   @staticmethod
   def calculateFlux(flux, listFile, i):
-  	tsFieldParams = getTSFieldParameters.getParams(listFile, i)
+  	tsFieldParams = getTSFieldParameters.getParams(listFile, i, getFilterNumber())
   	zpt = tsFieldParams[0]
   	ext_coeff = tsFieldParams[1]
   	airmass = tsFieldParams[2]
@@ -354,7 +354,7 @@ def getDuplicates(listFile, dataDir):
 	print dupes
 
 def setBand():
-  	return 'u'	
+  	return 'g'	
   
 def getFilterNumber():
   	if setBand() == 'u':

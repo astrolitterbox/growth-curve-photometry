@@ -135,7 +135,7 @@ class Interpolation():
 
 
 def setBand():
-  return 'g'
+  return 'i'
 
 def checkInput(listFile, dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir):
 	try:
@@ -165,7 +165,7 @@ def checkOutput(dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDi
 	except IOError as e:
 	  print e
 	  out = [ID]
-	  utils.writeOut(out, 'missing_g.csv')
+	  utils.writeOut(out, 'missing_'+setBand()+'.csv')
 	  pass
 	  
 	  
@@ -201,20 +201,19 @@ def main():
 
 	#checkInput(listFile, dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir)
 	checkOutput(dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDir, filledDir)
-  exit()
-  missing = np.genfromtxt('missing_g.csv')
+  missing = np.genfromtxt('missing_'+setBand()+'.csv')
   print missing, 'missing'  
-  ID = missing	
-  csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
-  for row in csvReader:  	
+  #ID = missing
+  #csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
+  #for row in csvReader:  	
   #	ID = string.strip(row[0])
 	#CHECK THE DELIMITERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
   #	if (int(ID) in x for x in missing):
   
   #	  print ID, 'did you check the delimiters?'
-  #for i, ID in enumerate(missing):
-  	if ID == 800:
+  for i, ID in enumerate(missing):
+  	#if ID == 800:
 	  	    print 'id,', int(ID) - 1	
 		    ra = GalaxyParameters.SDSS(listFile, int(ID) - 1).ra
 		    dec = GalaxyParameters.SDSS(listFile, int(ID) - 1).dec
@@ -226,6 +225,8 @@ def main():
 		    field_str = sdss.field2string(field)
 		    print ID
 		    inFile = fitsDir+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
+		    utils.writeOut((ID, inFile), 'badFilenames.csv') 
+		    
 		    gz = gzip.open(inFile)
 		    imgFile = pyfits.open(gz)
 		    img = imgFile[0].data
@@ -255,15 +256,15 @@ def main():
 		      print outputFilename
 
 		      info = (ID, shift, outputFilename)
-		      Interpolation.callInpaint(img, mask, outputFilename, int(ID - 1))
-		      utils.writeOut(info)
+		      #Interpolation.callInpaint(img, mask, outputFilename, int(ID - 1))
+		      utils.writeOut(info, band+'interp_log.csv')
 		    
 		    except IOError as e:
-		      utils.writeOut((ID, e), 'g_photometry_errors.csv')
+		      utils.writeOut((ID, e), band+'_fill_errors.csv')
 		      pass
-	else:
-		    print 'passing', ID		  
-         	    pass
+#	else:
+#		    print 'passing', ID		  
+ #        	    pass
 
 
 

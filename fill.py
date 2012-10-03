@@ -163,7 +163,7 @@ def checkOutput(dataDir, ID, run, rerun, camcol, runstr, band, field_str, fitsDi
 	  f = open(outputFilename)
 	  #print 'musu', ID
 	except IOError as e:
-	  print e
+	  
 	  out = [ID]
 	  utils.writeOut(out, 'missing_'+setBand()+'.csv')
 	  pass
@@ -257,7 +257,7 @@ def main():
 
 		      info = (ID, shift, outputFilename)
 		      #Interpolation.callInpaint(img, mask, outputFilename, int(ID - 1))
-		      utils.writeOut(info, band+'interp_log.csv')
+		      utils.writeOut(info, band+'_interp_log.csv')
 		    
 		    except IOError as e:
 		      utils.writeOut((ID, e), band+'_fill_errors.csv')

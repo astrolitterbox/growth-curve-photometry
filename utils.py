@@ -7,8 +7,9 @@ import itertools
 
 
 def writeOut(output, filename='log.csv'):
+   print output
    f = open(filename,'aw')
-   w = csv.writer(f, delimiter=',')
+   w = csv.writer(f)
    w.writerow(output)
    f.close()
 

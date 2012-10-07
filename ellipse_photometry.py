@@ -71,7 +71,11 @@ class GalaxyParameters:
       field_str = GalaxyParameters.SDSS(listFile, ID).field_str
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
       band = setBand()
-      fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+      dupeList = [162, 164, 249, 267, 319, 437, 445, 464, 476, 480, 487, 498, 511, 537, 570, 598, 616, 634, 701, 767, 883, 939]
+      if (ID + 1) in dupeList:
+      	fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fitsB'
+      else:
+	fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -199,7 +203,7 @@ class Photometry():
 	    growthSlope = 200
 	    outputImage = inputImage
 	    skySD = np.std(sky)
-	    limitCriterion = 0.001*skySD
+	    limitCriterion = 0.0005*skySD
 	    width = 20
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
@@ -354,7 +358,7 @@ def getDuplicates(listFile, dataDir):
 	print dupes
 
 def setBand():
-  	return 'g'	
+  	return 'z'	
   
 def getFilterNumber():
   	if setBand() == 'u':

@@ -72,10 +72,14 @@ class GalaxyParameters:
       runstr = GalaxyParameters.SDSS(listFile, ID).runstr
       band = setBand()
       dupeList = [162, 164, 249, 267, 319, 437, 445, 464, 476, 480, 487, 498, 511, 537, 570, 598, 616, 634, 701, 767, 883, 939]
-      if (ID + 1) in dupeList:
-      	fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fitsB'
+      if band == 'r':
+	fpCFile = dataDir+'/filled2/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+      	if (ID +1) in dupeList:
+		fpCFile = dataDir+'/filled3/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
       else:
-	fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+      		fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
+      	        if (ID + 1) in dupeList:
+		  fpCFile = fpCFile+'B'
       return fpCFile
   @staticmethod
   def getMaskUrl(listFile, dataDir, simpleFile, ID):
@@ -111,7 +115,7 @@ class Astrometry():
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
     print 'pixCoords', pixelCoords
     out = [ID, centerCoords[0], centerCoords[1], pixelCoords[0], pixelCoords[1]]
-    utils.writeOut(out, 'coords.csv')
+    #utils.writeOut(out, 'coords.csv')
     return (pixelCoords[1], pixelCoords[0]) #y -- first, x axis -- second
   @staticmethod
   def distance2origin(y, x, center):
@@ -203,7 +207,7 @@ class Photometry():
 	    growthSlope = 200
 	    outputImage = inputImage
 	    skySD = np.std(sky)
-	    limitCriterion = 0.0005*skySD
+	    limitCriterion = 0.00005*skySD
 	    width = 20
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
@@ -225,7 +229,7 @@ class Photometry():
 	      fluxData[isoA, 5] = Npix
 
 	      isoA = isoA +1
-	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  np.mean(fluxData[isoA-width:isoA-1, 2])*inputImage[np.where(ellipseMask == 1)].shape[0]	    
+	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  gc_sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
 	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
 	    	
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
@@ -238,7 +242,7 @@ class Photometry():
 	    # --------------------------------------- writing an ellipse of counted points, testing only
 	    #hdu = pyfits.PrimaryHDU(ellipseMask)
 	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    np.savetxt('growth_curves/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+	    np.savetxt('growth_curves/'+setBand()+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
 	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
@@ -264,7 +268,7 @@ class Photometry():
     CALIFA_ID = str(i+1)
     inputImage = Photometry.getInputFile(listFile, dataDir, i)
     dbDir = '../db/'
-
+    imgDir = 'img/'+setBand()+'/'
     center = Photometry.getCenter(listFile, i, dataDir)
     distances = Photometry.createDistanceArray(listFile, i, dataDir)
     #hdu = pyfits.PrimaryHDU(distances)
@@ -322,13 +326,13 @@ class Photometry():
     outputImage = inputImage
     #circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
     elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
-    #outputImage[circpix] = 500
-    outputImage[elPix] = 500
+    #outputImage[circpix] = 0
+    outputImage[elPix] = 0
     
     outputImage, cdf = imtools.histeq(outputImage)
         
     #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave('img/snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
+    scipy.misc.imsave(imgDir+'snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -358,7 +362,7 @@ def getDuplicates(listFile, dataDir):
 	print dupes
 
 def setBand():
-  	return 'z'	
+  	return 'i'	
   
 def getFilterNumber():
   	if setBand() == 'u':
@@ -383,7 +387,7 @@ def main():
   #  dataDir = '../data'
   listFile = dataDir+'/SDSS_photo_match.csv'
   outputFile = dataDir+'/gc_out.csv'
-  imgDir = 'img/'
+  imgDir = 'img/'+band+'/'
   simpleFile = dataDir+'/CALIFA_mother_simple.csv'
   maskFile = dataDir+'maskFilenames.csv'
   noOfGalaxies = 939

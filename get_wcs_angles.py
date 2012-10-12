@@ -36,7 +36,7 @@ class GalaxyParameters:
     rerun_col = 8
     camcol_col = 9
     field_col = 10
-
+    ID = ID - 1  
     with open(listFile, 'rb') as f:
 	mycsv = csv.reader(f)
 	mycsv = list(mycsv)	
@@ -188,26 +188,31 @@ def main():
   
   for ID in range(1, 940):
   
-	  	    print 'id,', int(ID) - 1	
-		    ra = GalaxyParameters.SDSS(listFile, int(ID) - 1).ra
-		    dec = GalaxyParameters.SDSS(listFile, int(ID) - 1).dec
-		    run = GalaxyParameters.SDSS(listFile, int(ID) - 1).run
-		    rerun = GalaxyParameters.SDSS(listFile, int(ID) - 1).rerun
-		    camcol = GalaxyParameters.SDSS(listFile, int(ID) - 1).camcol		    
-		    field = GalaxyParameters.SDSS(listFile, int(ID) - 1).field
-		    runstr = GalaxyParameters.SDSS(listFile, int(ID) - 1).runstr
+	  	    print 'id,', int(ID)
+		    ra = GalaxyParameters.SDSS(listFile, int(ID)).ra
+		    dec = GalaxyParameters.SDSS(listFile, int(ID)).dec
+		    run = GalaxyParameters.SDSS(listFile, int(ID)).run
+		    rerun = GalaxyParameters.SDSS(listFile, int(ID)).rerun
+		    camcol = GalaxyParameters.SDSS(listFile, int(ID)).camcol		    
+		    field = GalaxyParameters.SDSS(listFile, int(ID)).field
+		    runstr = GalaxyParameters.SDSS(listFile, int(ID)).runstr
 		    field_str = sdss.field2string(field)
 
 		    print 'getting header info...'
 		    rFile = fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
 
 		    WCS=astWCS.WCS(rFile)	
-		    pa = utils.convert(db.dbUtils.getFromDB('pa', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(ID)))
+		    pa = utils.convert(db.dbUtils.getFromDB('pa', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(ID)))[0][0]
+		    pa_align = utils.convert(db.dbUtils.getFromDB('pa_align', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+str(ID)))[0][0]
 		    ang = WCS.getRotationDeg() 
 		    print ang
 		    
-		    pa_align = ang + pa - 360
-		    out = int(ID), pa_align[0][0]
+		    pa_align2 = (360 - ang) - 90 + pa
+		    #if pa_align2 >= 180:
+		#	    pa_align2 = pa_align2 - 180
+		 #   if pa_align2 <= 0:
+		#	    pa_align2 = pa_align2 + 180
+		    out = int(ID), pa, pa_align2
 		    print out
 		    utils.writeOut(out, "align_pa.csv")
 

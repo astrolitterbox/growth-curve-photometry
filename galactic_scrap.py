@@ -1,13 +1,13 @@
 #the main part is written by mic (http://wemakethings.net)
-#usage: set input filename and outputFile
+#usage: set input filename and outputFile: python galactic_scrap.py inputFile outputFile
 
-nedNames = ""
-outputFile = ""
-
-
+import sys
 import urllib
 import re
-print "hello\n"
+
+nedNames = sys.argv[1]
+outputFile = sys.argv[2]
+
 names = open(nedNames).readlines()
 i = 1;
 for name in names:

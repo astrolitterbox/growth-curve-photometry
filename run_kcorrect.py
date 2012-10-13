@@ -23,17 +23,6 @@ import csv
 import readAtlas
 import collections
 
-c = 299792.458 
-pi = 3.14159265
-#     Cosmological parameters
-H0 = 70.0 #km/s/Mpc, 1 Mpc= 3.08568025*1e19 km
-Wm = 0.3
-Wl = 0.7
-Wh = c / H0 
-Wk = 1 - Wm - Wl 
-tH = (3.08568025*1e19/H0)/(3600 * 365 * 24*10e9) #Hubble time in Gyr
-skyArea = 41252.9612494193 #degrees      
-dH = c/H0 #in Mpc
 imgDir = 'img/'
 dbDir = '../db/'
 dbFile = 'CALIFA.sqlite'
@@ -43,14 +32,18 @@ observedList = 'list_observed.txt'
 db_dataFile = 'db_data.txt'
 
 #constants
+c = 299792.458 
+pi = 3.14159265
+#     Cosmological parameters
 H0 = 70.0 #km/s/Mpc, 1 Mpc= 3.08568025*1e19 km
+tH = (3.08568025*1e19/H0)/(3600 * 365 * 24*10e9) #Hubble time in Gyr
+dH = c/H0 #in Mpc
 Wl = 0.728
 Wm = 1 - Wl
 Wh = c / H0 
 Wk = 1 - Wm - Wl 
 tH = (3.08568025*1e19/H0)/(3600 * 365 * 24*10e9) #Hubble time in Gyr
-skyArea = 41252.9612494193 #degrees      
-dH = c/H0 #in Mpc
+
 
 
 #utilities
@@ -67,8 +60,8 @@ def angular2physical(reff, z): #return physical effective diameter of the galaxy
 def getAbsMag(z, mag, ext):
 	print z
 	d = comovingDistance(z)
-        dm = ztodm(z, (0.3, 0.7, 0.7))
-	absmag = mag - dm #- 3.1 * ext
+        dm = ztodm(z, (Wm, Wl, H0/100))
+	absmag = mag - dm - ext
 	print dm, 'dm', absmag, 'absmag'
 	return absmag
 	
@@ -82,47 +75,7 @@ def findOverlap(a, b):
    a_multiset = collections.Counter(list(a))
    b_multiset = collections.Counter(list(b))
    return list((a_multiset & b_multiset).elements())
-  
-def getDataArray(data, zData):
-  
-  
-  myArray = np.empty((939, ))
-  
-  redshifts = dataArray[:,20]
-  maggies = dataArray[:,3:8]
-  maggies_err = dataArray[:,8:13]
-  extinction = dataArray[:,13:18]
-  kc = SDSSKCorrect(redshifts, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
-  kcorr = kc.kcorrect()
-  absmag = kc.absmag()
-  dataArray[:,21] = absmag[:, 2]
-  dataArray[:,22] = data[:]['petroMag_g'] - data[:]['extinction_g'] - (data[:]['petroMag_r'] - data[:]['extinction_r'])
-  sb = data[:]['rho'] + data[:]['petroMag_r']
-  dataArray[:,23] = sb
-  stMass = np.zeros((len(data), 1))
-  size = np.zeros((len(data), 1))
-  reff = np.zeros((len(data), 1))
-  for i in range(0, len(data)):
-    if data[i]['lnLDeV_r'] >= data[i]['lnLExp_r']:
-      reff[i] = data[i]['deVRad_r']
-    else:
-      reff[i] = data[i]['expRad_r']
-    size[i] = angular2physical(reff[i], redshifts[i])
-    dataArray[i,24] = reff[i]
-    dataArray[i,25] = size[i]
-  coeffs = kc.coeffs
-  tmremain = np.array([[0.601525, 0.941511, 0.607033, 0.523732, 0.763937]])
-  ones = np.ones((1, len(redshifts)))
-  prod = np.dot(tmremain.T, ones).T 
-  modelMasses = coeffs*prod
-  #print modelMasses.shape
-  mass = np.sum(modelMasses, axis=1)
-  for i in range (0, (len(data))):
-    distmod = KC.utils.cosmology.ztodm(redshifts[i])
-    exp = 10 ** (0.4 * distmod)
-    stMass[i] = mass[i] * exp
-    dataArray[i,26] = stMass[i]
-  return dataArray
+
 
 def main():
   data = np.empty((939, 16))
@@ -179,7 +132,7 @@ def main():
   
   
   
-  outputArray = np.empty((939, 7))
+  outputArray = np.empty((939, 8))
   
   kc = SDSSKCorrect(redshift, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
   kcorr = kc.kcorrect()
@@ -199,9 +152,9 @@ def main():
     distmod = KC.utils.cosmology.ztodm(redshift[i])
     exp = 10 ** (0.4 * distmod)
     outputArray[i, 6] = mass[i] * exp
-
+    outputArray[i, 7] = getAbsMag(redshift[i], maggies[i, 2], extinction[i, 2])
   
-  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3f, %10.3f, %10.3e')  
+  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3f, %10.3f, %10.3e, %10.3e')  
   
 if __name__ == '__main__':
     main()

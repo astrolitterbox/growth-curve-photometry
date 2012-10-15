@@ -3,7 +3,7 @@ import numpy as np
 import math as math
 import matplotlib.pylab as plt
 import kcorrect as KC
-from kcorrect.sdss import SDSSKCorrect, SDSSPhotoZ, SDSS
+from kcorrect.sdss import SDSSFilterList, SDSSPhotoZ, SDSS
 from kcorrect.utils.cosmology import ztodm
 from scipy import integrate
 
@@ -123,18 +123,20 @@ def main():
   
   data[:, 15] = redshift[:, 0]
   
-  maggies = data[:, 0:5]
-
-  extinction = data[:, 5:10]
-
-  maggies_err = data[:, 11:]  
-
+  #maggies = data[:, 0:5]
+  maggies = data[:, 1:4]
+  print maggies.shape
   
+  #extinction = data[:, 5:10]
+  extinction = data[:, 6:9]
+  print extinction.shape
+  #maggies_err = data[:, 11:]  
+  maggies_err = data[:, 12:15]  
+  print maggies_err.shape
   
   
   outputArray = np.empty((939, 8))
-  
-  kc = SDSSKCorrect(redshift, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
+  kc =  KC.KCorrectAB(redshift, maggies, extinction, maggies_err, cosmo=(Wm, Wl, H0/100))
   kcorr = kc.kcorrect()
   #absmag = getAbsMag(redshift, maggies[:, 2], extinction[:, 2])#kc.absmag() 
   outputArray[:,0] = califa_id[:, 0]

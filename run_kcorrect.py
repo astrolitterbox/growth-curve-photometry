@@ -123,24 +123,20 @@ def main():
   
   data[:, 15] = redshift[:, 0]
   
-  #maggies = data[:, 0:5]
-  maggies = data[:, 1:4]
-  print maggies.shape
-  
-  #extinction = data[:, 5:10]
-  extinction = data[:, 6:9]
-  print extinction.shape
-  #maggies_err = data[:, 11:]  
-  maggies_err = data[:, 12:15]  
-  print maggies_err.shape
+  maggies = data[:, 0:5]
+
+  extinction = data[:, 5:10]
+
+  maggies_err = data[:, 11:] 
   
   
-  outputArray = np.empty((939, 8))
+  outputArray = np.empty((939, 10))
   kc =  KC.KCorrectAB(redshift, maggies, extinction, maggies_err, cosmo=(Wm, Wl, H0/100))
   kcorr = kc.kcorrect()
+
   #absmag = getAbsMag(redshift, maggies[:, 2], extinction[:, 2])#kc.absmag() 
   outputArray[:,0] = califa_id[:, 0]
-  print outputArray[:, 1:6].shape
+  #print kcorr[:, 2][:].shape
   
   outputArray[:, 1:6] = kc.absmag()  
   coeffs = kc.coeffs
@@ -155,8 +151,10 @@ def main():
     exp = 10 ** (0.4 * distmod)
     outputArray[i, 6] = mass[i] * exp
     outputArray[i, 7] = getAbsMag(redshift[i], maggies[i, 2], extinction[i, 2])
-  
-  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3f, %10.3f, %10.3e, %10.3e')  
+    
+    outputArray[i, 9] = distmod
+  outputArray[:, 8] = kcorr[:, 2]  
+  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3f, %10.3f, %10.3e, %10.3e, %10.3e, %10.3e')  
   
 if __name__ == '__main__':
     main()

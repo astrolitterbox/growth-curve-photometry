@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-import ellipse_photometry as e
+import galaxyParameters as e
 import pyfits
 
 
-def getParams(listFile, ID, filterNumber):
+def getParams(ID, filterNumber):
       filterNumber = filterNumber #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
-      run = e.GalaxyParameters.SDSS(listFile, ID).run
-      rerun = e.GalaxyParameters.SDSS(listFile, ID).rerun
-      camcol = e.GalaxyParameters.SDSS(listFile, ID).camcol
-      field = e.GalaxyParameters.SDSS(listFile, ID).field
-      runstr = e.GalaxyParameters.SDSS(listFile, ID).runstr
-      field_str = e.GalaxyParameters.SDSS(listFile, ID).field_str
+      run = e.GalaxyParameters.SDSS(ID).run
+      rerun = e.GalaxyParameters.SDSS(ID).rerun
+      camcol = e.GalaxyParameters.SDSS(ID).camcol
+      field = e.GalaxyParameters.SDSS(ID).field
+      runstr = e.GalaxyParameters.SDSS(ID).runstr
+      field_str = e.GalaxyParameters.SDSS(ID).field_str
 	#http://das.sdss.org/imaging/5115/40/calibChunks/2/tsField-005115-2-40-0023.fit
       print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
       

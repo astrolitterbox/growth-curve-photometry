@@ -41,7 +41,7 @@ class GraphData:
         self.legend = legend
 
 class Plots:
-    imgDir = './img/analysis'        
+    imgDir = './img/'        
     def plotLogHist(self, graphDataList, filename, plotTitles, bins, *args):
       bins=10**np.arange(*bins)     
       s = plt.figure()

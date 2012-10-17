@@ -4,15 +4,15 @@ import sys
 import numpy as np
 
 
-def plotGrowthCurve(fluxData, CALIFA_ID):
+def plotGrowthCurve(fluxData, band, CALIFA_ID):
     graph = plot.Plots()
-    cumulativeFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,1])), 'k', 'best')
-    currentFluxSkySubPPData = plot.GraphData(((fluxData[:,0], fluxData[:,2])), 'k', 'best')
-    currentFluxData = plot.GraphData(((fluxData[:,0], fluxData[:,4])), 'b', 'best')
-    skySubFluxData = plot.GraphData(((fluxData[:,0], fluxData[:, 6])), 'b', 'best')
+    cumulativeFluxData = plot.GraphData(((0.396*fluxData[:,0], fluxData[:,1])), 'k', 'best')
+    currentFluxSkySubPPData = plot.GraphData(((0.396*fluxData[:,0], fluxData[:,2])), 'k', 'best')
+    currentFluxData = plot.GraphData(((0.396*fluxData[:,0], fluxData[:,4])), 'b', 'best')
+    skySubFluxData = plot.GraphData(((0.396*fluxData[:,0], fluxData[:, 6])), 'b', 'best')
     #NpixData = plot.GraphData(((fluxData[:,0], fluxData[:, 5] - fluxData[:, 4])), 'b', 'best')
-    graph.plotScatter([cumulativeFluxData], CALIFA_ID+"cumulative_Flux", plot.PlotTitles("CumulativeFlux", "distance", "Flux"))
-    graph.plotScatter([currentFluxSkySubPPData], CALIFA_ID+"Flux_per_pixel", plot.PlotTitles("Sky subtracted flux per pixel", "distance", "Flux per pixel"))
-    graph.plotScatter([currentFluxData], CALIFA_ID+"Current_flux", plot.PlotTitles("Flux profile", "major axis", "counts"))
-    graph.plotScatter([skySubFluxData], CALIFA_ID+"Sky_sub_flux", plot.PlotTitles("Sky subtracted flux", "major axis", "counts"))
+    graph.plotScatter([cumulativeFluxData], band+'/plots/'+CALIFA_ID+"cumulative_Flux", plot.PlotTitles("CumulativeFlux", "distance", "Flux"))
+    graph.plotScatter([currentFluxSkySubPPData], band+'/plots/'+CALIFA_ID+"Flux_per_pixel", plot.PlotTitles("Sky subtracted flux per pixel", "distance", "Flux per pixel"))
+    graph.plotScatter([currentFluxData], band+'/plots/'+CALIFA_ID+"Current_flux", plot.PlotTitles("Flux profile", "major axis", "counts"))
+    graph.plotScatter([skySubFluxData], band+'/plots/'+CALIFA_ID+"Sky_sub_flux", plot.PlotTitles("Sky subtracted flux", "major axis", "counts"))
 

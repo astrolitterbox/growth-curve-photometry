@@ -127,11 +127,11 @@ def main():
 
   extinction = data[:, 6:9]
 
-  maggies_err = data[:, 12:14] 
-  
+  maggies_err = data[:, 11:14] 
+  print maggies.shape, extinction.shape, maggies_err.shape
   
   outputArray = np.empty((939, 7))
-  kc =  KC.ABKcorrect(redshift, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
+  kc =  KC.KCorrectAB(redshift, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
   kcorr = kc.kcorrect()
 
   #absmag = getAbsMag(redshift, maggies[:, 2], extinction[:, 2])#kc.absmag() 
@@ -154,7 +154,7 @@ def main():
     
     outputArray[i, 6] = distmod
   outputArray[:, 5] = kcorr[:, 2]  
-  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3f, %10.3f, %10.3e, %10.3e, %10.3e')  
+  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3e, %10.3e, %10.3e')  
   
 if __name__ == '__main__':
     main()

@@ -60,7 +60,7 @@ def removeLimits(array, inputShape):
 
 def getPixelEllipseLength(isoA, axisRatio):
   length = len(draw_ellipse((2000, 2000), 1000, 1000, 0, isoA, axisRatio)[0])
-  print 'length', length, 'circumference', get_ellipse_circumference(isoA, axisRatio)
+  #print 'length', length, 'circumference', get_ellipse_circumference(isoA, axisRatio)
   return length
 
 

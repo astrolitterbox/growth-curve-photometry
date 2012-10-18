@@ -141,9 +141,7 @@ class Photometry():
   def setLimitCriterion(i, band):
     skySD = Photometry.getSkyParams(i, band).skySD
     C = 0.0001
-    fluxRatio = Photometry.getFluxRatio(i, band).fluxRatio
-    print fluxRatio, 'Flux Ratio'
-    return C*skySD*fluxRatio
+    return C*skySD
       
  
 
@@ -163,7 +161,9 @@ class Photometry():
 	    growthSlope = 200
 	    #outputImage = inputImage
 	    limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
-	    width = 20
+	    width = 20/Photometry.getFluxRatio(int(CALIFA_ID) - 1, band).fluxRatio
+	    print width, 'width'
+
 	    #output = inputImage.copy()
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
@@ -211,7 +211,7 @@ class Photometry():
       n = fluxData[distance-width:distance+1, 3].shape[0]
       nPix = np.sum(fluxData[distance-width:distance+1, 5])
       slope = np.sum(np.abs(fluxData[distance-width:distance+1, 3]))/nPix
-      print 'slope: ', slope, 'limit: ', limitCriterion, distance, 'dist'
+      #print 'slope: ', slope, 'limit: ', limitCriterion, distance, 'dist'
       
       if slope <= limitCriterion:
         mean = np.mean(fluxData[distance-width:distance+1, 2])

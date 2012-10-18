@@ -25,92 +25,21 @@ import getTSFieldParameters
 import plotGrowthCurve		
 from math import isnan
 import scipy.misc 
-import numpy.lib.recfunctions
-
-
-
-
-class GalaxyParameters:
-  @staticmethod
-  def SDSS(listFile, ID):
-    ret = GalaxyParameters()
-    CALIFAID_col = 0
-    ra_col = 1
-    dec_col = 2
-    run_col = 7
-    rerun_col = 8
-    camcol_col = 9
-    field_col = 10
-    with open(listFile, 'rb') as f:
-	mycsv = csv.reader(f)
-	mycsv = list(mycsv)	
-	ret.CALIFAID = string.strip(mycsv[ID][CALIFAID_col])
-	ret.ra = string.strip(mycsv[ID][ra_col])
-	ret.dec = string.strip(mycsv[ID][dec_col])
-	ret.run = string.strip(mycsv[ID][run_col])
-	ret.rerun = string.strip(mycsv[ID][rerun_col])
-	ret.camcol = string.strip(mycsv[ID][camcol_col])
-	ret.field = string.strip(mycsv[ID][field_col])
-	ret.runstr = utils.run2string(ret.run)
-	ret.field_str = utils.field2string(ret.field)	
-    return ret
-  
-  @staticmethod
-  def getSDSSUrl(listFile, dataDir, ID):
-      camcol = GalaxyParameters.SDSS(listFile, ID).camcol
-      field = GalaxyParameters.SDSS(listFile, ID).field
-      field_str = GalaxyParameters.SDSS(listFile, ID).field_str
-      runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      band = setBand()
-      fpCFile = dataDir+'/SDSS/'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fit.gz'
-      return fpCFile
-  @staticmethod
-  def getFilledUrl(listFile, dataDir, ID):
-      camcol = GalaxyParameters.SDSS(listFile, ID).camcol
-      field = GalaxyParameters.SDSS(listFile, ID).field
-      field_str = GalaxyParameters.SDSS(listFile, ID).field_str
-      runstr = GalaxyParameters.SDSS(listFile, ID).runstr
-      band = setBand()
-      dupeList = [162, 164, 249, 267, 319, 437, 445, 464, 476, 480, 487, 498, 511, 537, 570, 598, 616, 634, 701, 767, 883, 939]
-      if band == 'r':
-	fpCFile = dataDir+'/filled2/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-      	if (ID +1) in dupeList:
-		fpCFile = dataDir+'/filled3/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-      else:
-      		fpCFile = dataDir+'/filled_'+band+'/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
-      	        if (ID + 1) in dupeList:
-		  fpCFile = fpCFile+'B'
-      return fpCFile
-  @staticmethod
-  def getMaskUrl(listFile, dataDir, simpleFile, ID):
-     NedName = GalaxyParameters.getNedName(listFile, simpleFile, ID).NedName
-     print NedName
-     maskFile = dataDir+'/MASKS/'+NedName+'_mask_r.fits'
-     return maskFile
-     	
-  @staticmethod
-  def getNedName(listFile, simpleFile, ID):
-    ret = GalaxyParameters()
-    with open(simpleFile, 'rb') as f:
-      NEDNAME_col = 2
-      mycsv = csv.reader(f)
-      mycsv = list(mycsv)	
-      ret.NedName = string.strip(mycsv[ID][NEDNAME_col])
-    return ret
-  
+import sys
+from galaxyParameters import *
 
 
 #a set of methods for swapping between pixel coordinates and ra, dec
 
 class Astrometry():
   @staticmethod
-  def getCenterCoords(listFile, ID):
-    centerCoords = (GalaxyParameters.SDSS(listFile, ID).ra, GalaxyParameters.SDSS(listFile, ID).dec)
+  def getCenterCoords(ID):
+    centerCoords = (GalaxyParameters.SDSS(ID).ra, GalaxyParameters.SDSS(ID).dec)
     return centerCoords
   @staticmethod
-  def getPixelCoords(listFile, ID, dataDir):   
-    WCS=astWCS.WCS(GalaxyParameters.getSDSSUrl(listFile, dataDir, ID)) #changed -- was filledUrl. I don't write coords to my masks..
-    centerCoords = Astrometry.getCenterCoords(listFile, ID)
+  def getPixelCoords(ID):   
+    WCS=astWCS.WCS(GalaxyParameters.getSDSSUrl(ID)) #changed -- was filledUrl. I don't write coords to my masks..
+    centerCoords = Astrometry.getCenterCoords(ID)
     print 'centerCoords', centerCoords
     pixelCoords = WCS.wcs2pix(centerCoords[0], centerCoords[1])
     print 'pixCoords', pixelCoords
@@ -138,10 +67,10 @@ class Photometry():
   pixelScale = 0.396
   iso25D = 40 / 0.396
   @staticmethod
-  def getCenter(listFile, i, dataDir):
-    ra = Astrometry.getCenterCoords(listFile, i)[0]
-    dec = Astrometry.getCenterCoords(listFile, i)[1]
-    return Astrometry.getPixelCoords(listFile, i, dataDir)
+  def getCenter(i):
+    ra = Astrometry.getCenterCoords(i)[0]
+    dec = Astrometry.getCenterCoords(i)[1]
+    return Astrometry.getPixelCoords(i)
   @staticmethod
   def findClosestEdge(distances, center):
   #finds the closest distance from the center to the edge. Used for sky gradient calculation, as we want to avoid using a small number of pixels in a ring.
@@ -156,28 +85,30 @@ class Photometry():
     return int(math.floor(min(yUp, yDown, xLeft, xRight)))
 
   @staticmethod
-  def createDistanceArray(listFile, i, dataDir):
-    center = Photometry.getCenter(listFile, i, dataDir)
+  def createDistanceArray(i):
+    center = Photometry.getCenter(i)
 
     #print 'center coords', center, 'coords', center[0], center[1]
-    inputImage = Photometry.getInputFile(listFile, dataDir, i)
-    distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(listFile, i, dataDir))
+    inputImage = Photometry.getInputFile(i, band=Settings.getConstants().band)
+    distances = Astrometry.makeDistanceArray(inputImage, Astrometry.getPixelCoords(i))
     return distances
   @staticmethod
-  def getInputFile(listFile, dataDir, i):
+  def getInputFile(i, band):
     #print 'filename:', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
-    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))
-    inputImage = inputFile[0].data - 1000
+    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(i, band))
+    inputImage = inputFile[0].data
+    if band != 'r':
+       inputImage-=1000 
     #print 'opened the input file'
     return inputImage
   @staticmethod    
   def getInputHeader(listFile, dataDir, i): 
-    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(listFile, dataDir, i))	
+    inputFile = pyfits.open(GalaxyParameters.getFilledUrl(i))	
     head = inputFile[0].header
     return head	
   @staticmethod
-  def calculateFlux(flux, listFile, i):
-  	tsFieldParams = getTSFieldParameters.getParams(listFile, i, getFilterNumber())
+  def calculateFlux(flux, i):
+  	tsFieldParams = getTSFieldParameters.getParams(i, Settings.getFilterNumber())
   	zpt = tsFieldParams[0]
   	ext_coeff = tsFieldParams[1]
   	airmass = tsFieldParams[2]
@@ -188,27 +119,52 @@ class Photometry():
     	print 'full magnitude', mag
 	return mag
   
-
   
+  
+  
+  @staticmethod
+  def initFluxData(inputImage, center, distances):
+	    fluxData = np.empty((np.max(distances), 7))
+	    fluxData[0,0] = 0
+	    fluxData[0,1] = inputImage[center]
+	    fluxData[0,2] = inputImage[center]
+	    fluxData[0,3] = 200
+	    fluxData[0,4] = inputImage[center]
+	    fluxData[0,5] = 1
+	    fluxData[0,6] = 1
+	    return fluxData
+  
+  
+  
+  
+  @staticmethod
+  def setLimitCriterion(i, band):
+    skySD = Photometry.getSkyParams(i, band).skySD
+    C = 0.0001
+    fluxRatio = Photometry.getFluxRatio(i, band).fluxRatio
+    print fluxRatio, 'Flux Ratio'
+    return C*skySD*fluxRatio
+      
  
 
   
   @staticmethod
-  def buildGrowthCurve(inputImage, center,  distances, skyMean, pa, ba, CALIFA_ID):
+  def buildGrowthCurve(center, distances, pa, ba, CALIFA_ID):
+	    band = Settings.getConstants().band
+	    inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
 	    ellipseMask = np.zeros((inputImage.shape))	    
-            sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
-	    fluxData = np.empty((np.max(distances), 7))
+	    fluxData = Photometry.initFluxData(inputImage, center, distances)
 	    currentPixels = center
-	    currentFlux = inputImage[center] - skyMean	
+	    currentFlux = inputImage[center] 	
 	    isoA = 1 #initialising    
 	    Npix = 1
 	    totalNpix = 1		
 	    oldFlux = inputImage[center[0], center[1]]
 	    growthSlope = 200
-	    outputImage = inputImage
-	    skySD = np.std(sky)
-	    limitCriterion = 0.00005*skySD
+	    #outputImage = inputImage
+	    limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
 	    width = 20
+	    #output = inputImage.copy()
 	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
 	      oldFlux = currentFlux	      
@@ -218,31 +174,34 @@ class Photometry():
 	      Npix = inputImage[currentPixels].shape[0]      
 	      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
 	      currentFlux = np.sum(inputImage[currentPixels])
-	      
+	      #output[currentPixels] = 1
 	      growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
-	      print 'isoA', isoA, 'Npix', Npix
+	      #print 'isoA', isoA, 'Npix', Npix
 	      fluxData[isoA, 0] = isoA
 	      fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)])# cumulative flux
 	      fluxData[isoA, 2] = currentFlux/Npix 
 	      fluxData[isoA, 3] = growthSlope/Npix
 	      fluxData[isoA, 4] = currentFlux #current flux
 	      fluxData[isoA, 5] = Npix
-
+	      fluxData[isoA, 6] = totalNpix
 	      isoA = isoA +1
-	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  gc_sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
 	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
+	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  gc_sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
+
 	    	
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
-	    fluxData[:, 1] = fluxData[:, 1]  #cumulative flux
+	    fluxData[:, 1] = fluxData[:, 1] - gc_sky*fluxData[:, 6]#cumulative flux, _sky_subtracted
+	    #print fluxData[-1, 1], gc_sky, 'SKY', fluxData[-1, 6], gc_sky*totalNpix
 	    fluxData[:, 4] = fluxData[:, 4] #current flux
 	    fluxData[:, 6] = fluxData[:, 4] - gc_sky*fluxData[:, 5] #current flux, sky subtracted
-	    print inputImage[np.where(ellipseMask == 1)].shape[0], 'shape', Npix, 'npix', np.mean(fluxData[isoA-width:isoA-1, 2]), 'sky'
+	    #print inputImage[np.where(ellipseMask == 1)].shape[0], 'shape', Npix, 'npix', np.mean(fluxData[isoA-width:isoA-1, 2]), 'sky'
 	    fluxData[:, 2] = fluxData[:, 2] - gc_sky #sky-subtracted flux per pixel
-	    print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
+	    #print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 	    # --------------------------------------- writing an ellipse of counted points, testing only
-	    #hdu = pyfits.PrimaryHDU(ellipseMask)
-	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    np.savetxt('growth_curves/'+setBand()+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+	    #if e:
+	    #  hdu = pyfits.PrimaryHDU(output)
+	    #  hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
+	    np.savetxt('growth_curves/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
 	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
@@ -262,77 +221,74 @@ class Photometry():
       print 'indexError', distance, e
       out = 0
     return out  
-  
+
   @staticmethod
-  def calculateGrowthCurve(listFile, dataDir, i):
+  def getFluxRatio(i, band):
+    ret = Photometry()
+    ret.fluxRatio = np.sum(Photometry.getInputFile(i, band))/np.sum(Photometry.getInputFile(i, 'r'))
+    return ret
+    
+
+
+  @staticmethod
+  def getSkyParams(i, band):
+    ret = Photometry()
+    inputImage = Photometry.getInputFile(i, band)
+    distances = Photometry.createDistanceArray(i)
+    sky = inputImage[np.where(distances > 3*int(round(Photometry.iso25D)))]
+    ret.skyMean = np.mean(sky)   
+    ret.skySD = np.std(sky)
+    return ret
+    
+  @staticmethod
+  def calculateGrowthCurve(i):
     CALIFA_ID = str(i+1)
-    inputImage = Photometry.getInputFile(listFile, dataDir, i)
+
     dbDir = '../db/'
-    imgDir = 'img/'+setBand()+'/'
-    center = Photometry.getCenter(listFile, i, dataDir)
-    distances = Photometry.createDistanceArray(listFile, i, dataDir)
+    imgDir = 'img/'+Settings.getConstants().band+'/'
+    center = Photometry.getCenter(i)
+    distances = Photometry.createDistanceArray(i)
     #hdu = pyfits.PrimaryHDU(distances)
     #hdu.writeto('distances.fits')
-    sky = inputImage[np.where(distances > int(round(Photometry.iso25D)))]
-    skyMean = np.mean(sky)   
-    skySD = np.std(sky)
-    #i+1 in the next line reflects the fact that CALIFA id's start with 1
+
     pa = db.dbUtils.getFromDB('PA', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
     ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    #ba = 1
-    #r_mag = db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    #r_e = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    #lucy_re = db.dbUtils.getFromDB('re', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0]#parsing tuples
-    #l_SkyMean = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'lucie', ' where id = '+ CALIFA_ID)[0][0] - 1000#parsing tuples
- #   print 'ba', ba
-    
-    #fluxData = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba)
-    #isoA = fluxData.shape[0]
-
-  
-    # --------------------------------------- starting GC photometry in circular annuli
-    print 'CIRCULAR APERTURE'
-    #circFlux, circFluxData = Photometry.circularFlux(inputImage, center,  distances, skyMean)  
-    #circFlux, circFluxData, gc_sky = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, 1, str(i+1))
-    #circRadius = circFluxData.shape[0]
-    #print circRadius, 'circle radius'
-    #otherFlux = circFluxData[-1, 1]   
-    #print 'fluxes: mask:', circFlux, 'sum', otherFlux    
-    #try:
-    #	    circHLR = np.where(np.round(circFluxData[:,1]/circFlux, 1) == 0.5)[0][0]
-    #except IndexError as e:
-    #	    circHLR = str(e)
-	    
-    #circMag = Photometry.calculateFlux(circFlux, listFile, i)
-
     
     # --------------------------------------- starting ellipse GC photometry
 
     print 'ELLIPTICAL APERTURE'
-    flux, fluxData, gc_sky = Photometry.buildGrowthCurve(inputImage, center, distances, skyMean, pa, ba, CALIFA_ID)  
-    totalFlux = flux
-    otherFlux = fluxData[fluxData.shape[0]-1, 1]   
+    totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
+    
+    otherFlux = fluxData[fluxData.shape[0]-1, 6]   
+   
     elMajAxis = fluxData.shape[0]
+    #print totalFlux - otherFlux, 'flux diff'
     #print 't', totalFlux, 'o', otherFlux
-    elMag = Photometry.calculateFlux(totalFlux, listFile, i)
+    #diff = [CALIFA_ID, totalFlux - otherFlux]
+    #utils.writeOut(diff, 'fluxdiff.txt')
+    elMag = Photometry.calculateFlux(totalFlux, i)
+    
     try:
-    	elHLR = fluxData[np.where(np.round(fluxData[:, 1]/totalFlux, 1) == 0.5)][0][0]    
+	elHLR = fluxData[np.where(np.floor(totalFlux/fluxData[:, 1]) == 1)][0][0] - 1 #Floor() -1 -- last element where the ratio is 2
+	print elHLR  
     except IndexError as e:
+        print 'err'
 	elHLR = e
-    plotGrowthCurve.plotGrowthCurve(fluxData, CALIFA_ID)
+    
+    plotGrowthCurve.plotGrowthCurve(fluxData, Settings.getConstants().band, CALIFA_ID)
  	
     
     # --------------------- writing output jpg file with both outermost annuli  
-    outputImage = inputImage
+    outputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, Settings.getConstants().band)
     #circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
-    elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
+    elPix = ellipse.draw_ellipse(outputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
     #outputImage[circpix] = 0
     outputImage[elPix] = 0
     
     outputImage, cdf = imtools.histeq(outputImage)
         
     #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave(imgDir+'snapshots/'+CALIFA_ID+'_gc.jpg', outputImage)
+    scipy.misc.imsave(Settings.getConstants().imgDir+Settings.getConstants().band+'/L_'+CALIFA_ID+'_gc.jpg', outputImage)
 
     #hdu = pyfits.PrimaryHDU(outputImage)
     #outputName = 'CALIFA'+CALIFA_ID+'.fits'
@@ -341,11 +297,13 @@ class Photometry():
 
     
     # ------------------------------------- formatting output row
-    output = [CALIFA_ID, elMag, elHLR, np.mean(sky),  gc_sky] 
+    band = Settings.getConstants().band
+    output = [CALIFA_ID, elMag, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
+    print output
     #print skyMean, oldSky, 'sky'
     return output
     
-def getDuplicates(listFile, dataDir):
+def getDuplicates():
 	#for i in range(0, 939):
 	#	print i+1, GalaxyParameters.getFilledUrl(listFile, dataDir, i)
 		
@@ -361,46 +319,66 @@ def getDuplicates(listFile, dataDir):
 	dupes = [int(item) for item in ids if int(item) not in list(indices)]
 	print dupes
 
-def setBand():
-  	return 'i'	
+
+class Settings():
   
-def getFilterNumber():
-  	if setBand() == 'u':
+  @staticmethod
+  def getConstants():
+    ret = Settings()
+    ret.band = sys.argv[3]
+    ret.dataDir = '../data'    
+    ret.listFile = ret.dataDir+'/SDSS_photo_match.csv'  
+    ret.simpleFile = ret.dataDir+'/CALIFA_mother_simple.csv'
+    ret.maskFile = ret.dataDir+'maskFilenames.csv'
+    ret.outputFile = ret.dataDir+'/gc_out.csv'
+    ret.imgDir = 'img/'
+    ret.lim_lo = int(sys.argv[1])
+    ret.lim_hi = int(sys.argv[2])
+    return ret
+    
+
+  @staticmethod
+  def getFilterNumber():
+  	if Settings.getConstants().band == 'u':
   		return 0
-  	elif setBand() == 'g':
+  	elif Settings.getConstants().band == 'g':
   		return 1
-  	elif setBand() == 'r':
+  	elif Settings.getConstants().band == 'r':
   		return 2
-  	elif setBand() == 'i':
+  	elif Settings.getConstants().band == 'i':
   		return 3
-  	elif setBand() == 'z':
+  	elif Settings.getConstants().band == 'z':
   		return 4
   			
-	    	
+
+
+
+
 def main():
   iso25D = 40 / 0.396
-  band = setBand()
-  dataDir = '../data'
+  #band = Settings.setBand()
+
  # dataDir = '/media/46F4A27FF4A2713B_/work2/data'
-  fitsdir = dataDir+'SDSS'+band
+  fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
-  listFile = dataDir+'/SDSS_photo_match.csv'
-  outputFile = dataDir+'/gc_out.csv'
-  imgDir = 'img/'+band+'/'
-  simpleFile = dataDir+'/CALIFA_mother_simple.csv'
-  maskFile = dataDir+'maskFilenames.csv'
-  noOfGalaxies = 939
+  band = Settings.getConstants().band
   
-
-  for i in range(0, 940):    
-
+  #missing = np.genfromtxt('z_wrong_skies.csv', delimiter = ',', dtype = object) 
+  #missing = np.genfromtxt('z_stmass_outliers.csv', delimiter = ',', dtype = int)
+  #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
+  #print missing
+  #for x, i in enumerate(missing):
+  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+    #print i, lim_lo, lim_hi, setBand()
+    print Settings.getConstants().band, Settings.getFilterNumber()
+    i = int(i) - 1
     try:
-      print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
-      print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
+      print 'filename', GalaxyParameters.getSDSSUrl(i)
+      print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       print i, 'i'
-      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output, band+'_ellipse_log.csv')
+      output = Photometry.calculateGrowthCurve(i)
+      utils.writeOut(output, band+'_ellipse_log'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]

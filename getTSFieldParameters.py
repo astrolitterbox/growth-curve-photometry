@@ -36,7 +36,7 @@ def getParams(ID, filterNumber):
 	elif filterNumber == 2:
 	  params = [24.02, 0.10, 1.15]
 	elif filterNumber == 3:
-	  params = [-23.67, 0.06. 1.15]
+	  params = [-23.67, 0.06, 1.15]
 	elif filterNumber == 4:
 	  params = [-21.98, 0.06, 1.15]
 	print 'default params', err

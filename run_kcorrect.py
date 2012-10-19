@@ -86,7 +86,7 @@ def main():
   g = utils.convert(db.dbUtils.getFromDB('g_mag', dbDir+'CALIFA.sqlite', 'gc'))
   r = utils.convert(db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'gc'))
   i = utils.convert(db.dbUtils.getFromDB('i_mag', dbDir+'CALIFA.sqlite', 'gc'))
-  z = utils.convert(db.dbUtils.getFromDB('petroMag_z', dbDir+'CALIFA.sqlite', 'mothersample'))
+  z = utils.convert(db.dbUtils.getFromDB('z_mag', dbDir+'CALIFA.sqlite', 'gc'))
 
 
   ext_u = utils.convert(db.dbUtils.getFromDB('extinction_u', dbDir+'CALIFA.sqlite', 'extinction'))
@@ -123,24 +123,24 @@ def main():
   
   data[:, 15] = redshift[:, 0]
   
-  maggies = data[:, 1:4]
+  maggies = data[:, 0:5]
 
-  extinction = data[:, 6:9]
+  extinction = data[:, 5:10]
 
-  maggies_err = data[:, 11:14] 
+  maggies_err = data[:, 10:15] 
   print maggies.shape, extinction.shape, maggies_err.shape
   
-  outputArray = np.empty((939, 7))
-  kc =  KC.KCorrectAB(redshift, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
+  outputArray = np.empty((939, 9))
+  kc =  SDSSKCorrect(redshift, maggies, maggies_err, extinction, cosmo=(Wm, Wl, H0/100))
   kcorr = kc.kcorrect()
 
   #absmag = getAbsMag(redshift, maggies[:, 2], extinction[:, 2])#kc.absmag() 
   outputArray[:,0] = califa_id[:, 0]
   #print kcorr[:, 2][:].shape
   
-  outputArray[:, 1:4] = kc.absmag()  
-  coeffs = kc.coeffs[:, 1:4]
-  tmremain = np.array([[0.941511, 0.607033, 0.523732]])
+  outputArray[:, 1:6] = kc.absmag()  
+  coeffs = kc.coeffs#[:, 1:4]
+  tmremain = np.array([[0.601525, 0.941511, 0.607033, 0.523732, 0.763937]])
   ones = np.ones((1, len(redshift)))
   prod = np.dot(tmremain.T, ones).T 
   modelMasses = coeffs*prod
@@ -149,12 +149,12 @@ def main():
   for i in range (0, (len(data))):
     distmod = KC.utils.cosmology.ztodm(redshift[i])
     exp = 10 ** (0.4 * distmod)
-    outputArray[i, 4] = mass[i] * exp
+    outputArray[i, 6] = mass[i] * exp
     #outputArray[i, 7] = getAbsMag(redshift[i], maggies[i, 2], extinction[i, 2])
     
-    outputArray[i, 6] = distmod
-  outputArray[:, 5] = kcorr[:, 2]  
-  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3e, %10.3e, %10.3e')  
+    outputArray[i, 8] = distmod
+  outputArray[:, 7] = kcorr[:, 2]  
+  np.savetxt("absmag.csv", outputArray, fmt = '%i, %10.3f, %10.3f, %10.3f, %10.3e, %10.3f, %10.3e, %10.3e, %10.3e')  
   
 if __name__ == '__main__':
     main()

@@ -225,7 +225,7 @@ class Photometry():
   @staticmethod
   def getFluxRatio(i, band):
     ret = Photometry()
-    ret.fluxRatio = np.sum(Photometry.getInputFile(i, band))/np.sum(Photometry.getInputFile(i, 'r'))
+    ret.fluxRatio = 1#0.5*np.sum(Photometry.getInputFile(i, band))/np.sum(Photometry.getInputFile(i, 'r'))
     return ret
     
 

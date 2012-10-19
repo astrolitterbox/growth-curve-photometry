@@ -365,11 +365,11 @@ def main():
   band = Settings.getConstants().band
   
   #missing = np.genfromtxt('z_wrong_skies.csv', delimiter = ',', dtype = object) 
-  #missing = np.genfromtxt('z_stmass_outliers.csv', delimiter = ',', dtype = int)
+  missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
   #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
   #print missing
-  #for x, i in enumerate(missing):
-  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+  for x, i in enumerate(missing):
+  #for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
     #print i, lim_lo, lim_hi, setBand()
     print Settings.getConstants().band, Settings.getFilterNumber()
     i = int(i) - 1

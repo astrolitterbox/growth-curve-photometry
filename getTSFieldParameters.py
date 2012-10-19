@@ -30,11 +30,11 @@ def getParams(ID, filterNumber):
 	params = [zpt_r, ext_coeff, airmass]
       except IOError as err:
 	if filterNumber == 0:
-	  params = [23.81, 0.50, 1.15]
+	  params = [-23.81, 0.50, 1.15]
 	elif filterNumber == 1:
 	  params = [-24.43, 0.18, 1.15]
 	elif filterNumber == 2:
-	  params = [24.02, 0.10, 1.15]
+	  params = [-24.02, 0.10, 1.15]
 	elif filterNumber == 3:
 	  params = [-23.67, 0.06, 1.15]
 	elif filterNumber == 4:

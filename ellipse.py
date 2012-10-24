@@ -81,7 +81,7 @@ def draw_ellipse(inputShape, y0, x0, pa, isoA, axisRatio):
 	
 	#print nPoints*2, 'npoints /////////////////////////////////////////////////////////'
 	#print len(rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,nPoints*2))[0])
-	return rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,nPoints))
+	return rejectDuplicates(ellipse(inputShape, isoA,isoA*axisRatio,pa,x0,y0,2*pi*nPoints))
 
 def rejectDuplicates(ellipseCoords):
   #taking care of the duplicate indices: 

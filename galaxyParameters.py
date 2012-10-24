@@ -51,7 +51,7 @@ class GalaxyParameters:
       field = GalaxyParameters.SDSS(ID).field
       field_str = GalaxyParameters.SDSS(ID).field_str
       runstr = GalaxyParameters.SDSS(ID).runstr
-      dupeList = [162, 164, 249, 267, 319, 437, 445, 464, 476, 477, 480, 487, 498, 511, 537, 570, 598, 616, 634, 699, 767, 883, 939]
+      dupeList = [162, 164, 249, 267, 319, 437, 445, 464, 476, 477, 480, 487, 498, 511, 537, 570, 598, 616, 634, 701, 767, 883, 939]
       if band == 'r':
 	fpCFile = dataDir+'/filled2/fpC-'+runstr+'-'+band+camcol+'-'+field_str+'.fits'
       	if (ID +1) in dupeList:

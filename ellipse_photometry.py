@@ -140,7 +140,7 @@ class Photometry():
   @staticmethod
   def setLimitCriterion(i, band):
     skySD = Photometry.getSkyParams(i, band).skySD
-    C = 0.0001
+    C = 0.00005
     return C*skySD
       
  
@@ -225,7 +225,7 @@ class Photometry():
   @staticmethod
   def getFluxRatio(i, band):
     ret = Photometry()
-    ret.fluxRatio = 1#0.5*np.sum(Photometry.getInputFile(i, band))/np.sum(Photometry.getInputFile(i, 'r'))
+    ret.fluxRatio = 0.5*np.sum(Photometry.getInputFile(i, band))/np.sum(Photometry.getInputFile(i, 'r'))
     return ret
     
 
@@ -364,12 +364,13 @@ def main():
   #  dataDir = '../data'
   band = Settings.getConstants().band
   
-  #missing = np.genfromtxt('z_wrong_skies.csv', delimiter = ',', dtype = object) 
-  missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
+  #missing = np.genfromtxt('u_wrong_skies.csv', delimiter = ',', dtype = object)[:, 0]
+  #print missing
+  #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
   #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
   #print missing
-  for x, i in enumerate(missing):
-  #for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+  #for x, i in enumerate(missing):
+  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
     #print i, lim_lo, lim_hi, setBand()
     print Settings.getConstants().band, Settings.getFilterNumber()
     i = int(i) - 1
@@ -378,7 +379,7 @@ def main():
       print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, band+'_ellipse_log'+str(Settings.getConstants().lim_lo)+'.csv')
+      utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]

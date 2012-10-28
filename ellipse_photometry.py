@@ -245,7 +245,7 @@ class Photometry():
   @staticmethod
   def calculateGrowthCurve(i):
     CALIFA_ID = str(i+1)
-
+    band = Settings.getConstants().band
     dbDir = '../db/'
     imgDir = 'img/'+Settings.getConstants().band+'/'
     center = Photometry.getCenter(i)
@@ -260,14 +260,7 @@ class Photometry():
 
     print 'ELLIPTICAL APERTURE'
     totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
-    
-    otherFlux = fluxData[fluxData.shape[0]-1, 6]   
-   
     elMajAxis = fluxData.shape[0]
-    #print totalFlux - otherFlux, 'flux diff'
-    #print 't', totalFlux, 'o', otherFlux
-    #diff = [CALIFA_ID, totalFlux - otherFlux]
-    #utils.writeOut(diff, 'fluxdiff.txt')
     elMag = Photometry.calculateFlux(totalFlux, i)
     
     try:
@@ -278,11 +271,31 @@ class Photometry():
 	elHLR = e
     
     plotGrowthCurve.plotGrowthCurve(fluxData, Settings.getConstants().band, CALIFA_ID)
- 	
+
+    #---- circular aperture	
+    if band == 'r':	    
+	    print 'Circular APERTURE'
+	    totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, 0, 1, CALIFA_ID)  
+	    circRadius = fluxData.shape[0]
+	    circMag = Photometry.calculateFlux(totalFlux, i)
+	    
+	    try:
+		circHLR = fluxData[np.where(np.floor(totalFlux/fluxData[:, 1]) == 1)][0][0] - 1 #Floor() -1 -- last element where the ratio is 2
+		print circHLR  
+	    except IndexError as e:
+		print 'err'
+		circHLR = e
+		# ------------------------------------- formatting output row
+	    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
+     else:
+	    output = [CALIFA_ID, elMag, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
+
+    print output
+	
     
     # --------------------- writing output jpg file with both outermost annuli  
     outputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, Settings.getConstants().band)
-    #circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
+    circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
     elPix = ellipse.draw_ellipse(outputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
     #outputImage[circpix] = 0
     outputImage[elPix] = 0
@@ -298,11 +311,6 @@ class Photometry():
     
 
     
-    # ------------------------------------- formatting output row
-    band = Settings.getConstants().band
-    output = [CALIFA_ID, elMag, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
-    print output
-    #print skyMean, oldSky, 'sky'
     return output
     
 def getDuplicates():

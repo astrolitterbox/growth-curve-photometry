@@ -27,7 +27,6 @@ from math import isnan
 import scipy.misc 
 import sys
 from galaxyParameters import *
-import matplotlib.pylab as plt
 
 
 #a set of methods for swapping between pixel coordinates and ra, dec
@@ -145,15 +144,14 @@ class Photometry():
     return C*skySD
       
  
-  
+
   
   @staticmethod
   def buildGrowthCurve(center, distances, pa, ba, CALIFA_ID):
 	    band = Settings.getConstants().band
 	    inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
 	    ellipseMask = np.zeros((inputImage.shape))	    
-	    #fluxData = Photometry.initFluxData(inputImage, center, distances)
-	    
+	    fluxData = Photometry.initFluxData(inputImage, center, distances)
 	    currentPixels = center
 	    currentFlux = inputImage[center] 	
 	    isoA = 1 #initialising    
@@ -162,16 +160,12 @@ class Photometry():
 	    oldFlux = inputImage[center[0], center[1]]
 	    growthSlope = 200
 	    #outputImage = inputImage
-	    #limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
+	    limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
 	    width = 20/Photometry.getFluxRatio(int(CALIFA_ID) - 1, band).fluxRatio
-	    #print width, 'width'
-	    fluxData = np.empty((20, 7))
+	    print width, 'width'
+
 	    #output = inputImage.copy()
-	    #while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
-	    radius = 700
-	    i = 0
-	    for isoA in range(radius, 720):
-	      
+	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	      previousNpix = Npix
 	      oldFlux = currentFlux	      
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
@@ -183,32 +177,31 @@ class Photometry():
 	      #output[currentPixels] = 1
 	      growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
 	      #print 'isoA', isoA, 'Npix', Npix
-	      fluxData[i, 0] = isoA
-	      fluxData[i, 1] = np.sum(inputImage[np.where(ellipseMask == 1)])# cumulative flux
-	      fluxData[i, 2] = currentFlux/Npix 
-	      fluxData[i, 3] = growthSlope/Npix
-	      fluxData[i, 4] = currentFlux #current flux
-	      fluxData[i, 5] = Npix
-	      fluxData[i, 6] = totalNpix
+	      fluxData[isoA, 0] = isoA
+	      fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)])# cumulative flux
+	      fluxData[isoA, 2] = currentFlux/Npix 
+	      fluxData[isoA, 3] = growthSlope/Npix
+	      fluxData[isoA, 4] = currentFlux #current flux
+	      fluxData[isoA, 5] = Npix
+	      fluxData[isoA, 6] = totalNpix
 	      isoA = isoA +1
-	      i = i+1
 	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
 	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  gc_sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
 
 	    	
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
-	    fluxData[:, 1] = fluxData[:, 1] #- gc_sky*fluxData[:, 6]#cumulative flux, _sky_subtracted
+	    fluxData[:, 1] = fluxData[:, 1] - gc_sky*fluxData[:, 6]#cumulative flux, _sky_subtracted
 	    #print fluxData[-1, 1], gc_sky, 'SKY', fluxData[-1, 6], gc_sky*totalNpix
 	    fluxData[:, 4] = fluxData[:, 4] #current flux
-	    #fluxData[:, 6] = fluxData[:, 4] - gc_sky*fluxData[:, 5] #current flux, sky subtracted
+	    fluxData[:, 6] = fluxData[:, 4] - gc_sky*fluxData[:, 5] #current flux, sky subtracted
 	    #print inputImage[np.where(ellipseMask == 1)].shape[0], 'shape', Npix, 'npix', np.mean(fluxData[isoA-width:isoA-1, 2]), 'sky'
 	    fluxData[:, 2] = fluxData[:, 2] - gc_sky #sky-subtracted flux per pixel
 	    #print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 	    # --------------------------------------- writing an ellipse of counted points, testing only
 	    #if e:
-	    #hdu = pyfits.PrimaryHDU(ellipseMask)
-	    #hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    #np.savetxt('growth_curves/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+	    #  hdu = pyfits.PrimaryHDU(output)
+	    #  hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
+	    np.savetxt('growth_curves/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
 	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
@@ -242,7 +235,7 @@ class Photometry():
     ret = Photometry()
     inputImage = Photometry.getInputFile(i, band)
     distances = Photometry.createDistanceArray(i)
-    sky = inputImage[np.where(distances > 3*int(round(Photometry.iso25D)))]
+    sky = inputImage[np.where(distances > 2*int(round(Photometry.iso25D)))]
     ret.skyMean = np.mean(sky)   
     ret.skySD = np.std(sky)
     return ret
@@ -265,42 +258,8 @@ class Photometry():
 
     print 'ELLIPTICAL APERTURE'
     totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
-    #regression:
     
-    xi = fluxData[:, 0] #isoA
-    A = np.array([xi, np.ones(len(fluxData))])
-    
-    print xi, xi.shape
-    print fluxData[:, 6], 'npix'
-    y = fluxData[:, 1]/fluxData[:, 6] #cumulative flux per pixel
-    print y, y.shape
-    w = np.linalg.lstsq(A.T,y)[0] # obtaining the parameters
-    print w
-    line = w[0]*xi+w[1] # regression line
-    
-    
-    f1 = plt.figure()
-    ax = f1.add_subplot(111)
-    plt.plot(xi,line,'r-',xi,y,'o')
-    from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-    majorLocator   = MultipleLocator(0.1)
-    majorFormatter = FormatStrFormatter('1.10%f')
-    minorLocator   = MultipleLocator(0.01)
-    xmajorLocator   = MultipleLocator(1)
-    ax.yaxis.set_major_locator(xmajorLocator)
-    ax.yaxis.set_major_locator(majorLocator)
-    ax.yaxis.set_major_formatter(majorFormatter)
-    ax.yaxis.set_major_locator(minorLocator)
-    ax.yaxis.set_major_formatter(majorFormatter)
-
-
-    f1.savefig("plot")
-    exit()  
-    
-    
-    
-    
-    #otherFlux = fluxData[fluxData.shape[0]-1, 6]   
+    otherFlux = fluxData[fluxData.shape[0]-1, 6]   
    
     elMajAxis = fluxData.shape[0]
     #print totalFlux - otherFlux, 'flux diff'

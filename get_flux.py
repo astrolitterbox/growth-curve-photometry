@@ -19,7 +19,7 @@ import imtools
 import plot_survey as plot
 #import photometry as phot
 import readAtlas
-import ellipse 
+import v_ellipse as ellipse
 import db
 import getTSFieldParameters
 import plotGrowthCurve		
@@ -150,37 +150,31 @@ class Photometry():
   def buildGrowthCurve(center, distances, pa, ba, CALIFA_ID):
 	    band = Settings.getConstants().band
 	    sky = Settings.getSkyFitValues(str(CALIFA_ID)).sky
+	    print sky, 'sky'
+	    isoA_max = Settings.getSkyFitValues(str(CALIFA_ID)).isoA
+
 	    inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
 	    ellipseMask = np.zeros((inputImage.shape))	    
-	    fluxData = Photometry.initFluxData(inputImage, center, distances)
+	    #fluxData = Photometry.initFluxData(inputImage, center, distances)
 	    currentPixels = center
 	    currentFlux = inputImage[center] 	
-	    isoA = 1 #initialising    
+	    isoA = np.arange(1, isoA_max)
+
 	    Npix = 1
 	    totalNpix = 1		
 	    #limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
-	    width = 20
-	    print width, 'width'
+	    #width = 20
+	    #print width, 'width'
 
 	    #output = inputImage.copy()
 	    print 'going up to', Settings.getSkyFitValues(str(CALIFA_ID)).isoA +1
-	    for isoA in range(1, int(Settings.getSkyFitValues(str(CALIFA_ID)).isoA+1)):
-	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
-	      ellipseMask[currentPixels] = 1
-	      Npix = inputImage[currentPixels].shape[0]      
-	      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
-	      currentFlux = np.sum(inputImage[currentPixels])
-	      fluxData[isoA, 0] = isoA
-	      fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)])# cumulative flux
-	      fluxData[isoA, 2] = currentFlux/Npix - sky
-	      isoA = isoA +1
-	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
-	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
-	    fluxData[:, 1] = fluxData[:, 1] - sky*totalNpix#cumulative flux, _sky_subtracted
-#	    hdu = pyfits.PrimaryHDU(output)
-#	    hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    #np.savetxt('growth_curves/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
-	    return (flux, fluxData, sky) 
+	    galaxy = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
+	    ellipseMask[galaxy] = 1
+	    hdu = pyfits.PrimaryHDU(ellipseMask)
+	    hdu.writeto('ellipse.fits')
+	    totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
+	    flux = np.sum(inputImage[galaxy]) - sky*totalNpix
+	    return flux 
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion, width):
@@ -234,20 +228,21 @@ class Photometry():
     # --------------------------------------- starting ellipse GC photometry
 
     print 'ELLIPTICAL APERTURE'
-    totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
+    #totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
+    totalFlux = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
     
-    otherFlux = fluxData[fluxData.shape[0]-1, 6]   
    
-    elMajAxis = fluxData.shape[0]
+    #elMajAxis = fluxData.shape[0]
     #print totalFlux - otherFlux, 'flux diff'
     #print 't', totalFlux, 'o', otherFlux
     #diff = [CALIFA_ID, totalFlux - otherFlux]
     #utils.writeOut(diff, 'fluxdiff.txt')
     elMag = Photometry.calculateFlux(totalFlux, i)
-    
+    #print totalFlux/fluxData[:, 1]
+    '''
     try:
 	elHLR = fluxData[np.where(np.floor(totalFlux/fluxData[:, 1]) == 1)][0][0] - 1 #Floor() -1 -- last element where the ratio is 2
-	print elHLR  
+	print elHLR, 'el hlr'  
     except IndexError as e:
         print 'err'
 	elHLR = e
@@ -275,10 +270,10 @@ class Photometry():
     
     # ------------------------------------- formatting output row
     band = Settings.getConstants().band
-    output = [CALIFA_ID, elMag, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
-    print output
+    output = [CALIFA_ID, elMag, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky]''' 
+    print elMag
     #print skyMean, oldSky, 'sky'
-    return output
+    #return output
     
 def getDuplicates():
 	#for i in range(0, 939):
@@ -366,7 +361,7 @@ def main():
       print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, band+'_flux'+str(Settings.getConstants().lim_lo)+'.csv')
+      #utils.writeOut(output, band+'_flux'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]

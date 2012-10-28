@@ -149,6 +149,9 @@ class Photometry():
   @staticmethod
   def buildGrowthCurve(center, distances, pa, ba, CALIFA_ID):
 	    band = Settings.getConstants().band
+	    sky = Settings.getSkyFitValues(str(CALIFA_ID)).sky
+	    print sky, 'sky'
+	    isoA_max = Settings.getSkyFitValues(str(CALIFA_ID)).isoA	    
 	    inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
 	    ellipseMask = np.zeros((inputImage.shape))	    
 	    fluxData = Photometry.initFluxData(inputImage, center, distances)
@@ -165,7 +168,8 @@ class Photometry():
 	    print width, 'width'
 
 	    #output = inputImage.copy()
-	    while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
+	    #while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
+	    for i in range(1, isoA_max+1):
 	      previousNpix = Npix
 	      oldFlux = currentFlux	      
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
@@ -187,8 +191,6 @@ class Photometry():
 	      isoA = isoA +1
 	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
 	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  gc_sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
-
-	    	
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
 	    fluxData[:, 1] = fluxData[:, 1] - gc_sky*fluxData[:, 6]#cumulative flux, _sky_subtracted
 	    #print fluxData[-1, 1], gc_sky, 'SKY', fluxData[-1, 6], gc_sky*totalNpix
@@ -201,7 +203,7 @@ class Photometry():
 	    #if e:
 	    #  hdu = pyfits.PrimaryHDU(output)
 	    #  hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-	    np.savetxt('growth_curves/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+	    np.savetxt('growth_curves/'+Settings.getConstants().band+'/total_gc_profile'+CALIFA_ID+'.csv', fluxData)	
 	    return (flux, fluxData, gc_sky) 
   
   @staticmethod
@@ -335,7 +337,14 @@ class Settings():
     ret.lim_lo = int(sys.argv[1])
     ret.lim_hi = int(sys.argv[2])
     return ret
-    
+        
+  @staticmethod
+  def getSkyFitValues(CALIFA_ID):
+    band = Settings.getConstants().band
+    ret = Settings()
+    ret.sky = db.dbUtils.getFromDB('sky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits', ' where califa_id = '+ str(CALIFA_ID))[0][0]
+    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits', ' where califa_id = '+ str(CALIFA_ID))[0][0] - 75 #middle of the ring
+    return ret
 
   @staticmethod
   def getFilterNumber():
@@ -379,7 +388,7 @@ def main():
       print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
+      utils.writeOut(output, band+'_total_log'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]

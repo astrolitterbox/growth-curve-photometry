@@ -4,7 +4,7 @@ import string
 import csv
 import utils
 import sys
-from zellipse_photometry import Settings
+from ellipse_photometry import Settings
 
 
 

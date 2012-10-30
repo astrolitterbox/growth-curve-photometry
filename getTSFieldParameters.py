@@ -22,9 +22,9 @@ def getParams(ID, filterNumber):
 
 	img = tsFile[1].data
 	#indexing -- field numbering in documentation starts with 0, hence #27 instead of #28 field, etc
-	zpt_r = list(img.field(27))[0][filterNumber]
-	ext_coeff = list(img.field(33))[0][filterNumber]
-	airmass = list(img.field(22))[0][filterNumber]
+	zpt_r = -24 #list(img.field(27))[0][filterNumber]
+	ext_coeff = 0 #list(img.field(33))[0][filterNumber]
+	airmass = 0 #list(img.field(22))[0][filterNumber]
 	
 	print zpt_r, ext_coeff, airmass, '-------------------'
 	params = [zpt_r, ext_coeff, airmass]
@@ -34,7 +34,7 @@ def getParams(ID, filterNumber):
 	elif filterNumber == 1:
 	  params = [-24.43, 0.18, 1.15]
 	elif filterNumber == 2:
-	  params = [-24.0, 0.0, 0]
+	  params = [-24.02, 0.10, 1.15]
 	elif filterNumber == 3:
 	  params = [-23.67, 0.06, 1.15]
 	elif filterNumber == 4:

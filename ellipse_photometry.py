@@ -96,7 +96,7 @@ class Photometry():
   def getInputFile():
     #print 'filename:', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
     #inputFile = pyfits.open(GalaxyParameters.getFilledUrl(i, band))
-    inputFile = pyfits.open('noisy_expDisk.fits')
+    inputFile = pyfits.open('noisy_deVauc.fits')
     inputImage = inputFile[0].data
     #if band != 'r':
     #   inputImage-=1000 
@@ -240,7 +240,7 @@ class Photometry():
     
   @staticmethod
   def calculateGrowthCurve(i):
-    CALIFA_ID = 'test_noisy_expDisk'
+    CALIFA_ID = 'test_noisy_deVauc'
     band = Settings.getConstants().band
     dbDir = '../db/'
     imgDir = 'img/'+Settings.getConstants().band+'/'
@@ -396,7 +396,7 @@ def main():
       #print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       #print i, 'i'
       output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, 'test_noisy_expDisk.csv')
+      utils.writeOut(output, 'test_noisy_deVauc.csv')
       #utils.writeOut(output, band+'_total_log'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err

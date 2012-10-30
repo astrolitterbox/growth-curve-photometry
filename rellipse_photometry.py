@@ -426,12 +426,12 @@ def main():
       print 'filename', GalaxyParameters.getSDSSUrl(listFile, dataDir, i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
       print i, 'i'
-      output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
-      utils.writeOut(output, band+'_ellipse_log'+str(lim_lo)+'.csv')
+      #output = Photometry.calculateGrowthCurve(listFile, dataDir, i)
+      #utils.writeOut(output, band+'_ellipse_log'+str(lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
-      output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, band+'_ellipseErrors.csv')
+      #output = [str(i+1), 'File not found', err]
+      #utils.writeOut(output, band+'_ellipseErrors.csv')
       pass   
  
    

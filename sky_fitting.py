@@ -169,11 +169,11 @@ class Photometry():
       line = w[0]*xi+w[1] # regression line
       print fluxSlope, 'slope'
       start = start + step
-    return np.mean(y), fluxSlope, fluxData[0, -1]
+    return np.mean(y), fluxSlope, fluxData[-1, 0]
    
   @staticmethod
   def growEllipses(inputImage, distances, center, start, end, pa, ba):
-    fluxData = np.empty((150, 7))
+    fluxData = np.empty((150, 2))
     i = 0
     for isoA in range(start, end):
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
@@ -259,9 +259,9 @@ class Photometry():
     ret = Photometry()
     inputImage = Photometry.getInputFile(i, band)
     distances = Photometry.createDistanceArray(i)
-    sky = inputImage[np.where(distances > 3*int(round(Photometry.iso25D)))]
+    sky = inputImage[np.where(distances > 2*int(round(Photometry.iso25D)))]
     ret.skyMean = np.mean(sky)   
-	    inputImage = inputImage[np.where(distances <= 800)]
+    #inputImage = inputImage[np.where(distances <= 800)]
     ret.skySD = np.std(sky)
     return ret
     
@@ -415,11 +415,11 @@ def main():
       print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
+      #utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, band+'_ellipseErrors.csv')
+      utils.writeOut(output, band+'_skyFitErrors.csv')
       pass   
  
    

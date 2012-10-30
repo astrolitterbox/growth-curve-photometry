@@ -18,6 +18,7 @@ def main():
       ids = ids+","+str(int(i))
       id_length+=1
     ids = ids[1:]  
+    print ids
     
     tot_mag = utils.convert(db.dbUtils.getFromDB('el_mag', dbDir+'CALIFA.sqlite', 'r_tot', ' where califa_id in('+ids+')'))  #parsing tuples  
     gc_mag = utils.convert(db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'gc', ' where califa_id in('+ids+')'))  #parsing tuples
@@ -37,7 +38,7 @@ def main():
     gc_sky = utils.convert(db.dbUtils.getFromDB('gc_sky', dbDir+'CALIFA.sqlite', 'gc', ' where califa_id in('+ids+')'))
     sdss_sky = utils.convert(db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sdss_sky', ' where califa_id in('+ids+')'))
     
-    
+    print tot_sky.shape, nadines_mag.shape
     
     #plot relations between various magnitude results
     graph = plot.Plots()

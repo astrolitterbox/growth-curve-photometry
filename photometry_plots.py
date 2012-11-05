@@ -11,7 +11,7 @@ dbDir = '../db/'
 
 def main():
     #selecting by ids when some of them are missing
-    fit_sky_ids = utils.convert(db.dbUtils.getFromDB('califa_id', dbDir+'CALIFA.sqlite', 'r_tot'))[:, 0]    
+    fit_sky_ids = utils.convert(db.dbUtils.getFromDB('califa_id', dbDir+'CALIFA.sqlite', 'u_tot'))[:, 0]    
     ids = ''
     id_length = 0
     for i in fit_sky_ids:
@@ -20,11 +20,11 @@ def main():
     ids = ids[1:]  
     print ids
     
-    tot_mag = utils.convert(db.dbUtils.getFromDB('el_mag', dbDir+'CALIFA.sqlite', 'r_tot', ' where califa_id in('+ids+')'))  #parsing tuples  
-    gc_mag = utils.convert(db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'gc', ' where califa_id in('+ids+')'))  #parsing tuples
+    tot_mag = utils.convert(db.dbUtils.getFromDB('u_mag', dbDir+'CALIFA.sqlite', 'u_tot', ' where califa_id in('+ids+')'))  #parsing tuples  
+    gc_mag = utils.convert(db.dbUtils.getFromDB('u_mag', dbDir+'CALIFA.sqlite', 'gc', ' where califa_id in('+ids+')'))  #parsing tuples
     #circ_mag = utils.convert(db.dbUtils.getFromDB('circ_r_mag', dbDir+'CALIFA.sqlite', 'gc'))  #parsing tuples    
     nadines_mag = utils.convert(db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id in('+ids+')'))  #parsing tuples
-    sdss_mag = utils.convert(db.dbUtils.getFromDB('petroMag_r', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id in('+ids+')'))  #parsing tuples    
+    sdss_mag = utils.convert(db.dbUtils.getFromDB('petroMag_u', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id in('+ids+')'))  #parsing tuples    
     atlas_mag = utils.convert(db.dbUtils.getFromDB('r_mag', dbDir+'CALIFA.sqlite', 'atlas', ' where califa_id in('+ids+')'))
 
     #gc_hlr = utils.convert(db.dbUtils.getFromDB('circ_hlr', dbDir+'CALIFA.sqlite', 'gc'))
@@ -34,7 +34,7 @@ def main():
     #el_hlr = utils.convert(db.dbUtils.getFromDB('el_hlma', dbDir+'CALIFA.sqlite', 'gc'))
 
     #lucie_sky = utils.convert(db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'lucie', ' where califa_id in('+ids+')'))  - 1000  #parsing tuples        
-    tot_sky = utils.convert(db.dbUtils.getFromDB('gc_sky', dbDir+'CALIFA.sqlite', 'r_tot', ' where califa_id in('+ids+')'))  #parsing tuples 
+    tot_sky = utils.convert(db.dbUtils.getFromDB('gc_sky', dbDir+'CALIFA.sqlite', 'u_tot', ' where califa_id in('+ids+')'))  #parsing tuples 
     gc_sky = utils.convert(db.dbUtils.getFromDB('gc_sky', dbDir+'CALIFA.sqlite', 'gc', ' where califa_id in('+ids+')'))
     sdss_sky = utils.convert(db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sdss_sky', ' where califa_id in('+ids+')'))
     
@@ -42,17 +42,17 @@ def main():
     
     #plot relations between various magnitude results
     graph = plot.Plots()
-    gc_magData = plot.GraphData(((nadines_mag, tot_mag)), 'k', 'best')
-    graph.plotScatter([gc_magData], "/analysis/new_gc_mag_vs_nadine", plot.PlotTitles("Comparison between my and Nadine's photometry values", "Nadine's gc magnitude, mag", "Updated gc r magnitude, mag"), (11, 16, 11, 16))
+    #gc_magData = plot.GraphData(((nadines_mag, tot_mag)), 'k', 'best')
+    #graph.plotScatter([gc_magData], "/analysis/new_gc_mag_vs_nadine", plot.PlotTitles("Comparison between my and Nadine's photometry values", "Nadine's gc magnitude, mag", "Updated gc r magnitude, mag"), (11, 16, 11, 16))
 
     gc_magData = plot.GraphData(((sdss_mag, tot_mag)), 'k', 'best')
-    graph.plotScatter([gc_magData], "/analysis/new_gc_mag_vs_sdss", plot.PlotTitles("Comparison between my and SDSS photometry values", "SDSS Petrosian r magnitude, mag", "Updated gc r magnitude, mag"),(11, 16, 11, 16))
+    graph.plotScatter([gc_magData], "/analysis/new_gc_mag_vs_sdss_u", plot.PlotTitles("Comparison between my and SDSS photometry values", "SDSS Petrosian u magnitude, mag", "Updated gc r magnitude, mag"),(12, 18, 12, 18))
 
-    gc_magData = plot.GraphData(((atlas_mag, tot_mag)), 'k', 'best')
-    graph.plotScatter([gc_magData], "/analysis/new_gc_mag_vs_nsatlas", plot.PlotTitles("Comparison between my and NASA Sloan Atlas photometry values", "Updated gc r magnitude, mag", "NSAtlas magnitude, mag"),(11, 16, 11, 16))
+    #gc_magData = plot.GraphData(((atlas_mag, tot_mag)), 'k', 'best')
+    #graph.plotScatter([gc_magData], "/analysis/new_gc_mag_vs_nsatlas", plot.PlotTitles("Comparison between my and NASA Sloan Atlas photometry values", "Updated gc r magnitude, mag", "NSAtlas magnitude, mag"),(11, 16, 11, 16))
 
     gc_magData = plot.GraphData(((gc_mag, tot_mag)), 'k', 'best')
-    graph.plotScatter([gc_magData], "/analysis/gc_vs_gc_new", plot.PlotTitles("Comparison between GC and sky-fit GC photometry values", "GC r magnitude, mag", "Updated GC magnitude, mag"),(11, 16, 11, 16))
+    graph.plotScatter([gc_magData], "/analysis/gc_vs_gc_new_u", plot.PlotTitles("Comparison between GC and sky-fit GC photometry values", "GC r magnitude, mag", "Updated GC magnitude, mag"),(12, 17, 12, 17))
 
     #gc_magData = plot.GraphData(((circ_mag, gc_mag)), 'k', 'best')
     #graph.plotScatter([gc_magData], "/analysis/el_mag_vs_circ_apert", plot.PlotTitles("Comparison between elliptical and circular annuli", "r magnitude, mag", "r magnitude, mag"),(11, 16, 11, 16))
@@ -73,10 +73,10 @@ def main():
     
 
     plotData = plot.GraphData(((np.arange(1, id_length+1), tot_sky - sdss_sky)), 'k', 'best')    
-    graph.plotScatter([plotData], "/analysis/sdss_sky_comparison", plot.PlotTitles("Comparison between my and SDSS sky values", "No.", "counts"), (0, id_length, -2, 0.5))
+    graph.plotScatter([plotData], "/analysis/sdss_sky_comparison_u", plot.PlotTitles("Comparison between my and SDSS sky values", "No.", "counts"), (0, id_length, -2, 0.5))
 
     plotData = plot.GraphData(((np.arange(1, id_length+1), gc_sky - tot_sky)), 'k', 'best')    
-    graph.plotScatter([plotData], "/analysis/gc_sky_comparison", plot.PlotTitles("GC sky - updated GC sky", "No.", "counts"))
+    graph.plotScatter([plotData], "/analysis/gc_sky_comparison_u", plot.PlotTitles("GC sky - updated GC sky", "No.", "counts"))
 
 
     exit()

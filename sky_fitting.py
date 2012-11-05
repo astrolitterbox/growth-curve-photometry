@@ -323,7 +323,11 @@ class Photometry():
     except IndexError:
       sky = 'nan'
     out = (CALIFA_ID, sky, slope, isoA)
+<<<<<<< HEAD
     utils.writeOut(out, "test_sky_fits.csv")
+=======
+    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+".csv")
+>>>>>>> b5cecb5988a0c8292aad1e2fd39f671fba7b9cc6
     
     
     

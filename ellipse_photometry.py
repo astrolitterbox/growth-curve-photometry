@@ -350,8 +350,13 @@ class Settings():
   def getSkyFitValues(CALIFA_ID):
     band = Settings.getConstants().band
     ret = Settings()
+<<<<<<< HEAD
     ret.sky = 122.94
     ret.isoA = 649
+=======
+    ret.sky = db.dbUtils.getFromDB('sky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0]
+    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0] - 75 #middle of the ring
+>>>>>>> b5cecb5988a0c8292aad1e2fd39f671fba7b9cc6
     return ret
 
   @staticmethod

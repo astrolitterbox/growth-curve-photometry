@@ -153,7 +153,8 @@ class Photometry():
     #limit = findClosestEdge(distances, center)
     band = Settings.getConstants().band
     inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
-    start = Photometry.getStart(CALIFA_ID)
+    #start = Photometry.getStart(CALIFA_ID) - 500
+    start = 100
     radius = 150
     step = 50
     fluxSlope = -10 #init
@@ -198,13 +199,6 @@ class Photometry():
 	    totalNpix = 1		
 	    oldFlux = inputImage[center[0], center[1]]
 	    growthSlope = 200
-	    #outputImage = inputImage
-	    #limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
-	    width = 20/Photometry.getFluxRatio(int(CALIFA_ID) - 1, band).fluxRatio
-	    #print width, 'width'
-
-	    #output = inputImage.copy()
-	    #while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
 	    radius = 460
 
 	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
@@ -288,8 +282,10 @@ class Photometry():
       sky, slope, isoA = Photometry.fitSky(center, distances, pa, ba, CALIFA_ID)
     except IndexError:
       sky = 'nan'
+      slope = 'nan'
+      isoA = 'nan'
     out = (CALIFA_ID, sky, slope, isoA)
-    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+".csv")
+    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_smaller.csv")
     
     
     
@@ -368,6 +364,8 @@ class Settings():
     ret.maskFile = ret.dataDir+'maskFilenames.csv'
     ret.outputFile = ret.dataDir+'/gc_out.csv'
     ret.imgDir = 'img/'
+    ret.outputFile = ret.dataDir+'/gc_out.csv'
+    ret.dbDir = '../db/'    
     ret.lim_lo = int(sys.argv[1])
     ret.lim_hi = int(sys.argv[2])
     return ret
@@ -399,29 +397,30 @@ def main():
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
   band = Settings.getConstants().band
-  
+  missing = utils.convert(db.dbUtils.getFromDB('CALIFA_ID', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
   #missing = np.genfromtxt('u_wrong_skies.csv', delimiter = ',', dtype = object)[:, 0]
-  #print missing
+  print missing
   #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
   #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
   #print missing
-  #for x, i in enumerate(missing):
-  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+  for x, i in enumerate(missing):
+  #for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
     #print i, lim_lo, lim_hi, setBand()
-    print Settings.getConstants().band, Settings.getFilterNumber()
+    #print Settings.getConstants().band, Settings.getFilterNumber()
     i = int(i) - 1
-    try:
-      print 'filename', GalaxyParameters.getSDSSUrl(i)
-      print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
-      print i, 'i'
-      output = Photometry.calculateGrowthCurve(i)
-      #utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
-    except IOError as err:
-      print 'err', err
-      output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, band+'_skyFitErrors.csv')
-      pass   
- 
+    if i > Settings.getConstants().lim_lo:
+      try:
+	print 'filename', GalaxyParameters.getSDSSUrl(i)
+	print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
+	print i, 'i'
+	output = Photometry.calculateGrowthCurve(i)
+	#utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
+      except IOError as err:
+	print 'err', err
+	output = [str(i+1), 'File not found', err]
+	utils.writeOut(output, band+'_skyFitErrors.csv')
+	pass   
+  
    
 if __name__ == "__main__":
   main()

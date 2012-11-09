@@ -348,8 +348,8 @@ class Settings():
   def getSkyFitValues(CALIFA_ID):
     band = Settings.getConstants().band
     ret = Settings()
-    ret.sky = db.dbUtils.getFromDB('sky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0]
-    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0] - 75 #middle of the ring
+    ret.sky = np.float(db.dbUtils.getFromDB('sky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0])
+    ret.isoA = np.float(db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0]) - 75 #middle of the ring
     return ret
 
   @staticmethod
@@ -379,13 +379,13 @@ def main():
   #  dataDir = '../data'
   band = Settings.getConstants().band
   
-  #missing = np.genfromtxt('u_wrong_skies.csv', delimiter = ',', dtype = object)[:, 0]
-  #print missing
+  missing = utils.convert(db.dbUtils.getFromDB('califa_id', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
+  print missing
   #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
   #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
   #print missing
-  #for x, i in enumerate(missing):
-  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+  for x, i in enumerate(missing):
+  #for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
     #print i, lim_lo, lim_hi, setBand()
     print Settings.getConstants().band, Settings.getFilterNumber()
     i = int(i) - 1
@@ -394,7 +394,7 @@ def main():
       print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
       print i, 'i'
       output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, band+'_total_log'+str(Settings.getConstants().lim_lo)+'.csv')
+      utils.writeOut(output, band+'_total_smaller_log'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:
       print 'err', err
       output = [str(i+1), 'File not found', err]

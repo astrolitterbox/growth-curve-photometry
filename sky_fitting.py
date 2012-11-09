@@ -397,25 +397,25 @@ def main():
   #  fitsDir = '../data/SDSS/'
   #  dataDir = '../data'
   band = Settings.getConstants().band
-  missing = utils.convert(db.dbUtils.getFromDB('CALIFA_ID', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
+  #missing = utils.convert(db.dbUtils.getFromDB('CALIFA_ID', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
   #missing = np.genfromtxt('u_wrong_skies.csv', delimiter = ',', dtype = object)[:, 0]
-  print missing
+  #print missing
   #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
   #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
   #print missing
-  for x, i in enumerate(missing):
-  #for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+  #for x, i in enumerate(missing):
+  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
     #print i, lim_lo, lim_hi, setBand()
     #print Settings.getConstants().band, Settings.getFilterNumber()
     i = int(i) - 1
-    if i > Settings.getConstants().lim_lo:
-      try:
+    #if i > Settings.getConstants().lim_lo:
+    try:
 	print 'filename', GalaxyParameters.getSDSSUrl(i)
 	print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
 	print i, 'i'
 	output = Photometry.calculateGrowthCurve(i)
 	#utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
-      except IOError as err:
+    except IOError as err:
 	print 'err', err
 	output = [str(i+1), 'File not found', err]
 	utils.writeOut(output, band+'_skyFitErrors.csv')

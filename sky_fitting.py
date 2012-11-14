@@ -171,11 +171,6 @@ class Photometry():
     print 'output distance', out
     return out
     
-  @staticmethod
-  def setLimitCriterion(i, band):
-    skySD = Photometry.getSkyParams(i, band).skySD
-    C = 0.00005
-    return C*skySD
       
   @staticmethod
   def fitSky(center, distances, pa, ba, CALIFA_ID):
@@ -183,7 +178,7 @@ class Photometry():
     band = Settings.getConstants().band
     inputImage = Photometry.getInputFile()
     
-    start = 500
+    start = 100
     radius = 150
     step = 50
     fluxSlope = -10 #init
@@ -296,9 +291,9 @@ class Photometry():
     
   @staticmethod
   def calculateGrowthCurve(i):
-    CALIFA_ID = 'test_noisy_deVauc'
+    CALIFA_ID = 'test_noisy_expDisk'
 
-    dbDir = '../db/'
+    dbDir = '../../../db/'
     imgDir = 'img/'+Settings.getConstants().band+'/'
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
@@ -328,51 +323,6 @@ class Photometry():
     
     
     
-    
-    #otherFlux = fluxData[fluxData.shape[0]-1, 6]   
-   
-    #elMajAxis = fluxData.shape[0]
-    #print totalFlux - otherFlux, 'flux diff'
-    #print 't', totalFlux, 'o', otherFlux
-    #diff = [CALIFA_ID, totalFlux - otherFlux]
-    #utils.writeOut(diff, 'fluxdiff.txt')
-    #elMag = Photometry.calculateFlux(totalFlux, i)
-    '''
-    try:
-	elHLR = fluxData[np.where(np.floor(totalFlux/fluxData[:, 1]) == 1)][0][0] - 1 #Floor() -1 -- last element where the ratio is 2
-	print elHLR  
-    except IndexError as e:
-        print 'err'
-	elHLR = e
-    
-    plotGrowthCurve.plotGrowthCurve(fluxData, Settings.getConstants().band, CALIFA_ID)
- 	
-    
-    # --------------------- writing output jpg file with both outermost annuli  
-    outputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, Settings.getConstants().band)
-    #circpix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, circRadius, 1)
-    elPix = ellipse.draw_ellipse(outputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
-    #outputImage[circpix] = 0
-    outputImage[elPix] = 0
-    
-    outputImage, cdf = imtools.histeq(outputImage)
-        
-    #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave(Settings.getConstants().imgDir+Settings.getConstants().band+'/L_'+CALIFA_ID+'_gc.jpg', outputImage)
-
-    #hdu = pyfits.PrimaryHDU(outputImage)
-    #outputName = 'CALIFA'+CALIFA_ID+'.fits'
-    #hdu.writeto(outputName) 
-    
-
-    
-    # ------------------------------------- formatting output row
-    band = Settings.getConstants().band
-    output = [CALIFA_ID, elMag, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
-    print output
-    #print skyMean, oldSky, 'sky'
-    return output
-    '''
 def getDuplicates():
 	#for i in range(0, 939):
 	#	print i+1, GalaxyParameters.getFilledUrl(listFile, dataDir, i)
@@ -395,15 +345,13 @@ class Settings():
   @staticmethod
   def getConstants():
     ret = Settings()
-    ret.band = sys.argv[3]
-    ret.dataDir = '../data'    
+    ret.band = 'r'
+    ret.dataDir = '../../../data'    
     ret.listFile = ret.dataDir+'/SDSS_photo_match.csv'  
     ret.simpleFile = ret.dataDir+'/CALIFA_mother_simple.csv'
     ret.maskFile = ret.dataDir+'maskFilenames.csv'
     ret.outputFile = ret.dataDir+'/gc_out.csv'
     ret.imgDir = 'img/'
-    ret.lim_lo = int(sys.argv[1])
-    ret.lim_hi = int(sys.argv[2])
     return ret
     
 
@@ -434,30 +382,10 @@ def main():
   #  dataDir = '../data'
   band = Settings.getConstants().band
   
-  #missing = np.genfromtxt('u_wrong_skies.csv', delimiter = ',', dtype = object)[:, 0]
-  #print missing
-  #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
-  #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
-  #print missing
-  #for x, i in enumerate(missing):
-  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
-    #print i, lim_lo, lim_hi, setBand()
-    print Settings.getConstants().band, Settings.getFilterNumber()
-    i = int(i) - 1
-    try:
-      print 'filename', GalaxyParameters.getSDSSUrl(i)
-      print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
-      print i, 'i'
-      
-      output = Photometry.calculateGrowthCurve(i)
-      #utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
-    except IOError as err:
-      print 'err', err
-      output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, band+'_skyFitErrors.csv')
-      pass   
- 
-   
+  output = Photometry.calculateGrowthCurve(1)
+  #utils.writeOut(output, band+'_log'+str(Settings.getConstants().lim_lo)+'.csv')
+
+
 if __name__ == "__main__":
   main()
 

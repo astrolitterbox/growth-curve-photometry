@@ -96,7 +96,7 @@ class Photometry():
   def getInputFile():
     #print 'filename:', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
     #inputFile = pyfits.open(GalaxyParameters.getFilledUrl(i, band))
-    inputFile = pyfits.open('noisy_deVauc.fits')
+    inputFile = pyfits.open('noisy_expDisk.fits')
     inputImage = inputFile[0].data
     #if band != 'r':
     #   inputImage-=1000 
@@ -240,9 +240,9 @@ class Photometry():
     
   @staticmethod
   def calculateGrowthCurve(i):
-    CALIFA_ID = 'test_noisy_deVauc'
+    CALIFA_ID = 'test_noisy_expDisk'
     band = Settings.getConstants().band
-    dbDir = '../db/'
+    dbDir = '../../../db/'
     imgDir = 'img/'+Settings.getConstants().band+'/'
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
@@ -334,24 +334,22 @@ class Settings():
   @staticmethod
   def getConstants():
     ret = Settings()
-    ret.band = sys.argv[3]
-    ret.dataDir = '../data'    
+    ret.band = 'r'
+    ret.dataDir = '../../../data'    
     ret.listFile = ret.dataDir+'/SDSS_photo_match.csv'  
     ret.simpleFile = ret.dataDir+'/CALIFA_mother_simple.csv'
     ret.maskFile = ret.dataDir+'maskFilenames.csv'
     ret.outputFile = ret.dataDir+'/gc_out.csv'
     ret.imgDir = 'img/'
     ret.dbDir = '../db/'
-    ret.lim_lo = int(sys.argv[1])
-    ret.lim_hi = int(sys.argv[2])
     return ret
         
   @staticmethod
   def getSkyFitValues(CALIFA_ID):
     band = Settings.getConstants().band
     ret = Settings()
-    ret.sky = 122.94
-    ret.isoA = 649
+    ret.sky = 122.868788582
+    ret.isoA = 499
     return ret
 
   @staticmethod
@@ -376,33 +374,9 @@ def main():
   #band = Settings.setBand()
 
  # dataDir = '/media/46F4A27FF4A2713B_/work2/data'
-  fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
-  #  fitsDir = '../data/SDSS/'
-  #  dataDir = '../data'
-  band = Settings.getConstants().band
-  
-  #missing = np.genfromtxt('u_wrong_skies.csv', delimiter = ',', dtype = object)[:, 0]
-  #print missing
-  #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
-  #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
-  #print missing
-  #for x, i in enumerate(missing):
-  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
-    #print i, lim_lo, lim_hi, setBand()
-    print Settings.getConstants().band, Settings.getFilterNumber()
-    i = int(i) - 1
-    try:
-      #print 'filename', GalaxyParameters.getSDSSUrl(i)
-      #print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
-      #print i, 'i'
-      output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, 'test_noisy_deVauc.csv')
-      #utils.writeOut(output, band+'_total_log'+str(Settings.getConstants().lim_lo)+'.csv')
-    except IOError as err:
-      print 'err', err
-      output = [str(i+1), 'File not found', err]
-      #utils.writeOut(output, band+'_ellipseErrors.csv')
-      pass   
+  #fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
+  output = Photometry.calculateGrowthCurve(1)
+  utils.writeOut(output, 'test_noisy_expDisk.csv')
  
    
 if __name__ == "__main__":

@@ -168,7 +168,7 @@ class Photometry():
 
 	    #output = inputImage.copy()
 	    #while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
-	    for isoA in range(1, isoA_max+1):
+	    for isoA in range(1, int(isoA_max)+1):
 	      previousNpix = Npix
 	      oldFlux = currentFlux	      
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
@@ -379,15 +379,15 @@ def main():
   #  dataDir = '../data'
   band = Settings.getConstants().band
   
-  missing = utils.convert(db.dbUtils.getFromDB('califa_id', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
-  print missing
+  #missing = utils.convert(db.dbUtils.getFromDB('califa_id', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
+  #print missing
   #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
   #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
   #print missing
-  for x, i in enumerate(missing):
-  #for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
+  #for x, i in enumerate(missing):
+  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
     #print i, lim_lo, lim_hi, setBand()
-    print Settings.getConstants().band, Settings.getFilterNumber()
+  #  print Settings.getConstants().band, Settings.getFilterNumber()
     i = int(i) - 1
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(i)

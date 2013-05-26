@@ -98,7 +98,7 @@ class Photometry():
     #print 'filename:', GalaxyParameters.getFilledUrl(listFile, dataDir, i)
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(i, band))
     inputImage = inputFile[0].data
-    if band != 'r':
+    if band != 'r' or (i == 882) or (i == 576):
        inputImage-=1000 
     #print 'opened the input file'
     return inputImage
@@ -270,9 +270,10 @@ class Photometry():
     #hdu = pyfits.PrimaryHDU(distances)
     #hdu.writeto('distances.fits')
 
-    pa = db.dbUtils.getFromDB('PA', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
-    ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
-    
+    #pa = db.dbUtils.getFromDB('PA', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
+    #ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
+    pa = 0
+    ba = 1
     # --------------------------------------- starting ellipse GC photometry
 
     print 'ELLIPTICAL APERTURE'
@@ -285,7 +286,7 @@ class Photometry():
       slope = 'nan'
       isoA = 'nan'
     out = (CALIFA_ID, sky, slope, isoA)
-    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_smaller.csv")
+    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_circ.csv")
     
     
     

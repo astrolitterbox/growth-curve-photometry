@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
+#usage: python sky_fitting.py lower_limit upper_limit band
 
 
 # -*- coding: utf-8 -*-
-#import Interpol
-#import getImages
 import pyfits
 import math
 import os
@@ -28,7 +26,7 @@ import scipy.misc
 import sys
 from galaxyParameters import *
 import matplotlib.pylab as plt
-
+import cProfile
 
 #a set of methods for swapping between pixel coordinates and ra, dec
 
@@ -108,6 +106,16 @@ class Photometry():
     head = inputFile[0].header
     return head	
   @staticmethod
+  def getMask(ID):
+     dataDir = Settings.getConstants().dataDir
+     maskFilename = dataDir+utils.getMask(Settings.getConstants().maskFile, ID)
+     maskFile = pyfits.open(maskFilename)
+     mask = maskFile[0].data
+     print maskFilename
+     maskFile.close()
+     print mask.shape, 'mask'
+     return mask
+  @staticmethod
   def calculateFlux(flux, i):
   	tsFieldParams = getTSFieldParameters.getParams(i, Settings.getFilterNumber())
   	zpt = tsFieldParams[0]
@@ -153,19 +161,21 @@ class Photometry():
     #limit = findClosestEdge(distances, center)
     band = Settings.getConstants().band
     inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
+    mask = Photometry.getMask(int(CALIFA_ID) - 1)
+
     #start = Photometry.getStart(CALIFA_ID) - 500
     start = 100
     radius = 150
-    step = 50
+    step = 10
     fluxSlope = -10 #init
     while fluxSlope < 0:
-      fluxData = Photometry.growEllipses(inputImage, distances, center, start, start+radius, pa, ba)
+      fluxData = Photometry.growEllipses(inputImage, distances, center, start, start+radius, pa, ba, CALIFA_ID, mask)
+      print 'back'
       xi = fluxData[:, 0] #isoA
       A = np.array([xi, np.ones(len(fluxData))])
       y = fluxData[:, 1]
       print np.mean(y), start
       w = np.linalg.lstsq(A.T,y)[0] # obtaining the parameters
-      print w
       fluxSlope = w[0]
       line = w[0]*xi+w[1] # regression line
       print fluxSlope, 'slope'
@@ -173,16 +183,32 @@ class Photometry():
     return np.mean(y), fluxSlope, fluxData[-1, 0]
    
   @staticmethod
-  def growEllipses(inputImage, distances, center, start, end, pa, ba):
-    fluxData = np.empty((150, 2))
+  def growEllipses(inputImage, distances, center, start, end, pa, ba, CALIFA_ID, mask):
+    fluxData = np.empty((150, 5))
     i = 0
     for isoA in range(start, end):
+	      #draw ellipse for all pixels:
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
-	      Npix = inputImage[currentPixels].shape[0]      
+      	      Npix = inputImage[currentPixels].shape[0]
 	      currentFlux = np.sum(inputImage[currentPixels])
+	      #draw ellipse for masked pixels only:
+      
+	      inputImage = np.ma.masked_array(inputImage, mask=mask)
+	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
+
+	      NpixM = inputImage[currentPixelsM].shape[0]
+	      #print Npix, 'npix'
+	      currentFluxM = np.sum(inputImage[currentPixelsM])
+	      
+	      #write out
 	      fluxData[i, 0] = isoA
-	      fluxData[i, 1] = currentFlux/Npix 
+	      fluxData[i, 1] = currentFlux
+	      fluxData[i, 2] = Npix
+	      fluxData[i, 3] = currentFluxM
+	      fluxData[i, 4] = NpixM
+	      
 	      i = i + 1
+	      #print 'ret'
     return fluxData
 
   @staticmethod
@@ -202,7 +228,10 @@ class Photometry():
 	    radius = 460
 
 	    gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
-	    flux = np.sum(inputImage[np.where(ellipseMask == 1)]) -  gc_sky*inputImage[np.where(ellipseMask == 1)].shape[0]	    
+	    
+	    #mask = Photometry.getMask(CALIFA_ID)
+	    goodImage = inputImage[np.where((ellipseMask == 1) & (mask == 0))]
+	    flux = np.sum(goodImage) -  gc_sky*goodImage.shape[0]	    
 
 	    	
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 
@@ -276,8 +305,6 @@ class Photometry():
     # --------------------------------------- starting ellipse GC photometry
 
     print 'ELLIPTICAL APERTURE'
-    #totalFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
-    #regression:
     try:
       sky, slope, isoA = Photometry.fitSky(center, distances, pa, ba, CALIFA_ID)
     except IndexError:
@@ -285,7 +312,7 @@ class Photometry():
       slope = 'nan'
       isoA = 'nan'
     out = (CALIFA_ID, sky, slope, isoA)
-    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_smaller.csv")
+    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_new.csv")
     
     
     
@@ -358,7 +385,7 @@ class Settings():
   def getConstants():
     ret = Settings()
     ret.band = sys.argv[3]
-    ret.dataDir = '../data'    
+    ret.dataDir = '../data/'    
     ret.listFile = ret.dataDir+'/SDSS_photo_match.csv'  
     ret.simpleFile = ret.dataDir+'/CALIFA_mother_simple.csv'
     ret.maskFile = ret.dataDir+'maskFilenames.csv'

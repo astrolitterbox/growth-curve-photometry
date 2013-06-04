@@ -29,6 +29,8 @@ import matplotlib.pylab as plt
 import cProfile
 import multiprocessing
 
+
+
 #a set of methods for swapping between pixel coordinates and ra, dec
 
 class Astrometry():
@@ -47,19 +49,18 @@ class Astrometry():
     #utils.writeOut(out, 'coords.csv')
     return (pixelCoords[1], pixelCoords[0]) #y -- first, x axis -- second
   @staticmethod
-  def distance2origin(y, x, center):
-   deltaY = y - center[0]
-   deltaX = x - center[1]
-   r = (deltaY**2 + deltaX**2)
-   return r
+  def distance2origin(shape, center):
+    grid = np.indices(shape)
+    y = grid[0] - center[0]
+    x = grid[1] - center[1]
+    r = np.round(np.sqrt(np.square(y) + np.square(x)), 0)
+    return r
   @staticmethod
   def makeDistanceArray(img, center):
     distances = np.zeros(img.shape)
-    print Astrometry.distance2origin(0,0, center), 'squared distance to origin'
-    for i in range(0, img.shape[0]):
-      for j in range(0, img.shape[1]):
-	distances[i,j] = Astrometry.distance2origin(i,j, center)
-    return np.round(np.sqrt(distances), 0)
+    distances = Astrometry.distance2origin(img.shape, center)
+
+    return distances
 
 
 

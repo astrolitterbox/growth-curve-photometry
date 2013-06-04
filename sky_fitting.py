@@ -265,7 +265,7 @@ class Settings():
   		return 4
   			
 
-def doFitting():
+def doFitting(galaxyList):
     for i in galaxyList:
       i = int(i) - 1
       band = Settings.getConstants().band      
@@ -288,9 +288,13 @@ def splitList(galaxyRange, chunkNumber):
     return [galaxyRange[i:i+n] for i in range(0, len(galaxyRange), n)]
 
 def getMissing():
-  ready_ids = np.genfromtxt("sky_fits_r_new.csv", delimiter=",")[:, 0]
+  ready_ids = np.genfromtxt("sky_fits_r_new.csv", delimiter=",", dtype='%i')[:, 0]
   print ready_ids
-  #for califa_id in range(1, 940):
+  missing_ids = []
+  for califa_id in range(1, 940):
+    if califa_id not in ready_ids:
+      missing_ids.append(califa_id)
+  return sorted(missing_ids)    
     
 
 def main():
@@ -300,10 +304,10 @@ def main():
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #getting list of CALIFA IDS to work with
   galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
-  for galaxyList in splitList(galaxyRange, 6):
-    print len(galaxyList), 'length of a list of lists'
-
-    print len(splitList(galaxyRange, 6))
+  chunks = 6
+  for galaxyList in splitList(galaxyRange, chunks):
+    #print len(galaxyList), 'length of a list of IDs'
+    print galaxyList
     p = multiprocessing.Process(target=doFitting, args=[galaxyList])
     p.start()
    

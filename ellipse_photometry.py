@@ -163,48 +163,42 @@ class Photometry():
 
   
   @staticmethod
-  def buildGrowthCurve(center, distances, pa, ba, CALIFA_ID):
+  def buildGrowthCurve(center, distances, CALIFA_ID):
 	    band = Settings.getConstants().band
-	    sky = Settings.getSkyFitValues(str(CALIFA_ID)).sky
-	    #skyUM = Settings.getSkyFitValues(str(CALIFA_ID)).skyUM
-	    #print sky, 'sky', skyUM, 'skyUM'
-	    isoA_max = Settings.getSkyFitValues(str(CALIFA_ID)).isoA
+	    isoA_max = np.float(db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+ str(CALIFA_ID)))
+	    pa = db.dbUtils.getFromDB('pa', Settings.getConstants().dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0]
+	    ba = db.dbUtils.getFromDB('ba', Settings.getConstants().dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0]
+
+	    #Input array
 	    inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
-	    mask = Photometry.getMask(int(CALIFA_ID)-1)
-            inputImageM = np.ma.masked_array(inputImage, mask=mask)
-	    
-	    ellipseMask = np.zeros((inputImage.shape))
-	    ellipseMaskM = ellipseMask.copy()
+            #masked input array
+	    mask = Photometry.getMask(int(CALIFA_ID)-1)           
+            inputImageM = np.ma.masked_array(inputImage, mask=mask)    
+	    #ellipseMask = np.zeros((inputImage.shape))
+	    #ellipseMaskM = ellipseMask.copy()
 	    fluxData = Photometry.initFluxData(inputImage, center, distances)
 	    currentPixels = center
 	    currentFlux = inputImage[center] 	
-	    isoA = 1 #initialising    
-	    Npix = 1
-	    totalNpix = 1		
-	    growthSlope = 200
-	    #outputImage = inputImage
-	    limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
-	    #width = 20/Photometry.getFluxRatio(int(CALIFA_ID) - 1, band).fluxRatio
-	    #print width, 'width'
-
-	    #output = inputImage.copy()
-	    #while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
+	    
+	    Npix = 1 #init
+	    growthSlope = 200 #init
+	    
 	    for isoA in range(1, int(isoA_max)+1):
 	      
 	      #draw ellipse for all pixels:
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
       	      Npix = inputImage[currentPixels].shape[0]
 	      currentFlux = np.sum(inputImage[currentPixels])
-	      ellipseMask[currentPixels] = 1
-	      totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]	      
+	      #ellipseMask[currentPixels] = 1
+	      #totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]	      
 	      Npix = inputImage[currentPixels].shape[0]
 	      
 	      #draw ellipse for masked pixels only:     
 	      currentPixelsM = ellipse.draw_ellipse(inputImageM.shape, center[0], center[1], pa, isoA, ba)
-	      ellipseMaskM[currentPixelsM] = 1
+	      #ellipseMaskM[currentPixelsM] = 1
 	      currentFluxM = np.sum(inputImageM[currentPixelsM])	      
 	      NpixM = inputImageM[currentPixelsM].shape[0]
-	      totalNpixM = inputImageM[np.where(ellipseMaskM == 1)].shape[0]
+	      #totalNpixM = inputImageM[np.where(ellipseMaskM == 1)].shape[0]
 	      #Setting the fluxData array values
 
 	      fluxData[isoA, 0] = isoA
@@ -271,14 +265,12 @@ class Photometry():
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
 
-    pa = db.dbUtils.getFromDB('pa', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
-    ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
     
     # --------------------------------------- starting ellipse GC photometry
 
     print 'ELLIPTICAL APERTURE'
 #flux, fluxM, fluxData, sky    
-    totalFlux, totalMaskedFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)  
+    totalFlux, totalMaskedFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, CALIFA_ID)  
     elMajAxis = fluxData.shape[0]
     elMag = Photometry.calculateFlux(totalFlux, i)
     elMagMasked = Photometry.calculateFlux(totalMaskedFlux, i)
@@ -365,8 +357,7 @@ class Settings():
   def getSkyFitValues(CALIFA_ID):
     band = Settings.getConstants().band
     ret = Settings()
-    ret.sky = np.float(db.dbUtils.getFromDB('sky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0])
-    ret.isoA = np.float(db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0]) - 75 #middle of the ring
+    ret.isoA = np.float(db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_new', 'where califa_id = '+ str(CALIFA_ID))) 
     #Sky value where masked regions were included
     #ret.skyUM = np.float(db.dbUtils.getFromDB('skyUM', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+ str(CALIFA_ID))[0][0])
     
@@ -413,7 +404,7 @@ def main():
     try:
       print 'filename', GalaxyParameters.getSDSSUrl(i)
       print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
-      print i, 'i'
+      
       output = Photometry.calculateGrowthCurve(i)
       utils.writeOut(output, band+'_new_'+str(Settings.getConstants().lim_lo)+'.csv')
     except IOError as err:

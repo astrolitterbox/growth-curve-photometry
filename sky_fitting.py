@@ -164,7 +164,7 @@ class Photometry():
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
       	      Npix = inputImage[currentPixels].shape[0]
 	      currentFlux = np.sum(inputImage[currentPixels])
-	      #draw ellipse for masked pixels only:
+	      #draw ellipse with masks:
       
 	      inputImage = np.ma.masked_array(inputImage, mask=mask)
 	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
@@ -289,7 +289,7 @@ def splitList(galaxyRange, chunkNumber):
     return [galaxyRange[i:i+n] for i in range(0, len(galaxyRange), n)]
 
 def getMissing():
-  ready_ids = np.genfromtxt("sky_fits_r_new.csv", delimiter=",", dtype='%i')[:, 0]
+  ready_ids = np.genfromtxt("sky_fits_r_new.csv", delimiter=",", dtype='i')[:, 0]
   print ready_ids
   missing_ids = []
   for califa_id in range(1, 940):
@@ -304,7 +304,9 @@ def main():
   #exit()
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #getting list of CALIFA IDS to work with
-  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  #getting list of missing galaxy IDs:
+  galaxyRange = getMissing()
   chunks = 6
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'

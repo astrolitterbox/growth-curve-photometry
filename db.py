@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import math as math
-import matplotlib.pylab as plt
-import kcorrect as KC
-from kcorrect.sdss import SDSSKCorrect, SDSSPhotoZ, SDSS
-from scipy import integrate
-import matplotlib.cm as cm
-import matplotlib.mlab as mlab
 import sqlite3
 import csv
 
@@ -84,9 +78,13 @@ class dbUtils:
 	  conn = sqlite3.connect(table)
 	  c = conn.cursor()
 	  print 'select ' + columns + ' from ' + view + ''.join(whereClause) +' order by rowid asc'
+	  
 	  c.execute('select ' + columns + ' from ' + view + ''.join(whereClause)+' order by rowid asc')
 	  conn.commit()
-	  return c.fetchall()
+	  data = c.fetchall()
+	  col = 0 #http://stackoverflow.com/questions/2854011/get-a-simple-list-from-sqlite-in-python-not-a-list-of-tuples
+	  column=[elt[col] for elt in data]
+	  return np.asarray(column)
 	'''
 	@staticmethod
 	def selectWithJoin(dbname, viewName, table1, table2, columns1, key,  *where):

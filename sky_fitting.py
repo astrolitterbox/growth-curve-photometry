@@ -124,33 +124,34 @@ class Photometry():
     band = Settings.getConstants().band
     inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
     mask = Photometry.getMask(int(CALIFA_ID) - 1)
-
     #start = Photometry.getStart(CALIFA_ID) - 500
     start = 100
     radius = 150
-    step = 10
+    step = 50
     fluxSlopeM = -10 #init
-    while fluxSlopeM < 0:
+    fluxSlope = -10
+    while fluxSlope < 0:
       fluxData = Photometry.growEllipses(inputImage, distances, center, start, start+radius, pa, ba, CALIFA_ID, mask)
       #fitting unmasked
       xi = fluxData[:, 0] #isoA
       A = np.array([xi, np.ones(len(fluxData))])
-      y = fluxData[:, 1]/fluxData[:, 2] #flux ppx
-      print np.mean(y), start
+      y = np.divide(fluxData[:, 1], fluxData[:, 2]) #flux ppx
+      #print np.mean(y), start
       w = np.linalg.lstsq(A.T,y)[0] # obtaining the parameters
       fluxSlope = w[0]
       line = w[0]*xi+w[1] # regression line
-      print fluxSlope, 'slope'
+      #print fluxSlope, 'slope'
       #fitting masked
-      print 'fitting masked'
+      #print 'fitting masked'
       xi = fluxData[:, 0] #isoA
       A = np.array([xi, np.ones(len(fluxData))])
       yM = fluxData[:, 3]/fluxData[:, 4] #flux ppx
-      print np.mean(yM), start
+
       w = np.linalg.lstsq(A.T,yM)[0] # obtaining the parameters
       fluxSlopeM = w[0]
+      print np.mean(yM), np.mean(y), start, fluxSlope, np.sum(fluxData[:, 2]), np.sum(fluxData[:, 4])  
       line = w[0]*xi+w[1] # regression line
-      print fluxSlopeM, 'slope'
+      #print fluxSlopeM, 'slope'
 
       start = start + step
     return np.mean(y), fluxSlope, np.mean(yM), fluxSlopeM, fluxData[-1, 0]
@@ -165,11 +166,9 @@ class Photometry():
       	      Npix = inputImage[currentPixels].shape[0]
 	      currentFlux = np.sum(inputImage[currentPixels])
 	      #draw ellipse with masks:
-      
-	      inputImage = np.ma.masked_array(inputImage, mask=mask)
+	      inputImageM = np.ma.masked_array(inputImage, mask=mask)
 	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
-
-	      NpixM = inputImage[currentPixelsM].shape[0]
+	      NpixM = inputImageM[currentPixelsM].shape[0]
 	      #print Npix, 'npix'
 	      currentFluxM = np.sum(inputImage[currentPixelsM])
 	      
@@ -194,12 +193,11 @@ class Photometry():
     imgDir = 'img/'+Settings.getConstants().band+'/'
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
-    #hdu = pyfits.PrimaryHDU(distances)
-    #hdu.writeto('distances.fits')
-    pa = db.dbUtils.getFromDB('pa', dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0][0]  #parsing tuples
-    ba = db.dbUtils.getFromDB('ba', dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0][0]#parsing tuples
+
+    pa = db.dbUtils.getFromDB('pa', Settings.getConstants().dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0]
+    ba = db.dbUtils.getFromDB('ba', Settings.getConstants().dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0]
     
-    print CALIFA_ID, pa
+    #print CALIFA_ID, pa
     #pa = -1*(90 - pa)
     
     # --------------------------------------- starting ellipse GC photometry
@@ -304,9 +302,11 @@ def main():
   #exit()
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #getting list of CALIFA IDS to work with
-  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  
+  #OR:
   #getting list of missing galaxy IDs:
-  galaxyRange = getMissing()
+  #galaxyRange = getMissing()
   chunks = 6
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'

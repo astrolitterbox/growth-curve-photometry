@@ -21,14 +21,14 @@ import plot_survey as plot
 import readAtlas
 import ellipse
 import db
-import getTSFieldParameters
+
 import plotGrowthCurve		
 from math import isnan
 import scipy.misc 
 import sys
 from galaxyParameters import *
 import cProfile
-
+import multiprocessing
 
 #a set of methods for swapping between pixel coordinates and ra, dec
 
@@ -122,18 +122,7 @@ class Photometry():
     inputFile = pyfits.open(GalaxyParameters.getFilledUrl(i))	
     head = inputFile[0].header
     return head	
-  @staticmethod
-  def calculateFlux(flux, i):
-  	tsFieldParams = getTSFieldParameters.getParams(i, Settings.getFilterNumber())
-  	zpt = tsFieldParams[0]
-  	ext_coeff = tsFieldParams[1]
-  	airmass = tsFieldParams[2]
-  	print zpt, ext_coeff, airmass, 'tsparams'    
-	fluxRatio = flux/(53.9075*10**(-0.4*(zpt+ext_coeff*airmass)))
-    	mag = -2.5 * np.log10(fluxRatio)
-    	#mag2 = -2.5 * np.log10(fluxRatio2)
-    	print 'full magnitude', mag
-	return mag
+
   
   
   
@@ -174,7 +163,7 @@ class Photometry():
             #masked input array
 	    mask = Photometry.getMask(int(CALIFA_ID)-1)           
             inputImageM = np.ma.masked_array(inputImage, mask=mask)    
-	    #ellipseMask = np.zeros((inputImage.shape))
+	    ellipseMask = np.zeros((inputImage.shape))
 	    #ellipseMaskM = ellipseMask.copy()
 	    fluxData = Photometry.initFluxData(inputImage, center, distances)
 	    currentPixels = center
@@ -189,7 +178,7 @@ class Photometry():
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
       	      Npix = inputImage[currentPixels].shape[0]
 	      currentFlux = np.sum(inputImage[currentPixels])
-	      #ellipseMask[currentPixels] = 1
+	      ellipseMask[currentPixels] = 1
 	      #totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]	      
 	      Npix = inputImage[currentPixels].shape[0]
 	      
@@ -216,9 +205,19 @@ class Photometry():
 	    #print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 	    # --------------------------------------- writing an ellipse of counted points, testing only
 	    #if e:
+	    
+	    #hdu = pyfits.PrimaryHDU(ellipseMask)
+            #hdu.writeto('galaxy.fits', clobber=True)	    
+	    #plot the ellipse image
+	    outputImage = inputImage
+	    elPix = ellipse.draw_ellipse(outputImage.shape, center[0], center[1], pa, isoA_max, ba)   
+	    outputImage[elPix] = 0
+	    outputImage, cdf = imtools.histeq(outputImage)
+	    scipy.misc.imsave('img/new/'+Settings.getConstants().band+"/"+CALIFA_ID+".png", outputImage)
 
-	    np.savetxt('growth_curves/'+Settings.getConstants().band+'/new_gc_profile'+CALIFA_ID+'.csv', fluxData)	
-	    return fluxData 
+	    #Save profile
+	    np.savetxt('growth_curves/new/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+	    #return fluxData 
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion, width):
@@ -265,23 +264,8 @@ class Photometry():
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
 
+    Photometry.buildGrowthCurve(center, distances, CALIFA_ID)
     
-    # --------------------------------------- starting ellipse GC photometry
-
-    print 'ELLIPTICAL APERTURE'
-#flux, fluxM, fluxData, sky    
-    totalFlux, totalMaskedFlux, fluxData, gc_sky = Photometry.buildGrowthCurve(center, distances, CALIFA_ID)  
-    elMajAxis = fluxData.shape[0]
-    elMag = Photometry.calculateFlux(totalFlux, i)
-    elMagMasked = Photometry.calculateFlux(totalMaskedFlux, i)
-    try:
-	elHLR = fluxData[np.where(np.floor(totalFlux/fluxData[:, 1]) == 1)][0][0] - 1 #Floor() -1 -- last element where the ratio is 2
-	print elHLR  
-    except IndexError as e:
-        print 'err'
-	elHLR = e
-    
-    plotGrowthCurve.plotGrowthCurve(fluxData, Settings.getConstants().band, CALIFA_ID)
 
     #---- circular aperture	
     #if band == 'r':	    
@@ -300,24 +284,15 @@ class Photometry():
 		# ------------------------------------- formatting output row
 #	    output = [CALIFA_ID, elMag, elHLR, circMag, circHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
  #   else:
-    output = [CALIFA_ID, elMag, elMagMasked, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
+    #output = [CALIFA_ID, elMag, elMagMasked, elHLR, Photometry.getSkyParams(i, band).skyMean,  gc_sky] 
 
-    print output
+    #print output
 	
     
     # --------------------- writing output jpg file with both outermost annuli  
-    outputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, Settings.getConstants().band)
+
     #circpix = ellipse.draw_ellipse(outputImage.shape, center[0], center[1], pa, circRadius, 1)
-    elPix = ellipse.draw_ellipse(outputImage.shape, center[0], center[1], pa, elMajAxis, ba)    
-    #outputImage[circpix] = 0
-    outputImage[elPix] = 0
-    #outputImage[circHLR] = 0
-    
-    outputImage, cdf = imtools.histeq(outputImage)
-        
-    #scipy.misc.imsave('img/output/'+CALIFA_ID+'.jpg', outputImage)    
-    scipy.misc.imsave(Settings.getConstants().imgDir+Settings.getConstants().band+'/new_'+CALIFA_ID+'_gc.jpg', outputImage)
-    return output
+    #return output
     
 def getDuplicates():
 	#for i in range(0, 939):
@@ -364,55 +339,45 @@ class Settings():
 
     return ret
 
-  @staticmethod
-  def getFilterNumber():
-  	if Settings.getConstants().band == 'u':
-  		return 0
-  	elif Settings.getConstants().band == 'g':
-  		return 1
-  	elif Settings.getConstants().band == 'r':
-  		return 2
-  	elif Settings.getConstants().band == 'i':
-  		return 3
-  	elif Settings.getConstants().band == 'z':
-  		return 4
+
   			
 
+def splitList(galaxyRange, chunkNumber):
+    #Get the number of IDs in a chunk we want
+    n = int(math.floor(len(galaxyRange)/chunkNumber)) + 1
+    print n, 'length of a chunk'
+    return [galaxyRange[i:i+n] for i in range(0, len(galaxyRange), n)]
 
+def measure(galaxyList):
+  band = Settings.getConstants().band        
+  for i in galaxyList:
+      i = int(i) - 1
+      try:
+	  print 'filename', GalaxyParameters.getSDSSUrl(i)
+	  print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
+	  Photometry.calculateGrowthCurve(i)
+      except IOError as err:
+	print 'err', err
+	output = [str(i+1), 'File not found', err]
+	utils.writeOut(output, "ellipseErrors_new.csv")
+	pass   
+  
 
 
 def main():
   iso25D = 40 / 0.396
-  #band = Settings.setBand()
-
- # dataDir = '/media/46F4A27FF4A2713B_/work2/data'
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
-  #  fitsDir = '../data/SDSS/'
-  #  dataDir = '../data'
   band = Settings.getConstants().band
-  
-  #missing = utils.convert(db.dbUtils.getFromDB('califa_id', Settings.getConstants().dbDir+'CALIFA.sqlite', band+'_flags'))
-  #print missing
-  #missing = np.genfromtxt('wrong_tsfield.csv', delimiter = ',', dtype = int)
-  #missing = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
-  #print missing
-  #for x, i in enumerate(missing):
-  for i in range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi):
-    #print i, lim_lo, lim_hi, setBand()
-  #  print Settings.getConstants().band, Settings.getFilterNumber()
-    i = int(i) - 1
-    try:
-      print 'filename', GalaxyParameters.getSDSSUrl(i)
-      print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
+
+  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  chunks = 6
+  for galaxyList in splitList(galaxyRange, chunks):
+    #print len(galaxyList), 'length of a list of IDs'
+    print galaxyList
+    p = multiprocessing.Process(target=measure, args=[galaxyList])
+    p.start()
       
-      output = Photometry.calculateGrowthCurve(i)
-      utils.writeOut(output, band+'_new_'+str(Settings.getConstants().lim_lo)+'.csv')
-    except IOError as err:
-      print 'err', err
-      output = [str(i+1), 'File not found', err]
-      utils.writeOut(output, band+'_ellipseErrors.csv')
-      pass   
- 
+      
    
 if __name__ == "__main__":
   main()

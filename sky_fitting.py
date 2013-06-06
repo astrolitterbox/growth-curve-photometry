@@ -130,7 +130,7 @@ class Photometry():
     step = 50
     fluxSlopeM = -10 #init
     fluxSlope = -10
-    while fluxSlope < 0:
+    while fluxSlopeM < 0:
       fluxData = Photometry.growEllipses(inputImage, distances, center, start, start+radius, pa, ba, CALIFA_ID, mask)
       #fitting unmasked
       xi = fluxData[:, 0] #isoA
@@ -145,7 +145,7 @@ class Photometry():
       #print 'fitting masked'
       xi = fluxData[:, 0] #isoA
       A = np.array([xi, np.ones(len(fluxData))])
-      yM = fluxData[:, 3]/fluxData[:, 4] #flux ppx
+      yM = np.divide(fluxData[:, 3],fluxData[:, 4]) #flux ppx
 
       w = np.linalg.lstsq(A.T,yM)[0] # obtaining the parameters
       fluxSlopeM = w[0]

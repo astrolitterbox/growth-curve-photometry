@@ -167,6 +167,7 @@ class Photometry():
 	      currentFlux = np.sum(inputImage[currentPixels])
 	      #draw ellipse with masks:
 	      inputImageM = np.ma.masked_array(inputImage, mask=mask)
+	      inputImageM = np.ma.fix_invalid(inputImage, fill_value=0)
 	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
 	      NpixM = inputImageM[currentPixelsM].compressed().shape[0]
 	      currentFluxM = np.sum(inputImage[currentPixelsM])

@@ -4,10 +4,22 @@ import pyfits
 import numpy as np
 import utils
 
+def getFilterNumber(band):
+  	if band == 'u':
+  		return 0
+  	elif band == 'g':
+  		return 1
+  	elif band == 'r':
+  		return 2
+  	elif band == 'i':
+  		return 3
+  	elif band == 'z':
+  		return 4
 
 
-def getParams(ID, filterNumber):
-      filterNumber = filterNumber #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
+
+def getParams(ID, band):
+      filterNumber = getFilterNumber(band) #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
       run = e.GalaxyParameters.SDSS(ID).run
       rerun = e.GalaxyParameters.SDSS(ID).rerun
       camcol = e.GalaxyParameters.SDSS(ID).camcol

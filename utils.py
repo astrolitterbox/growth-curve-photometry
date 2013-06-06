@@ -6,6 +6,7 @@ import csv
 import itertools
 
 
+
 def writeOut(output, filename='log.csv'):
    print output
    f = open(filename,'aw')

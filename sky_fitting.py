@@ -168,8 +168,8 @@ class Photometry():
 	      #draw ellipse with masks:
 	      inputImageM = np.ma.masked_array(inputImage, mask=mask)
 	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
-	      NpixM = inputImageM[currentPixelsM][np.where(~mask)].shape[0]
-	      #print Npix, 'npix'
+	      NpixM = inputImageM[currentPixelsM].compressed().shape[0]
+	      print Npix, 'npix', NpixM
 	      currentFluxM = np.sum(inputImage[currentPixelsM])
 	      
 	      #write out
@@ -210,6 +210,7 @@ class Photometry():
       sky = 'nan'
       slope = 'nan'
       isoA = 'nan'
+      print 'aaaa'
     out = (CALIFA_ID, sky, slope, skyM, slopeM, isoA)
     utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_new.csv")
     

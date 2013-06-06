@@ -169,8 +169,8 @@ class Photometry():
 	      inputImageM = np.ma.masked_array(inputImage, mask=mask)
 	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
 	      NpixM = inputImageM[currentPixelsM].compressed().shape[0]
-	      print Npix, 'npix', NpixM
 	      currentFluxM = np.sum(inputImage[currentPixelsM])
+	      print Npix, NpixM, 'npix', currentFlux, currentFluxM, 'flux'
 	      
 	      #write out
 	      fluxData[i, 0] = isoA

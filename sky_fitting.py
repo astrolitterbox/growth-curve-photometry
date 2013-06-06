@@ -125,9 +125,9 @@ class Photometry():
     inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
     mask = Photometry.getMask(int(CALIFA_ID) - 1)
     #start = Photometry.getStart(CALIFA_ID) - 500
-    start = 100
+    start = 101
     radius = 150
-    step = 50
+    step = 10
     fluxSlopeM = -10 #init
     fluxSlope = -10
     while fluxSlopeM < 0:
@@ -149,7 +149,7 @@ class Photometry():
 
       w = np.linalg.lstsq(A.T,yM)[0] # obtaining the parameters
       fluxSlopeM = w[0]
-      print np.mean(yM), np.mean(y), start, fluxSlope, np.sum(fluxData[:, 2]), np.sum(fluxData[:, 4])  
+      #print np.mean(yM), np.mean(y), start, fluxSlope, np.sum(fluxData[:, 2]), np.sum(fluxData[:, 4])  
       line = w[0]*xi+w[1] # regression line
       #print fluxSlopeM, 'slope'
 
@@ -167,10 +167,10 @@ class Photometry():
 	      currentFlux = np.sum(inputImage[currentPixels])
 	      #draw ellipse with masks:
 	      inputImageM = np.ma.masked_array(inputImage, mask=mask)
-	      currentPixelsM = ellipse.draw_ellipse(inputImageM[~inputImageM.mask].shape, center[0], center[1], pa, isoA, ba)
+	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
+	      
 	      NpixM = inputImageM[currentPixelsM].compressed().shape[0]
-	      currentFluxM = np.sum(inputImage[currentPixelsM])
-	      print Npix, 'npix', NpixM, currentFlux, currentFluxM
+	      currentFluxM = np.sum(inputImageM[currentPixelsM])
 	      
 	      #write out
 	      fluxData[i, 0] = isoA

@@ -303,11 +303,11 @@ def main():
   #exit()
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #getting list of CALIFA IDS to work with
-  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   
   #OR:
   #getting list of missing galaxy IDs:
-  #galaxyRange = getMissing()
+  galaxyRange = getMissing()
   chunks = 6
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'

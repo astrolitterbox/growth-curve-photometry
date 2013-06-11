@@ -43,7 +43,10 @@ def calculateFlux(flux, i):
     	print 'full magnitude', mag
 	return mag
 
-for i in range(15, 17):
+mags = []
+
+for i in range(1, 100):
+	
 	#z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
 	#outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
 	#outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
@@ -66,7 +69,7 @@ for i in range(15, 17):
 	currentFlux = np.subtract(currentFlux, Npix*sky)
 	cumFlux = np.cumsum(currentFlux) 
 	cumFluxOld = oldData[:, 1]
-	ell = data[:, 3]
+	#ell = data[:, 3]
 	#print np.sum(currentFlux), 'sum curr'
 	#sky+= 2
 	#currentFlux = np.subtract(currentFlux, Npix*sky)
@@ -88,23 +91,29 @@ for i in range(15, 17):
 	#exit()	
 	fig = plt.figure()
 	ax = fig.add_subplot(221)
-	ax.plot(isoA, cumFluxOld, c="b")
+	#ax.plot(isoA, cumFluxOld, c="b")
 	ax.plot(isoANew, cumFlux, c="r")
 
 	ax = fig.add_subplot(222)
-	ax.plot(isoA, currentFluxOld, c="b")	
-	ax.plot(isoANew, currentFlux, c="r")
+	ax.plot(isoA, cumFluxOld, c="b")	
+	#ax.plot(isoANew, currentFlux, c="r")
 	
 	ax = fig.add_subplot(223)
 	ax.plot(isoANew, Npix, c="r")
-	ax.plot(isoANew, ell, c="b")
-	ax.plot(isoA, NpixOld, c="b")
-	plt.savefig('img/curves/'+band+"/"+str(i))
-	#exit()
+	#ax.plot(isoANew, ell, c="b")
 	
+
+	#mags.append((i, elMag))
+	
+	ax = fig.add_subplot(224)
+	ax.plot(isoA, NpixOld, c="b")
+
+	plt.savefig('img/curves/'+band+"/"+str(i))
+
 	#sc_index = np.where(np.round(flux, 0) == round(flux[0]/math.e, 0))
         #sc_index = np.where([(np.divide(centralFlux, flux) > math.e) & (isoA > maxFluxIsoA)])[1][0] #the first index after the maximum	   
  	#lsc = isoA[sc_index]*0.396 #in arcseconds
 
 	#phys_lsc = cosm.angular2physical(lsc, z)
 	#print str(i)+","+ str(lsc)+","+ str(phys_lsc[0])+","+ str(z[0])#+","+str(maxFluxIsoA)+","+ str(lsc)# -- testing
+#np.savetxt("mags.csv", mags, fmt="%i,%f")

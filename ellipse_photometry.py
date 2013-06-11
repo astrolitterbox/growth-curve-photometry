@@ -195,7 +195,7 @@ class Photometry():
 	      fluxData[isoA, 0] = isoA
 	      fluxData[isoA, 1] = currentFlux 	      
 	      fluxData[isoA, 2] = Npix
-	      fluxData[isoA, 3] = el#currentFluxM
+	      fluxData[isoA, 3] = currentFluxM
 	      fluxData[isoA, 4] = NpixM #Npix, excluding masked areas
 	      isoA = isoA +1
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 

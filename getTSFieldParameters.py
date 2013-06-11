@@ -27,7 +27,7 @@ def getParams(ID, band):
       runstr = e.GalaxyParameters.SDSS(ID).runstr
       field_str = e.GalaxyParameters.SDSS(ID).field_str
 	#http://das.sdss.org/imaging/5115/40/calibChunks/2/tsField-005115-2-40-0023.fit
-      print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+      #print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
       
       try:
 	tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')
@@ -38,7 +38,7 @@ def getParams(ID, band):
 	ext_coeff = list(img.field(33))[0][filterNumber]
 	airmass = list(img.field(22))[0][filterNumber]
 	
-	print zpt_r, ext_coeff, airmass, '-------------------'
+	#print zpt_r, ext_coeff, airmass, '-------------------'
 	params = [zpt_r, ext_coeff, airmass]
       except IOError as err:
 	if filterNumber == 0:

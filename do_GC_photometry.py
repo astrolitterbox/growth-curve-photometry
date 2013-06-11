@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import math
 import db
 import getTSFieldParameters
+import sys 
 
 #import cosm
 dbDir = '../db/'
@@ -44,8 +45,9 @@ def calculateFlux(flux, i):
 	return mag
 
 mags = []
-
-for i in range(1, 100):
+lim_lo = int(sys.argv[1])
+lim_hi = int(sys.argv[2])
+for i in range(lim_lo, lim_hi):
 	
 	#z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
 	#outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
@@ -65,10 +67,15 @@ for i in range(1, 100):
 	currentFlux = data[:, 1] #current flux
 	Npix = data[:, 2] #npix
 	#currentFluxM = data[:, 3] #current flux
-	#NpixM = data[:, 4] 
+	#NpixM = data[:, 4]
+	#print currentFlux
 	currentFlux = np.subtract(currentFlux, Npix*sky)
 	cumFlux = np.cumsum(currentFlux) 
 	cumFluxOld = oldData[:, 1]
+	currFluxOld = oldData[:, 3]
+	
+	#currFluxOld = np.subtract(currFluxOld, NpixOld*sky)
+	
 	#ell = data[:, 3]
 	#print np.sum(currentFlux), 'sum curr'
 	#sky+= 2
@@ -79,23 +86,23 @@ for i in range(1, 100):
 	#print currentFlux[1]	
 	#cumFlux = np.cumsum(currentFlux) 
 	#cumFluxM = np.cumsum(currentFlux)
+	print currFluxOld
 	
-	
-	#totalFlux = cumFlux[-1]# - sky*np.sum(Npix)
+	totalFlux = np.sum(currentFlux)
 	#totalFluxM = np.sum(currentFlux)# - skyM*np.sum(Npix)
 	#print totalFlux, 'total'
 	#print cumFlux[-1], 'cum'
-	elMagOld = calculateFlux(cumFluxOld[-1], i)
-	elMag = calculateFlux(cumFlux[-1], i)
-	print elMagOld, elMag
+	elMagOld = calculateFlux(np.sum(currFluxOld), i)
+	elMag = calculateFlux(totalFlux, i)
+	print elMagOld, 'old', elMag, 'now'
 	#exit()	
 	fig = plt.figure()
 	ax = fig.add_subplot(221)
 	#ax.plot(isoA, cumFluxOld, c="b")
-	ax.plot(isoANew, cumFlux, c="r")
+	ax.plot(isoANew, currentFlux, c="r")
 
 	ax = fig.add_subplot(222)
-	ax.plot(isoA, cumFluxOld, c="b")	
+	ax.plot(isoA, currFluxOld, c="b")	
 	#ax.plot(isoANew, currentFlux, c="r")
 	
 	ax = fig.add_subplot(223)

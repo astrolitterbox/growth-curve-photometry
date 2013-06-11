@@ -173,27 +173,29 @@ class Photometry():
 	    growthSlope = 200 #init
 	    
 	    for isoA in range(1, int(isoA_max)+1):
-	      
+	      currentPixels = 0
 	      #draw ellipse for all pixels:
 	      currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
-      	      Npix = inputImage[currentPixels].shape[0]
-	      currentFlux = np.sum(inputImage[currentPixels])
-	      ellipseMask[currentPixels] = 1
+      	      currentFlux = np.sum(inputImage[currentPixels])
+	      #ellipseMask[currentPixels] = 1
 	      #totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]	      
 	      Npix = inputImage[currentPixels].shape[0]
+	      el = ellipse.getPixelEllipseLength(isoA, ba)
+	      #print Npix, 'Npix', el
 	      
 	      #draw ellipse for masked pixels only:     
 	      currentPixelsM = ellipse.draw_ellipse(inputImageM.shape, center[0], center[1], pa, isoA, ba)
 	      #ellipseMaskM[currentPixelsM] = 1
 	      currentFluxM = np.sum(inputImageM[currentPixelsM])	      
 	      NpixM = inputImageM[currentPixelsM].shape[0]
+	      
 	      #totalNpixM = inputImageM[np.where(ellipseMaskM == 1)].shape[0]
 	      #Setting the fluxData array values
 
 	      fluxData[isoA, 0] = isoA
 	      fluxData[isoA, 1] = currentFlux 	      
 	      fluxData[isoA, 2] = Npix
-	      fluxData[isoA, 3] = currentFluxM
+	      fluxData[isoA, 3] = el#currentFluxM
 	      fluxData[isoA, 4] = NpixM #Npix, excluding masked areas
 	      isoA = isoA +1
 	    fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted 

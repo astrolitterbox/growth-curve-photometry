@@ -10,6 +10,7 @@ import getTSFieldParameters
 dbDir = '../db/'
 band = 'r'
 dataDir = 'growth_curves/new/'+band
+dataDirOld = 'growth_curves/'+band
 '''
     # --------------------------------------- starting ellipse GC photometry
 
@@ -42,7 +43,7 @@ def calculateFlux(flux, i):
     	print 'full magnitude', mag
 	return mag
 
-for i in range(2, 3):
+for i in range(15, 17):
 	#z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
 	#outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
 	#outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
@@ -51,33 +52,53 @@ for i in range(2, 3):
 	print sky, skyM
 	##sky = 108
 	dataFile = dataDir+"/gc_profile"+str(i)+".csv"
+	dataFileOld = dataDirOld+"/gc_profile"+str(i)+".csv"
 	data = np.genfromtxt(dataFile)
-	isoA = data[:, 0]
+	oldData = np.genfromtxt(dataFileOld)
+	isoA = oldData[:, 0]
+	currentFluxOld = oldData[:, 3]
+	NpixOld = oldData[:, 4]		
+	isoANew = data[:, 0]	
 	currentFlux = data[:, 1] #current flux
-	Npix = data[:, 2] #current flux
-	currentFluxM = data[:, 3] #current flux
-	NpixM = data[:, 4] 
+	Npix = data[:, 2] #npix
+	#currentFluxM = data[:, 3] #current flux
+	#NpixM = data[:, 4] 
+	currentFlux = np.subtract(currentFlux, Npix*sky)
+	cumFlux = np.cumsum(currentFlux) 
+	cumFluxOld = oldData[:, 1]
+	ell = data[:, 3]
 	#print np.sum(currentFlux), 'sum curr'
 	#sky+= 2
-	currentFlux = np.subtract(currentFlux, Npix*sky)
+	#currentFlux = np.subtract(currentFlux, Npix*sky)
 	
 	#print np.sum(currentFlux), 'sum curr'
 
 	#print currentFlux[1]	
-	cumFlux = np.cumsum(currentFlux) 
-	cumFluxM = np.cumsum(currentFlux)
+	#cumFlux = np.cumsum(currentFlux) 
+	#cumFluxM = np.cumsum(currentFlux)
 	
-	#totalFlux = np.sum(currentFlux) #- sky*np.sum(Npix)
+	
+	#totalFlux = cumFlux[-1]# - sky*np.sum(Npix)
 	#totalFluxM = np.sum(currentFlux)# - skyM*np.sum(Npix)
 	#print totalFlux, 'total'
-	print cumFlux[-1], 'cum'
-	
+	#print cumFlux[-1], 'cum'
+	elMagOld = calculateFlux(cumFluxOld[-1], i)
 	elMag = calculateFlux(cumFlux[-1], i)
-	#elMagM = calculateFlux(totalFluxM, i)
-	print elMag, elMagM
+	print elMagOld, elMag
 	#exit()	
 	fig = plt.figure()
-	plt.scatter(isoA, cumFlux)
+	ax = fig.add_subplot(221)
+	ax.plot(isoA, cumFluxOld, c="b")
+	ax.plot(isoANew, cumFlux, c="r")
+
+	ax = fig.add_subplot(222)
+	ax.plot(isoA, currentFluxOld, c="b")	
+	ax.plot(isoANew, currentFlux, c="r")
+	
+	ax = fig.add_subplot(223)
+	ax.plot(isoANew, Npix, c="r")
+	ax.plot(isoANew, ell, c="b")
+	ax.plot(isoA, NpixOld, c="b")
 	plt.savefig('img/curves/'+band+"/"+str(i))
 	#exit()
 	

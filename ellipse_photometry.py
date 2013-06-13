@@ -200,6 +200,7 @@ class Photometry():
 		flux = np.sum(inputImage[np.where(ellipseMask == 1)]) - sky*inputImage[np.where(ellipseMask == 1)].shape[0]	
 		fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted
 		fluxData[:, 1] = fluxData[:, 1] - sky*fluxData[:, 5]#cumulative flux, _sky_subtracted
+		fluxData[:, 3] = fluxData[:, 3] - sky*fluxData[:, 4]
 		fluxData[:, 2] = fluxData[:, 2] - sky #sky-subtracted flux per pixel
 		  #print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 		  # --------------------------------------- writing an ellipse of counted points, testing only

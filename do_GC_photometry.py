@@ -11,7 +11,7 @@ import sys
 dbDir = '../db/'
 band = 'r'
 dataDir = 'growth_curves/new/'+band
-dataDirOld = 'growth_curves/'+band
+dataDirOld = 'growth_curves/test/'+band
 '''
     # --------------------------------------- starting ellipse GC photometry
 
@@ -52,7 +52,7 @@ for i in range(lim_lo, lim_hi):
 	#z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
 	#outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
 	#outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
-	sky = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]
+	sky = 110#db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]
 	skyM = db.dbUtils.getFromDB('skyMasked', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]	
 	print sky, skyM
 	##sky = 108
@@ -60,8 +60,11 @@ for i in range(lim_lo, lim_hi):
 	dataFileOld = dataDirOld+"/gc_profile"+str(i)+".csv"
 	data = np.genfromtxt(dataFile)
 	oldData = np.genfromtxt(dataFileOld)
+	newSize = min(data.shape[0], oldData.shape[0])
+	data = data[:newSize,:]
+	oldData = oldData[:newSize,:]
 	isoA = oldData[:, 0]
-	currentFluxOld = oldData[:, 3]
+	
 	NpixOld = oldData[:, 4]		
 	isoANew = data[:, 0]	
 	currentFlux = data[:, 1] #current flux
@@ -71,13 +74,17 @@ for i in range(lim_lo, lim_hi):
 	#print currentFlux
 	currentFlux = np.subtract(currentFlux, Npix*sky)
 	cumFlux = np.cumsum(currentFlux) 
-	cumFluxOld = oldData[:, 1]
-	currFluxOld = oldData[:, 3]
+	
+	#cumFluxOld = oldData[:, 1]
+	print Npix.shape, 'npx'
+	currFluxOld = (oldData[:, 3])
 	
 	#currFluxOld = np.subtract(currFluxOld, NpixOld*sky)
+	cumFluxOld = np.cumsum(currFluxOld)
+	
 	
 	#ell = data[:, 3]
-	#print np.sum(currentFlux), 'sum curr'
+	print cumFluxOld[-1], 'cfo'
 	#sky+= 2
 	#currentFlux = np.subtract(currentFlux, Npix*sky)
 	
@@ -86,23 +93,23 @@ for i in range(lim_lo, lim_hi):
 	#print currentFlux[1]	
 	#cumFlux = np.cumsum(currentFlux) 
 	#cumFluxM = np.cumsum(currentFlux)
-	print currFluxOld
+	#print currFluxOld
 	
 	totalFlux = np.sum(currentFlux)
 	#totalFluxM = np.sum(currentFlux)# - skyM*np.sum(Npix)
 	#print totalFlux, 'total'
 	#print cumFlux[-1], 'cum'
-	elMagOld = calculateFlux(np.sum(currFluxOld), i)
+	elMagOld = calculateFlux(cumFluxOld[-1], i)
 	elMag = calculateFlux(totalFlux, i)
 	print elMagOld, 'old', elMag, 'now'
 	#exit()	
 	fig = plt.figure()
 	ax = fig.add_subplot(221)
 	#ax.plot(isoA, cumFluxOld, c="b")
-	ax.plot(isoANew, currentFlux, c="r")
+	ax.plot(isoANew, cumFlux, c="r")
 
 	ax = fig.add_subplot(222)
-	ax.plot(isoA, currFluxOld, c="b")	
+	ax.plot(isoA, cumFluxOld, c="b")	
 	#ax.plot(isoANew, currentFlux, c="r")
 	
 	ax = fig.add_subplot(223)
@@ -116,7 +123,12 @@ for i in range(lim_lo, lim_hi):
 	ax.plot(isoA, NpixOld, c="b")
 
 	plt.savefig('img/curves/'+band+"/"+str(i))
-
+	
+	fig = plt.figure()
+	old = db.dbUtils.getFromDB("r_mag", dbDir+'CALIFA.sqlite', 'gc', ' where califa_id < 100')
+	new = db.dbUtils.getFromDB("mag", dbDir+'CALIFA.sqlite', 'mags')
+	plt.scatter(old, new)
+	plt.savefig('mags_comparison')
 	#sc_index = np.where(np.round(flux, 0) == round(flux[0]/math.e, 0))
         #sc_index = np.where([(np.divide(centralFlux, flux) > math.e) & (isoA > maxFluxIsoA)])[1][0] #the first index after the maximum	   
  	#lsc = isoA[sc_index]*0.396 #in arcseconds

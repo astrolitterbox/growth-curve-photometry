@@ -131,13 +131,13 @@ class Photometry():
   def initFluxData(inputImage, center, distances):
 	    print np.max(distances)
 
-	    fluxData = np.empty((np.max(distances), 6))
+	    fluxData = np.empty((np.max(distances), 5))
 	    fluxData[0,0] = 0 #isoA
 	    fluxData[0,1] = inputImage[center] #currentFlux
-	    fluxData[0,2] = inputImage[center]
+	    fluxData[0,2] = 1
 	    fluxData[0,3] = inputImage[center] #currentFluxM 
 	    fluxData[0,4] = 1 #NpixM
-	    fluxData[0,5] = 1
+
 
 	    return fluxData
   
@@ -156,58 +156,59 @@ class Photometry():
   def buildGrowthCurve(center, distances, pa, ba, CALIFA_ID):
 		band = Settings.getConstants().band
 		sky = Settings.getSkyFitValues(str(CALIFA_ID)).sky
-		print sky, 'sky'
-		isoA_max = Settings.getSkyFitValues(str(CALIFA_ID)).isoA	
+		isoA_max = Settings.getSkyFitValues(str(CALIFA_ID)).isoA			
 		inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
-		ellipseMask = np.zeros((inputImage.shape))	
+		#masked input array
+		mask = Photometry.getMask(int(CALIFA_ID)-1)
+		inputImageM = np.ma.masked_array(inputImage, mask=mask)
+		ellipseMask = np.zeros((inputImage.shape), dtype=np.uint8)
+		ellipseMaskM = ellipseMask.copy()
 		fluxData = Photometry.initFluxData(inputImage, center, distances)
-		print fluxData.shape, 'fd'
 		currentPixels = center
-		currentFlux = inputImage[center]
-		isoA = 1 #initialising
-		Npix = 1
-		totalNpix = 1	
-		oldFlux = inputImage[center[0], center[1]]
-		growthSlope = 200
-		#outputImage = inputImage
-		limitCriterion = Photometry.setLimitCriterion(int(CALIFA_ID) - 1, band = Settings.getConstants().band)
-		#width = 20/Photometry.getFluxRatio(int(CALIFA_ID) - 1, band).fluxRatio
-		#print width, 'width'
+		currentFlux = inputImage[center] 
 
-		#output = inputImage.copy()
-		#while Photometry.checkLimitCriterion(fluxData, isoA-1, limitCriterion, width) != 1:
+		Npix = 1 #init
+		growthSlope = 200 #init
 		for isoA in range(1, int(isoA_max)+1):
-		  previousNpix = Npix
-		  oldFlux = currentFlux	
+		  
+		  #draw ellipse for all pixels:
 		  currentPixels = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
-		  ellipse.getPixelEllipseLength(isoA, ba)
+		  Npix = inputImage[currentPixels].shape[0]
+		  currentFlux = np.sum(inputImage[currentPixels])
 		  ellipseMask[currentPixels] = 1
 		  Npix = inputImage[currentPixels].shape[0]
-		  totalNpix = inputImage[np.where(ellipseMask == 1)].shape[0]
-		  currentFlux = np.sum(inputImage[currentPixels])
-		  #output[currentPixels] = 1
+
+		  #draw ellipse for masked pixels only:
+		  currentPixelsM = ellipse.draw_ellipse(inputImageM.shape, center[0], center[1], pa, isoA, ba)
+		  ellipseMaskM[currentPixelsM] = 1
+		  
+		  NpixM = inputImageM[currentPixelsM].compressed().shape[0]
+		  currentFluxM = np.sum(inputImageM.filled(0)[currentPixelsM])	
+		  #print Npix - NpixM, currentFlux-currentFluxM
+		  
 		  #growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
-		  print 'isoA', isoA
+		  #print 'isoA', isoA
 		  fluxData[isoA, 0] = isoA
 		  fluxData[isoA, 1] = np.sum(inputImage[np.where(ellipseMask == 1)])# cumulative flux
-		  fluxData[isoA, 2] = currentFlux/Npix
-		  #fluxData[isoA, 3] = growthSlope/Npix
-		  fluxData[isoA, 3] = currentFlux #current flux
-		  fluxData[isoA, 4] = Npix
-		  fluxData[isoA, 5] = totalNpix
+		  fluxData[isoA, 2] = inputImage[np.where(ellipseMask == 1)].shape[0]
+
+		  fluxData[isoA, 3] = np.sum(inputImageM[np.where(ellipseMaskM == 1)])# cumulative flux, without masked pixels
+		  fluxData[isoA, 4] = inputImageM[np.where(ellipseMaskM == 1)].shape[0]
+
 		  isoA = isoA +1
 		  #gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
 		flux = np.sum(inputImage[np.where(ellipseMask == 1)]) - sky*inputImage[np.where(ellipseMask == 1)].shape[0]	
 		fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted
-		fluxData[:, 1] = fluxData[:, 1] - sky*fluxData[:, 5]#cumulative flux, _sky_subtracted
-		fluxData[:, 3] = fluxData[:, 3] - sky*fluxData[:, 4]
-		fluxData[:, 2] = fluxData[:, 2] - sky #sky-subtracted flux per pixel
+		#fluxData[:, 1] = fluxData[:, 1] - sky*fluxData[:, 5]#cumulative flux, _sky_subtracted
+		#fluxData[:, 3] = fluxData[:, 3] - sky*fluxData[:, 4]
+		#fluxData[:, 2] = fluxData[:, 2] - sky #sky-subtracted flux per pixel
 		  #print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 		  # --------------------------------------- writing an ellipse of counted points, testing only
 		  #if e:
-		  # hdu = pyfits.PrimaryHDU(output)
-		  # hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
-		np.savetxt('growth_curves/test/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+		hdu = pyfits.PrimaryHDU(ellipseMask)
+		hdu.writeto('ellipseMask'+CALIFA_ID+'.fits')
+		
+		np.savetxt('growth_curves/new/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion, width):
@@ -364,7 +365,7 @@ def main():
   band = Settings.getConstants().band
 
   galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
-  chunks = 1
+  chunks = 6
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'
     print galaxyList

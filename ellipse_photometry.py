@@ -183,9 +183,9 @@ class Photometry():
 		  ellipseMaskM[currentPixelsM] = 1
 		  maskedPixels = inputImageM[np.where((ellipseMaskM == 1) & (mask == 0))]
 		  
-		  #NpixM = inputImageM[currentPixelsM].compressed().shape[0]
+		  NpixM = inputImageM[currentPixelsM].compressed().shape[0]
 		  #currentFluxM = np.sum(inputImageM.filled(0)[currentPixelsM])	
-		  #print Npix - NpixM, currentFlux-currentFluxM
+		  
 		  
 		  #growthSlope = utils.getSlope(oldFlux, currentFlux, isoA-1, isoA)
 		  #print 'isoA', isoA
@@ -201,6 +201,7 @@ class Photometry():
 		  #gc_sky = np.mean(fluxData[isoA-width:isoA-1, 2])
 		#flux = np.sum(inputImage[np.where(ellipseMask == 1)]) - sky*inputImage[np.where(ellipseMask == 1)].shape[0]	
 		fluxData = fluxData[0:isoA-1,:] #the last isoA value was incremented, so it should be subtracted
+		print np.sum(inputImage[np.where(ellipseMask == 1)])-np.sum(inputImageM[np.where((ellipseMaskM == 1) & (mask == 0))])
 		#fluxData[:, 1] = fluxData[:, 1] - sky*fluxData[:, 5]#cumulative flux, _sky_subtracted
 		#fluxData[:, 3] = fluxData[:, 3] - sky*fluxData[:, 4]
 		#fluxData[:, 2] = fluxData[:, 2] - sky #sky-subtracted flux per pixel

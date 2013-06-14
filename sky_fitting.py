@@ -170,7 +170,7 @@ class Photometry():
 	      currentPixelsM = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA, ba)
 	      
 	      NpixM = inputImageM[currentPixelsM].compressed().shape[0]
-	      currentFluxM = np.sum(inputImageM[currentPixelsM])
+	      currentFluxM = np.sum(inputImageM.filled(0)[currentPixelsM])
 	      
 	      #write out
 	      fluxData[i, 0] = isoA
@@ -303,11 +303,11 @@ def main():
   #exit()
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #getting list of CALIFA IDS to work with
-  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   
   #OR:
   #getting list of missing galaxy IDs:
-  galaxyRange = getMissing()
+  #galaxyRange = getMissing()
   chunks = 6
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'

@@ -61,20 +61,18 @@ for i in range(lim_lo, lim_hi):
 	dataFile = dataDir+"/gc_profile"+str(i)+".csv"
 	#dataFileOld = dataDirOld+"/test/gc_profile"+str(i)+".csv"
 	data = np.genfromtxt(dataFile)
-	#oldData = np.genfromtxt(dataFileOld)
-	#newSize = min(data.shape[0], oldData.shape[0])
-	#data = data[:newSize,:]
-	#oldData = oldData[:newSize,:]
-	#isoA = oldData[:, 0]
-	#cumFluxOld = oldData[:, 1]
-	#NpixOld = oldData[:, 4]		
-	#NpixOldCum = oldData[:, 5]	
 	isoA = data[:, 0]	
 	cumFlux = data[:, 1] #current flux
 	Npix = data[:, 2] #npix
+	cumFluxM = data[:, 3]
+	NpixM = data[:, 4]
 	totalNpix = Npix[-1]
 	totalFlux = cumFlux[-1]
-	print totalFlux, 'total Flux', totalNpix, 'totalNpix'
+	
+	totalNpixM = NpixM[-1]
+	totalFluxM = cumFluxM[-1]
+	
+	print totalFlux, totalFluxM, 'total Flux', totalNpix, totalNpixM, 'totalNpix'
 	#maskFile = pyfits.open("ellipseMask6.fits")
 	#mask = maskFile[0].data
 
@@ -82,11 +80,14 @@ for i in range(lim_lo, lim_hi):
 	#totalOldNpix = np.sum(mask[np.where(mask == 1)])
 	
 	totalSky = totalNpix*sky
+	totalSkyM = totalNpixM*sky
 	#print totalSky, 'sky sum', totalNpix, 'Npix'
 	skySubFlux = totalFlux - totalSky
-	print skySubFlux, 'sky subtracted flux'
-	elMag = calculateFlux(skySubFlux, i)  
-	print elMag
+	skySubFluxM = totalFluxM - totalSkyM
+	print skySubFlux, skySubFluxM, 'sky subtracted flux'
+	elMag = calculateFlux(skySubFlux, i)
+	elMagM = calculateFlux(skySubFluxM, i)  
+	print elMag, elMagM
 	exit()
 	
 	mags.append((i, elMag))

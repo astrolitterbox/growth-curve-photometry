@@ -46,15 +46,27 @@ def calculateFlux(flux, i):
     	print 'full magnitude', mag
 	return mag
 
-def subtractSky(sky, Npix, totalFlux):
-  totalSky = sky*Npix
-  return totalFlux - totalSky
+def checkMissing(dataDir, lim_lo, lim_hi):
+  missing = []
+  for i in range(lim_lo, lim_hi):
+	try:
+	  dataFile = dataDir+"/gc_profile"+str(i)+".csv"
+	  d = np.genfromtxt(dataFile)
+	except IOError as e:
+	  missing.append(i)
+  np.savetxt('missing_curves.csv', missing, fmt='%i')
+
 
 mags = []
 lim_lo = int(sys.argv[1])
 lim_hi = int(sys.argv[2])
-for i in range(lim_lo, lim_hi):
-	
+
+
+
+checkMissing(dataDir, lim_lo, lim_hi)
+
+
+'''
 	#z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
 	#outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
 	#outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
@@ -76,50 +88,45 @@ for i in range(lim_lo, lim_hi):
 	totalNpixM = NpixM[-1]
 	totalFluxM = cumFluxM[-1]
 	
-	print totalFlux - totalFluxM, 'total Flux', totalNpix, totalNpixM, 'totalNpix'
+	print totalFlux, totalFluxM, 'total Flux', totalNpix, totalNpixM, 'totalNpix'
 	#maskFile = pyfits.open("ellipseMask6.fits")
 	#mask = maskFile[0].data
 
-	
+
 	#totalOldNpix = np.sum(mask[np.where(mask == 1)])
 	
+	totalSky = totalNpix*sky
+	totalSkyM = totalNpixM*sky
 	#print totalSky, 'sky sum', totalNpix, 'Npix'
-	skySubFlux = subtractSky(sky, totalNpix, cumFlux)
-	skySubFluxM = subtractSky(skyM, totalNpixM, cumFluxM)
-	print skySubFlux[-1], skySubFluxM[-1], 'sky subtracted flux'
-	elMag = calculateFlux(skySubFlux[-1], i)
-	elMagM = calculateFlux(skySubFluxM[-1], i)  
+	skySubFlux = totalFlux - totalSky
+	skySubFluxM = totalFluxM - totalSkyM
+	print skySubFlux, skySubFluxM, 'sky subtracted flux'
+	elMag = calculateFlux(skySubFlux, i)
+	elMagM = calculateFlux(skySubFluxM, i)  
 	print elMag, elMagM
-	try:
-	  elHLR = data[np.where(np.round(skySubFlux/skySubFlux[-1], 1) == 0.5)][0][0] 
-	except IndexError as e:
-	  elHLR = e	    
+	exit()
 	
-	try:
-	  elR90 = data[np.where(np.round(skySubFlux/skySubFlux[-1], 1) == 0.9)][0][0] 
-	except IndexError as e:
-	  elR90 = e	    
-	try:
-	  elHLRM = data[np.where(np.round(skySubFluxM/skySubFluxM[-1], 1) == 0.5)][0][0] 
-	except IndexError as e:
-	  elHLRM = e	    
-	
-	try:
-	  elR90M = data[np.where(np.round(skySubFluxM/skySubFluxM[-1], 1) == 0.9)][0][0] 
-	except IndexError as e:
-	  elR90M = e	    
-
-
-
-	print elHLR, 0.396*elHLR, elR90, 0.396*elR90
-	print elHLRM, elR90M
-	mags.append((i, elMag, elMagM, 0.396*elHLR, 0.396*elR90))
+	mags.append((i, elMag))
 
 	
 	fig = plt.figure()
-	ax = fig.add_subplot(111)
-	ax.plot(isoA, skySubFlux, c="b")
-	ax.plot(isoA, skySubFluxM, c="r")
+	ax = fig.add_subplot(221)
+	ax.plot(isoA, np.cumsum(currentFlux)  - sky*np.cumsum(Npix), c="b")
+	
+
+	ax = fig.add_subplot(222)
+	#ax.plot(isoA, cumFluxOld, c="b")	
+	ax.plot(isoA, currentFlux, c="r")
+	
+	#ax = fig.add_subplot(223)
+	#ax.plot(isoA, skySubFlux, c="r")
+	#ax.plot(isoANew, cumFluxOld, c="b")
+	
+
+
+	
+	ax = fig.add_subplot(224)
+	ax.plot(isoA, Npix, c="r")
 
 	plt.savefig('img/curves/'+band+"/"+str(i))
 	
@@ -134,4 +141,5 @@ for i in range(lim_lo, lim_hi):
 
 	#phys_lsc = cosm.angular2physical(lsc, z)
 	#print str(i)+","+ str(lsc)+","+ str(phys_lsc[0])+","+ str(z[0])#+","+str(maxFluxIsoA)+","+ str(lsc)# -- testing
-np.savetxt("mags.csv", mags, fmt="%i,%f, %f, %f, %f")
+	#np.savetxt("mags.csv", mags, fmt="%i,%f")
+	'''

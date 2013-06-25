@@ -7,11 +7,12 @@ import sys
 from ellipse_photometry import Settings
 
 
-
 class GalaxyParameters:
+  
   @staticmethod
   def SDSS(ID):
-    listFile = Settings.getConstants().listFile
+    dataDir = '../data/'    
+    listFile = dataDir+'/SDSS_photo_match.csv' 
     ret = GalaxyParameters()
     CALIFAID_col = 0
     ra_col = 1

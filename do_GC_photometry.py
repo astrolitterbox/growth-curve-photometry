@@ -1,4 +1,5 @@
-#USAGE: python read_SB_profiles.py > outputFile.txt
+import matplotlib
+matplotlib.use('Agg')
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,90 +57,88 @@ def checkMissing(dataDir, lim_lo, lim_hi):
 	  missing.append(i)
   np.savetxt('missing_curves.csv', missing, fmt='%i')
 
-
-mags = []
-lim_lo = int(sys.argv[1])
-lim_hi = int(sys.argv[2])
-
-
-
-checkMissing(dataDir, lim_lo, lim_hi)
+def main():
+  mags = []
+  lim_lo = int(sys.argv[1])
+  lim_hi = int(sys.argv[2])
 
 
-'''
-	#z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
-	#outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
-	#outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
-	sky = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]
-	skyM = db.dbUtils.getFromDB('skyMasked', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]	
-	print sky, skyM
-	##sky = 108
-	dataFile = dataDir+"/gc_profile"+str(i)+".csv"
-	#dataFileOld = dataDirOld+"/test/gc_profile"+str(i)+".csv"
-	data = np.genfromtxt(dataFile)
-	isoA = data[:, 0]	
-	cumFlux = data[:, 1] #current flux
-	Npix = data[:, 2] #npix
-	cumFluxM = data[:, 3]
-	NpixM = data[:, 4]
-	totalNpix = Npix[-1]
-	totalFlux = cumFlux[-1]
-	
-	totalNpixM = NpixM[-1]
-	totalFluxM = cumFluxM[-1]
-	
-	print totalFlux, totalFluxM, 'total Flux', totalNpix, totalNpixM, 'totalNpix'
-	#maskFile = pyfits.open("ellipseMask6.fits")
-	#mask = maskFile[0].data
+
+  #checkMissing(dataDir, lim_lo, lim_hi)
 
 
-	#totalOldNpix = np.sum(mask[np.where(mask == 1)])
-	
-	totalSky = totalNpix*sky
-	totalSkyM = totalNpixM*sky
-	#print totalSky, 'sky sum', totalNpix, 'Npix'
-	skySubFlux = totalFlux - totalSky
-	skySubFluxM = totalFluxM - totalSkyM
-	print skySubFlux, skySubFluxM, 'sky subtracted flux'
-	elMag = calculateFlux(skySubFlux, i)
-	elMagM = calculateFlux(skySubFluxM, i)  
-	print elMag, elMagM
-	exit()
-	
-	mags.append((i, elMag))
+  for i in range(lim_lo, lim_hi):
+	  #z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
+	  #outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
+	  #outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
+	  sky = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]
+	  skyM = db.dbUtils.getFromDB('skyMasked', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]	
+	  print sky, skyM
+	  ##sky = 108
+	  dataFile = dataDir+"/gc_profile"+str(i)+".csv"
+	  #dataFileOld = dataDirOld+"/test/gc_profile"+str(i)+".csv"
+	  data = np.genfromtxt(dataFile)
+	  isoA = data[:, 0]	
+	  cumFlux = data[:, 1] #current flux
+	  Npix = data[:, 2] #npix
+	  cumFluxM = data[:, 3]
+	  NpixM = data[:, 4]
+	  totalNpix = Npix[-1]
+	  totalFlux = cumFlux[-1]
+	  
+	  totalNpixM = NpixM[-1]
+	  totalFluxM = cumFluxM[-1]
+	  
+	  print totalFlux, totalFluxM, 'total Flux', totalNpix, totalNpixM, 'totalNpix'
+	  #maskFile = pyfits.open("ellipseMask6.fits")
+	  #mask = maskFile[0].data
+	  
+	  skySubCumFlux = cumFlux - sky*Npix
+	  skySubCumFluxM = cumFluxM - sky*NpixM
+	  #totalOldNpix = np.sum(mask[np.where(mask == 1)])
+	  
+	  totalSky = totalNpix*sky
+	  totalSkyM = totalNpixM*sky
+	  #print totalSky, 'sky sum', totalNpix, 'Npix'
+	  skySubFlux = totalFlux - totalSky
+	  skySubFluxM = totalFluxM - totalSkyM
+	  print skySubFlux, skySubFluxM, 'sky subtracted flux'
+	  elMag = calculateFlux(skySubFlux, i-1)
+	  elMagM = calculateFlux(skySubFluxM, i-1)  
+	  print elMag, elMagM
+	  try:
+	    elHLR = data[np.where(np.round(skySubCumFlux/skySubCumFlux[-1], 1) == 0.5)][0][0] 
+	  except IndexError as e:
+	    elHLR = e      
+	  try:
+	    elHLRM = data[np.where(np.round(skySubCumFluxM/skySubCumFluxM[-1], 1) == 0.5)][0][0] 
+	  except IndexError as e:
+	    elHLRM = e  
+	  try:
+	    elR90 = data[np.where(np.round(skySubCumFlux/skySubCumFlux[-1], 1) == 0.9)][0][0] 
+	  except IndexError as e:
+	    elR90 = e
+	  try:
+	    elR90M = data[np.where(np.round(skySubCumFluxM/skySubCumFluxM[-1], 1) == 0.9)][0][0] 
+	  except IndexError as e:
+	    elR90M = e  	  
+	    
+	  print i, elMag, elMagM, elHLR, elHLRM, elR90, elR90M
+	  
+	  
+	  out = (i, elMag, elMagM, elHLR,elHLRM, elR90, elR90M)
+	  
+	  mags.append(out) 
 
-	
-	fig = plt.figure()
-	ax = fig.add_subplot(221)
-	ax.plot(isoA, np.cumsum(currentFlux)  - sky*np.cumsum(Npix), c="b")
-	
+	  
+	  fig = plt.figure()
+	  ax = fig.add_subplot(111)
+	  ax.plot(isoA, skySubCumFlux, c="r")
+	  
+	  ax.plot(isoA, skySubCumFluxM, c="b")
 
-	ax = fig.add_subplot(222)
-	#ax.plot(isoA, cumFluxOld, c="b")	
-	ax.plot(isoA, currentFlux, c="r")
-	
-	#ax = fig.add_subplot(223)
-	#ax.plot(isoA, skySubFlux, c="r")
-	#ax.plot(isoANew, cumFluxOld, c="b")
-	
-
-
-	
-	ax = fig.add_subplot(224)
-	ax.plot(isoA, Npix, c="r")
-
-	plt.savefig('img/curves/'+band+"/"+str(i))
-	
-	#fig = plt.figure()
-	#old = db.dbUtils.getFromDB("r_mag", dbDir+'CALIFA.sqlite', 'gc', ' where califa_id < 100')
-	#new = db.dbUtils.getFromDB("mag", dbDir+'CALIFA.sqlite', 'mags')
-	#plt.scatter(old, new)
-	#plt.savefig('mags_comparison')
-	#sc_index = np.where(np.round(flux, 0) == round(flux[0]/math.e, 0))
-        #sc_index = np.where([(np.divide(centralFlux, flux) > math.e) & (isoA > maxFluxIsoA)])[1][0] #the first index after the maximum	   
- 	#lsc = isoA[sc_index]*0.396 #in arcseconds
-
-	#phys_lsc = cosm.angular2physical(lsc, z)
-	#print str(i)+","+ str(lsc)+","+ str(phys_lsc[0])+","+ str(z[0])#+","+str(maxFluxIsoA)+","+ str(lsc)# -- testing
-	#np.savetxt("mags.csv", mags, fmt="%i,%f")
-	'''
+	  plt.savefig('img/curves/'+band+"/"+str(i))
+  np.savetxt("mags.csv", mags, fmt="%i,%f,%f, %f,%f, %f,%f")
+	  
+if __name__=="__main__":
+  main()

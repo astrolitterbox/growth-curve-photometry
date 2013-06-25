@@ -12,7 +12,7 @@ from math import ceil
 #awk < mothersample.csv 'BEGIN { FS="," }; { print $1,",",$2,",",$3,",",$9,",",$10,",",$11,",",$12}' > list.txt
 
 dataFile = 'list.txt'
-band = 'g'
+
 
 #the next three functions are from sdsspy library (http://code.google.com/p/sdsspy/)
 
@@ -78,8 +78,6 @@ def getShiftedImage(img, shift):
     else: #(-, -) case
       print 'negative', img.shape, shift[0]
       ret = img[-(shift[0]):, -(shift[1]):]
-
-      
   print ret.shape
   return ret	  
   

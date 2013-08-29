@@ -8,16 +8,25 @@ import matplotlib.pyplot as plt
 
 
 
+def makeDiagonalLine(data):
+  x1,x2,n,m,b = np.min(data),np.max(data),1000,1.,0. 
+  x = np.r_[x1:x2:n*1j] #http://docs.scipy.org/doc/numpy/reference/generated/numpy.r_.html
+  return x, m, b
+
 
 #Settings
 f = open('settings','r')
 settings = eval(f.read())
 dbDir = settings['dbDir']
 
-bands = ['u', 'g', 'r', 'i']
+bands = ['u', 'g', 'r', 'i', 'z']
 
 mags = np.empty((937, 5))
 oldMags = np.empty((937, 5))
+oldSky = np.empty((937, 5))
+sky = np.empty((937, 5))
+isoA = np.empty((937, 1))
+oldIsoA = np.empty((937, 5))
 petroMags = np.empty((937, 5))
 phot_ids = db.dbUtils.getFromDB('califa_id', dbDir+'CALIFA_new_photometry.sqlite', 'gc_new_r')
 ids = sqlify(phot_ids)
@@ -25,7 +34,20 @@ ids = sqlify(phot_ids)
 for i, band in enumerate(bands):
   mags[:, i] = db.dbUtils.getFromDB(band+'_mag', dbDir+'CALIFA_new_photometry.sqlite', 'gc_new_'+band, ' where califa_id in '+ids)
   petroMags[:, i] = db.dbUtils.getFromDB('petroMag_'+band, dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id in '+ids)
-  oldMags[:, i] = db.dbUtils.getFromDB(band, dbDir+'CALIFA.sqlite', 'gc_results', ' where califa_id in '+ids)
+  oldMags[:, i] = db.dbUtils.getFromDB('el_mag', dbDir+'CALIFA.sqlite', band+'_tot', ' where califa_id in '+ids)
+  oldSky[:, i] = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id in '+ids)
+  if band == 'r':
+    sky[:, i] = db.dbUtils.getFromDB('sky', dbDir+'CALIFA_new_photometry.sqlite', 'sky_new', ' where califa_id in '+ids)
+  else:
+    sky[:, i] = db.dbUtils.getFromDB(band+'_sky', dbDir+'CALIFA_new_photometry.sqlite', 'gc_new_'+band, ' where califa_id in '+ids)
+  
+  oldSky[:, i] = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id in '+ids)
+  oldSky[:, i][np.where(oldSky[:, i] > 1000)] = oldSky[:, i][np.where(oldSky[:, i] > 1000)] - 1000
+  sky[:, i][np.where(sky[:, i] > 1000)] = sky[:, i][np.where(sky[:, i] > 1000)] - 1000
+  oldIsoA[:, i] = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id in '+ids)
+
+#because it's the same for all bands:
+isoA[:, 0] = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA_new_photometry.sqlite','sky_new', ' where califa_id in '+ids)
 
 # r mag
 
@@ -121,42 +143,170 @@ plt.ylabel("i mag, GC")
 
 plt.savefig('test/g_i_colour')
 
-#morphtypes
 
-Hubtype = np.asarray(decodeU(db.dbUtils.getFromDB('Hubtype', dbDir+'CALIFA.sqlite', 'morph', ' where califa_id in '+ids)))
-HubSubType = np.asarray(decodeU(db.dbUtils.getFromDB('HubSubtype', dbDir+'CALIFA.sqlite', 'morph', ' where califa_id in '+ids)))
-n = db.dbUtils.getFromDB('n', dbDir+'CALIFA.sqlite', 'galfit', ' where califa_id in '+ids)
+#all magnitudes
 
-morphtypes = np.empty((Hubtype.shape[0], 1), dtype = 'object')
-for i, galaxy in enumerate(Hubtype):
-  morphtypes[i] = galaxy+HubSubType[i]
-#print morphtypes
 
-resolution = 'hubtype'
 
-morph = getMorphNumbers(morphtypes, resolution)
+fig = plt.figure(figsize=(14, 14))  
+ax = plt.subplot(511)
+x, m, b = makeDiagonalLine(petroMags[:, 0])
+ax.scatter(petroMags[:, 0], oldMags[:, 0], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("u mag, SDSS")
+plt.ylabel("u mag, old GC")
+#ax.axis([-0.5, 2.5, -0.5, 2.5])
 
-types = ['EO', 'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'S0', 'S0a', 'Sa', 'Sab', 'Sb', 'Sbc', 'Sc', 'Scd', 'Sd', 'Sdm', 'Sm', 'Ir']
 
-#clipped_col = np.clip(col, np.mean(col)-3*np.std(col), np.mean(col)+3*np.std(col))
+ax = plt.subplot(512)
+x, m, b = makeDiagonalLine(petroMags[:, 1])
+ax.scatter(petroMags[:, 1], oldMags[:, 1], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("g mag, SDSS")
+plt.ylabel("g mag, old GC")
+#ax.axis([0, 5, 0, 5])
 
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111)
-mean = np.mean(mags[:, 1] - mags[:, 3])
-sigma = np.std(mags[:, 1] - mags[:, 3])
-print sigma, mean, mags[:, 1] - mags[:, 3]
-p = plt.scatter(morph, n, c=np.clip(mags[:, 1] - mags[:, 3], mean-sigma, mean+sigma), alpha=0.9, s=30)
-plt.ylabel(r"S$\'{e}$rsic n")
-plt.xlabel("Hubble type")
-plt.xlim(-0.2, 20)
-plt.ylim(-0, 8)
-Minor_formatter = mpl.ticker.FixedFormatter(types)
-majorLocator = mpl.ticker.MultipleLocator(1)
-#cbar = plt.colorbar(p)
-ax.xaxis.set_major_locator(majorLocator)
-ax.xaxis.set_major_formatter(Minor_formatter)
+ax = plt.subplot(513)
+x, m, b = makeDiagonalLine(petroMags[:, 2])
+ax.scatter(petroMags[:, 2], oldMags[:, 2], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("r mag, SDSS")
+plt.ylabel("r mag, old GC")
 
-#cbar.ax.set_ylabel("g-r color")
-plt.savefig("test/morphtypes_vs_color")
+ax = plt.subplot(514)
+x, m, b = makeDiagonalLine(petroMags[:, 3])
+ax.scatter(petroMags[:, 3], oldMags[:, 3], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("i mag, SDSS")
+plt.ylabel("i mag, old GC")
+
+ax = plt.subplot(515)
+x, m, b = makeDiagonalLine(petroMags[:, 4])
+ax.scatter(petroMags[:, 4], oldMags[:, 4], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("z mag, SDSS")
+plt.ylabel("z mag, old GC")
+plt.savefig("test/all_mags_comparison")
+
+#all mags, new GC
+
+fig = plt.figure(figsize=(14, 14))  
+ax = plt.subplot(511)
+x, m, b = makeDiagonalLine(petroMags[:, 0])
+ax.scatter(petroMags[:, 0], mags[:, 0], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("u mag, SDSS")
+plt.ylabel("u mag, GC")
+#ax.axis([-0.5, 2.5, -0.5, 2.5])
+
+
+ax = plt.subplot(512)
+x, m, b = makeDiagonalLine(petroMags[:, 1])
+ax.scatter(petroMags[:, 1], mags[:, 1], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("g mag, SDSS")
+plt.ylabel("g mag, GC")
+#ax.axis([0, 5, 0, 5])
+
+ax = plt.subplot(513)
+x, m, b = makeDiagonalLine(petroMags[:, 2])
+ax.scatter(petroMags[:, 2], mags[:, 2], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("r mag, SDSS")
+plt.ylabel("r mag, GC")
+
+ax = plt.subplot(514)
+x, m, b = makeDiagonalLine(petroMags[:, 3])
+ax.scatter(petroMags[:, 3], mags[:, 3], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("i mag, SDSS")
+plt.ylabel("i mag, GC")
+
+ax = plt.subplot(515)
+x, m, b = makeDiagonalLine(petroMags[:, 4])
+ax.scatter(petroMags[:, 4], mags[:, 4], c='k', s=5)
+plt.plot(x,m*x + b, c='g')
+plt.xlabel("z mag, SDSS")
+plt.ylabel("z mag, GC")
+plt.savefig("test/all_mags_comparison_new_GC")
+
+
+
+#sky values comparison
+
+fig = plt.figure(figsize=(14, 14))  
+ax = plt.subplot(511)
+ax.scatter(oldSky[:, 0], oldSky[:, 0] - sky[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("u band sky, old GC")
+plt.ylabel("old GC sky - GC sky")
+
+
+ax = plt.subplot(512)
+ax.scatter(oldSky[:, 1], oldSky[:, 1] - sky[:, 1], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("g band sky, old GC")
+plt.ylabel("old GC sky - GC sky")
+
+
+ax = plt.subplot(513)
+ax.scatter(oldSky[:, 2], oldSky[:, 2] - sky[:, 2], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("r band sky, old GC")
+plt.ylabel("old GC sky - GC sky")
+
+ax = plt.subplot(514)
+ax.scatter(oldSky[:, 3], oldSky[:, 3] - sky[:, 3], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("i band sky, old GC")
+plt.ylabel("old GC sky - GC sky")
+
+ax = plt.subplot(515)
+ax.scatter(oldSky[:, 4], oldSky[:, 4] - sky[:, 4], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("z band sky, old GC")
+plt.ylabel("old GC sky - GC sky")
+
+plt.savefig("test/sky_comparison_new_GC")
+
+
+#isoA values comparison
+
+
+fig = plt.figure(figsize=(14, 14))  
+ax = plt.subplot(511)
+ax.scatter(oldIsoA[:, 0], oldIsoA[:, 0] - isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("u band radius, old GC")
+plt.ylabel("old radius - new GC radius")
+
+
+ax = plt.subplot(512)
+ax.scatter(oldIsoA[:, 1], oldIsoA[:, 1] - isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("g band radius, old GC")
+plt.ylabel("old radius - new GC radius")
+
+
+ax = plt.subplot(513)
+ax.scatter(oldIsoA[:, 2], oldIsoA[:, 2] - isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("r band radius, old GC")
+plt.ylabel("old radius - new GC radius")
+
+ax = plt.subplot(514)
+ax.scatter(oldIsoA[:, 3], oldIsoA[:, 3] - isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("i band radius, old GC")
+plt.ylabel("old radius - new GC radius")
+
+ax = plt.subplot(515)
+ax.scatter(oldIsoA[:, 4], oldIsoA[:, 4] - isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("z band radius, old GC")
+plt.ylabel("old radius - new GC radius")
+
+plt.savefig("test/isoA_comparison_new_GC")
+
 
 

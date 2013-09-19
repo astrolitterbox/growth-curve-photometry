@@ -54,8 +54,7 @@ isoA[:, 0] = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA_new_photometry.sqlite','
 fig = plt.figure(figsize=(8, 8))  
 ax = plt.subplot(111)
 ax.scatter(petroMags[:, 2], mags[:, 2], c='k', s=5)
-c = ax.scatter(petroMags[:, 2], oldMags[:, 2], c=np.abs(mags[:, 2] - oldMags[:, 2]), s=5, edgecolor="None")
-plt.colorbar(c)
+c = ax.scatter(petroMags[:, 2], oldMags[:, 2], c='r', s=5, edgecolor="None")
 ax.axis([10, 16.5, 10, 16.5])
 #ax.line([[10, 10], [16.5, 16.5]])
 plt.xlabel("SDSS r magnitude, mag")
@@ -272,6 +271,42 @@ plt.savefig("test/sky_comparison_new_GC")
 
 #isoA values comparison
 
+fig = plt.figure(figsize=(14, 14))  
+ax = plt.subplot(511)
+ax.scatter(oldIsoA[:, 0], isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("u band radius, old GC")
+plt.ylabel("new GC radius")
+
+
+ax = plt.subplot(512)
+ax.scatter(oldIsoA[:, 1], isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("g band radius, old GC")
+plt.ylabel("new GC radius")
+
+
+ax = plt.subplot(513)
+ax.scatter(oldIsoA[:, 2], isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("r band radius, old GC")
+plt.ylabel("new GC radius")
+
+ax = plt.subplot(514)
+ax.scatter(oldIsoA[:, 3], isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("i band radius, old GC")
+plt.ylabel("new GC radius")
+
+ax = plt.subplot(515)
+ax.scatter(oldIsoA[:, 4], isoA[:, 0], c='k', s=5)
+plt.axhline(c='g')
+plt.xlabel("z band radius, old GC")
+plt.ylabel("new GC radius")
+
+plt.savefig("test/isoA_comparison_new_GC")
+
+#isoA diff comparison
 
 fig = plt.figure(figsize=(14, 14))  
 ax = plt.subplot(511)
@@ -306,7 +341,43 @@ plt.axhline(c='g')
 plt.xlabel("z band radius, old GC")
 plt.ylabel("old radius - new GC radius")
 
-plt.savefig("test/isoA_comparison_new_GC")
+plt.savefig("test/isoA_diff_new_GC")
+
+#Magnitude difference vs. isoA difference
+
+fig = plt.figure(figsize=(14, 14))  
+ax = plt.subplot(511)
+
+ax.scatter(oldIsoA[:, 0] - isoA[:, 0], oldMags[:, 0] - mags[:, 0],c='k', s=5)
+plt.axhline(c='g')
+plt.ylabel("u band old GC - new GC")
+plt.xlabel("old radius - new GC radius")
 
 
+ax = plt.subplot(512)
+ax.scatter(oldIsoA[:, 1] - isoA[:, 0], oldMags[:, 1] - mags[:, 1], c='k', s=5)
+plt.axhline(c='g')
+plt.ylabel("g band old GC - new GC")
+plt.xlabel("old radius - new GC radius")
 
+
+ax = plt.subplot(513)
+ax.scatter(oldIsoA[:, 2] - isoA[:, 0], oldMags[:, 2] - mags[:, 2], c='k', s=5)
+plt.axhline(c='g')
+plt.ylabel("r band old GC - new GC")
+plt.xlabel("old radius - new GC radius")
+
+ax = plt.subplot(514)
+ax.scatter(oldIsoA[:, 3] - isoA[:, 0], oldMags[:, 3] - mags[:, 3], c='k', s=5)
+plt.axhline(c='g')
+plt.ylabel("i band old GC - new GC")
+plt.xlabel("old radius - new GC radius")
+
+ax = plt.subplot(515)
+ax.scatter(oldIsoA[:, 4] - isoA[:, 0], oldMags[:, 4] - mags[:, 4], c='k', s=5)
+plt.axhline(c='g')
+plt.ylabel("z band old GC - new GC")
+plt.xlabel("old radius - new GC radius")
+
+plt.savefig("test/mag_diff_isoA_diff")
+print np.mean(oldMags[:, 1] - oldMags[:, 2]), 'old', np.mean(mags[:, 1][~np.isnan(mags[:, 1])]) - np.mean(mags[:, 2][~np.isnan(mags[:, 2])]), 'new'

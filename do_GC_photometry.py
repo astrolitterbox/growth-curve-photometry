@@ -8,12 +8,15 @@ import db
 import getTSFieldParameters
 import sys 
 import pyfits
+import matplotlib.image as image
+import matplotlib.cm as cm
 
+plt.rc('legend',**{'fontsize':11})
 
 #import cosm
 dbDir = '../db/'
-band = 'r'
-dataDir = 'growth_curves/new/'+band
+band = sys.argv[3]
+dataDir = 'growth_curves/2/'+band
 dataDirOld = 'growth_curves/test/'+band
 '''
     # --------------------------------------- starting ellipse GC photometry
@@ -71,8 +74,8 @@ def main():
 	  #z = db.dbUtils.getFromDB('z', dbDir+'CALIFA.sqlite', 'mothersample', ' where califa_id = '+str(i))
 	  #outerRadius_curr = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_'+band, ' where califa_id = '+str(i))[0]
 	  #outerRadius_r = db.dbUtils.getFromDB('isoA', dbDir+'CALIFA.sqlite', 'sky_fits_r', ' where califa_id = '+str(i))[0]
-	  sky = db.dbUtils.getFromDB('sky', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]
-	  skyM = db.dbUtils.getFromDB('skyMasked', dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(i))[0]	
+	  sky = db.dbUtils.getFromDB('allsky', dbDir+'CALIFA.sqlite', 'gc2_'+band+'_sky', ' where califa_id = '+str(i))[0]
+	  skyM = db.dbUtils.getFromDB('mSky', dbDir+'CALIFA.sqlite', 'gc2_'+band+'_sky', ' where califa_id = '+str(i))[0]	
 	  print sky, skyM
 	  ##sky = 108
 	  dataFile = dataDir+"/gc_profile"+str(i)+".csv"
@@ -93,8 +96,8 @@ def main():
 	  #maskFile = pyfits.open("ellipseMask6.fits")
 	  #mask = maskFile[0].data
 	  
-	  skySubCumFlux = cumFlux - sky*Npix
-	  skySubCumFluxM = cumFluxM - sky*NpixM
+	  skySubCumFlux = cumFlux - skyM*Npix
+	  skySubCumFluxM = cumFluxM - skyM*NpixM
 	  #totalOldNpix = np.sum(mask[np.where(mask == 1)])
 	  
 	  totalSky = totalNpix*sky
@@ -131,14 +134,30 @@ def main():
 	  mags.append(out) 
 
 	  
-	  fig = plt.figure()
-	  ax = fig.add_subplot(111)
-	  ax.plot(isoA, skySubCumFlux, c="r")
+	  fig = plt.figure(figsize=(12, 12))
+	  ax = fig.add_subplot(221)
+	  ax.plot(isoA, skySubCumFlux, c="r", label='Total cum. flux')
 	  
-	  ax.plot(isoA, skySubCumFluxM, c="b")
+	  ax.plot(isoA, skySubCumFluxM, c="b", label='Total flux of unmasked pixels')
+	  plt.legend(loc=8)
+	  ax = fig.add_subplot(222)
+	  ax.plot(isoA[1:], np.diff(skySubCumFlux), c="r", label='Total flux')
+	  ax.plot(isoA[1:], np.diff(skySubCumFluxM), c="b", label='Total flux of unmasked pixels')
+	  plt.axhline(c='k')
+	  plt.legend(loc=1)
+	  
+  	  ax = fig.add_subplot(223)
+	  ax.plot(isoA[1:], np.diff(Npix), c="r", label='Npix')
+	  ax.plot(isoA[1:], np.diff(NpixM), c="b", label='No. of unmasked pixels')
+	  plt.axhline(c='k')
+	  plt.legend(loc=2)
 
-	  plt.savefig('img/curves/'+band+"/"+str(i))
-  np.savetxt("mags.csv", mags, fmt="%i,%f,%f, %f,%f, %f,%f")
+	  
+	  ax = fig.add_subplot(224)
+	  im = image.imread('img/2/snapshots/'+band+"/"+str(i)+".jpg")
+	  ax.imshow(im, cmap = cm.afmhot)
+	  plt.savefig('img/2/curves_diff/'+band+"/"+str(i))
+  np.savetxt("mags"+band+".csv", mags, fmt="%i,%f,%f, %f,%f, %f,%f")
 	  
 if __name__=="__main__":
   main()

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-#import pyfits
+import pyfits
 import numpy as np
 import utils
 #import inspect
 import csv
 import string
+import os
+from itertools import chain
 
 def getFilterNumber(band):
   	if band == 'u':
@@ -18,6 +20,10 @@ def getFilterNumber(band):
   	elif band == 'z':
   		return 4
 
+
+def flatten(listOfLists):
+    "Flatten one level of nesting"
+    return chain.from_iterable(listOfLists)      
 
 
 class GalaxyParameters:
@@ -63,7 +69,7 @@ def getParams(ID, band):
       #print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
       
       try:
-	print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/dr/'+camcol+'/drField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+	#print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/dr/'+camcol+'/drField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
 	
 	tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')
 
@@ -82,8 +88,15 @@ def getParams(ID, band):
 	airmass = list(img.field(22))[0][filterNumber]
 	params = [zpt_r, ext_coeff, airmass]
       return params
+'''
+with open('field_params.csv', 'a') as f:
+  for i in range(0, 939):
+    par = []
+    for band in ['u', 'g', 'r', 'i', 'z']: #0, 1, 2, 3, 4
+      params = getParams(i, band)
+      par.append(params)
 
-
-for i in range(0, 940):
-  print getParams(i, 'r')
-
+    f.write(str(i+1)+","+str(list(flatten(par)))+os.linesep)
+    
+f.close()
+'''

@@ -1,4 +1,4 @@
-#usage: python sky_fitting.py lower_limit upper_limit band
+  #usage: python sky_fitting.py lower_limit upper_limit band
 
 
 # -*- coding: utf-8 -*-
@@ -12,7 +12,8 @@ import utils
 import inpaint
 from astLib import astWCS
 import numpy as np
-import sdss_photo_check as sdss
+#import sdss_photo_check as sdss
+import sdss as sdss
 import imtools
 import plot_survey as plot
 #import photometry as phot
@@ -28,6 +29,21 @@ from galaxyParameters import *
 import matplotlib.pylab as plt
 import cProfile
 import multiprocessing
+
+
+def rFilename(ID):
+  ID = ID+1
+  fitsDir = Settings.getConstants().dataDir+'SDSS/'
+  ra = GalaxyParameters.SDSS(int(ID) - 1).ra
+  dec = GalaxyParameters.SDSS(int(ID) - 1).dec
+  run = GalaxyParameters.SDSS(int(ID) - 1).run
+  rerun = GalaxyParameters.SDSS(int(ID) - 1).rerun
+  camcol = GalaxyParameters.SDSS(int(ID) - 1).camcol
+  field = GalaxyParameters.SDSS(int(ID) - 1).field
+  runstr = GalaxyParameters.SDSS(int(ID) - 1).runstr
+  field_str = utils.field2string(field)
+  rFile = fitsDir+'r/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz'
+  return rFile
 
 
 
@@ -117,13 +133,28 @@ class Photometry():
      maskFile.close()
      print mask.shape, 'mask'
      return mask
-       
+  @staticmethod
+  def getCroppedMask(mask, i):
+    #WCS for u band:
+    WCS=astWCS.WCS(GalaxyParameters.getSDSSUrl(i))   
+    #WCS for r band:
+    rFile = rFilename(i)
+    WCSr = astWCS.WCS(rFile)
+    #as in fill.py:
+    band_center = WCS.wcs2pix(WCS.getCentreWCSCoords()[0], WCS.getCentreWCSCoords()[1])
+    r_center = WCS.wcs2pix(WCSr.getCentreWCSCoords()[0], WCSr.getCentreWCSCoords()[1])
+    shift = [band_center[0] - r_center[0], band_center[1] - r_center[1]]
+    shift = [math.ceil(shift[1]), math.ceil(shift[0])]
+    print shift, 'shift', band_center, r_center, 
+    croppedMask = sdss.getShiftedImage(mask, shift)
+    return croppedMask   
+
   @staticmethod
   def fitSky(center, distances, pa, ba, CALIFA_ID):
     #limit = findClosestEdge(distances, center)
     band = Settings.getConstants().band
     inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
-    mask = Photometry.getMask(int(CALIFA_ID) - 1)
+    mask = Photometry.getCroppedMask(Photometry.getMask(int(CALIFA_ID) - 1), int(CALIFA_ID) - 1)
     #start = Photometry.getStart(CALIFA_ID) - 500
     start = 101
     radius = 150
@@ -212,7 +243,7 @@ class Photometry():
       isoA = 'nan'
       print 'aaaa'
     out = (CALIFA_ID, sky, slope, skyM, slopeM, isoA)
-    utils.writeOut(out, "sky_fits_"+Settings.getConstants().band+"_new.csv")
+    utils.writeOut(out, "gc2_"+Settings.getConstants().band+"_sky.csv")
     
 
 def getDuplicates():
@@ -288,7 +319,7 @@ def splitList(galaxyRange, chunkNumber):
     return [galaxyRange[i:i+n] for i in range(0, len(galaxyRange), n)]
 
 def getMissing():
-  ready_ids = np.genfromtxt("sky_fits_r_new.csv", delimiter=",", dtype='i')[:, 0]
+  ready_ids = np.genfromtxt("gc2_"+Settings.getConstants().band+"_sky.csv", delimiter=",", dtype='i')[:, 0]
   print ready_ids
   missing_ids = []
   for califa_id in range(1, 940):
@@ -303,12 +334,12 @@ def main():
   #exit()
   fitsdir = Settings.getConstants().dataDir+'SDSS'+Settings.getConstants().band
   #getting list of CALIFA IDS to work with
-  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   
   #OR:
   #getting list of missing galaxy IDs:
-  #galaxyRange = getMissing()
-  chunks = 6
+  galaxyRange = getMissing()
+  chunks = 8
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'
     print galaxyList

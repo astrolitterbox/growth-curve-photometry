@@ -209,10 +209,15 @@ class Photometry():
 		  #print inputImage[np.where(ellipseMask == 1)].shape[0], '***************************************'
 		  # --------------------------------------- writing an ellipse of counted points, testing only
 		
-		hdu = pyfits.PrimaryHDU(ellipseMask)
-		hdu.writeto('masks/ellipseMask'+CALIFA_ID+'.fits', clobber=True)
-		
-		np.savetxt('growth_curves/new/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
+		#hdu = pyfits.PrimaryHDU(ellipseMask)
+		#hdu.writeto('masks/ellipseMask'+CALIFA_ID+'.fits', clobber=True)
+		    # --------------------- writing output jpg file with both outermost annuli  
+		outputImage = inputImage
+		elPix = ellipse.draw_ellipse(inputImage.shape, center[0], center[1], pa, isoA-1, ba)    
+		outputImage[elPix] = 0	
+		outputImage, cdf = imtools.histeq(outputImage)
+		scipy.misc.imsave('img/2/snapshots/'+band+"/"+CALIFA_ID+'.jpg', outputImage)
+		np.savetxt('growth_curves/2/'+Settings.getConstants().band+'/gc_profile'+CALIFA_ID+'.csv', fluxData)	
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion, width):
@@ -255,7 +260,7 @@ class Photometry():
     CALIFA_ID = str(i+1)
     band = Settings.getConstants().band
     dbDir = '../db/'
-    imgDir = 'img/'+Settings.getConstants().band+'/'
+    imgDir = 'img/2/'+Settings.getConstants().band+'/'
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
     
@@ -304,10 +309,10 @@ class Settings():
   def getSkyFitValues(CALIFA_ID):
     band = Settings.getConstants().band
     ret = Settings()
-    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+str(CALIFA_ID))[0] 
+    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'gc2_'+band+"_sky", ' where califa_id = '+str(CALIFA_ID))[0] 
     
-    #Sky value where masked regions were included
-    ret.sky = np.float(db.dbUtils.getFromDB('sky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'sky_new', ' where califa_id = '+ str(CALIFA_ID))[0])
+    #Sky value where masked regions were not included
+    ret.sky = np.float(db.dbUtils.getFromDB('mSky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'gc2_'+band+"_sky", ' where califa_id = '+ str(CALIFA_ID))[0])
     
 
     return ret
@@ -437,14 +442,14 @@ def main():
   
   band = Settings.getConstants().band
 
-  galaxyRange = getMissing()
-  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  #galaxyRange = getMissing()
+  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   
-  chunks = 1
+  chunks = 8
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'
     print galaxyList
-    p = multiprocessing.Process(target=measureFluxInOtherBands, args=[galaxyList])
+    p = multiprocessing.Process(target=measure, args=[galaxyList])
     p.start()
       
       

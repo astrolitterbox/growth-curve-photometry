@@ -77,9 +77,9 @@ class dbUtils:
 
 	  conn = sqlite3.connect(table)
 	  c = conn.cursor()
-	  print 'select ' + columns + ' from ' + view + ''.join(whereClause) +' order by rowid asc'
+	  print 'select ' + columns + ' from ' + view + ''.join(whereClause) +' order by califa_id asc'
 	  
-	  c.execute('select ' + columns + ' from ' + view + ''.join(whereClause)+' order by rowid asc')
+	  c.execute('select ' + columns + ' from ' + view + ''.join(whereClause)+' order by califa_id asc')
 	  conn.commit()
 	  data = c.fetchall()
 	  col = 0 #http://stackoverflow.com/questions/2854011/get-a-simple-list-from-sqlite-in-python-not-a-list-of-tuples

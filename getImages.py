@@ -45,10 +45,10 @@ def tostring(val, nmin=None, nmax=None):
         vstr = str(val)
     return vstr        
 
+dataDir = "" #where is the x-match file?
+dataFile = dataDir+'/SDSS_photo_match.csv'
 
-#PA = []
 csvReader = csv.reader(open(dataFile, "rU"), delimiter=',')
-#f = csv.writer(open('Position_angles.txt', 'w'), delimiter=',')
 for row in csvReader:
       print '********************************', row[0]      
       CALIFAID = string.strip(row[0])
@@ -62,15 +62,9 @@ for row in csvReader:
       field_str = field2string(field)
       print 'wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz' #<-- replace r between runstr and camcol to any other band
       os.system('wget http://das.sdss.org/imaging/'+run+'/'+rerun+'/corr/'+camcol+'/fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz') #<-- replace r between runstr and camcol to any other band
-      print 'uncompressing..'
-      gz = gzip.open('fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
-      imgFile = pyfits.open(gz, mode='readonly')
-      print 'getting header info...'
-      head = imgFile[0].header
-      angle = head['SPA']
-      info = (int(CALIFAID), angle)
-      #PA.append(info)
-      #print PA    
-      f.writerow(info)
-#numpy.savetxt('', PA)
+      #print 'uncompressing..'
+      #gz = gzip.open('fpC-'+runstr+'-r'+camcol+'-'+field_str+'.fit.gz')
+      #imgFile = pyfits.open(gz, mode='readonly')
+      #print 'getting header info...'
+      #head = imgFile[0].header
 

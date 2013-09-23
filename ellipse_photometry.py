@@ -265,10 +265,11 @@ class Photometry():
     center = Photometry.getCenter(i)
     distances = Photometry.createDistanceArray(i)
     
-    pa = db.dbUtils.getFromDB('pa', Settings.getConstants().dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0]
-    ba = db.dbUtils.getFromDB('ba', Settings.getConstants().dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0]
-
-    Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)
+    e = Photometry.findClosestEdge(distances, center)
+    #pa = db.dbUtils.getFromDB('pa', Settings.getConstants().dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0]
+    #ba = db.dbUtils.getFromDB('ba', Settings.getConstants().dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0]
+    utils.writeOut([CALIFA_ID, e], 'closest_edge.csv')
+    #Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)
     
 
     
@@ -334,6 +335,7 @@ def measure(galaxyList):
       try:
 	  print 'filename', GalaxyParameters.getSDSSUrl(i)
 	  print 'filledFilename', GalaxyParameters.getFilledUrl(i, band)
+	  
 	  Photometry.calculateGrowthCurve(i)
       except IOError as err:
 	print 'err', err
@@ -443,11 +445,11 @@ def main():
   
   band = Settings.getConstants().band
 
-  galaxyRange = getMissing()
-  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  #galaxyRange = getMissing()
+  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   print galaxyRange
 
-  chunks = 4
+  chunks = 1
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'
     print galaxyList

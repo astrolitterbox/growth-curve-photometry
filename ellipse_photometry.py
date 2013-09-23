@@ -162,6 +162,7 @@ class Photometry():
 		inputImage = Photometry.getInputFile(int(CALIFA_ID) - 1, band)
 		#masked input array
 		mask = Photometry.getMask(int(CALIFA_ID)-1)
+		mask = getCroppedMask(mask, int(CALIFA_ID)-1)
 		inputImageM = np.ma.masked_array(inputImage, mask=mask)
 		ellipseMask = np.zeros((inputImage.shape), dtype=np.uint8)
 		ellipseMaskM = ellipseMask.copy()
@@ -343,12 +344,12 @@ def measure(galaxyList):
 
 def getMissing():
   band = Settings.getConstants().band
-  ready_ids = np.genfromtxt("gc_"+band+".csv", delimiter=",", dtype='i')[:, 0]
-  print ready_ids
   missing_ids = []
   for califa_id in range(1, 940):
-    if califa_id not in ready_ids:
-      missing_ids.append(califa_id)
+      try:
+	with open('growth_curves/2/'+band+"/gc_profile"+str(califa_id)+".csv"): pass
+      except IOError:
+	missing_ids.append(califa_id)
   return sorted(missing_ids)    
 
 def rFilename(ID):
@@ -442,10 +443,11 @@ def main():
   
   band = Settings.getConstants().band
 
-  #galaxyRange = getMissing()
-  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
-  
-  chunks = 8
+  galaxyRange = getMissing()
+  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  print galaxyRange
+
+  chunks = 4
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'
     print galaxyList

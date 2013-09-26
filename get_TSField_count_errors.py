@@ -54,7 +54,20 @@ class GalaxyParameters:
     return ret
 
 
-
+def getFields(img, filterNumber):
+  zpt_r = list(img.field(27))[0][filterNumber]
+  ext_coeff = list(img.field(33))[0][filterNumber]
+  #airmass = list(img.field(22))[0][filterNumber]
+  airmass = img.field('airmass')[0][filterNumber]
+  zpt = img.field('aa')[0][filterNumber]
+  sky = img.field('sky')[0][filterNumber]
+  nCR = img.field('nCR')[0][filterNumber]  
+  skySig = img.field('skySig')[0][filterNumber]    
+  skyErr = img.field('skyErr')[0][filterNumber]  
+  ext_coeff = img.field('kk')[0][filterNumber]
+  gain = img.field('gain')[0][filterNumber]  
+  dark_variance = img.field('dark_variance')[0][filterNumber]  
+  return [zpt_r, ext_coeff, airmass, gain, dark_variance, sky, skySig, skyErr, nCR]
 
 def getParams(ID, band):
       
@@ -69,34 +82,28 @@ def getParams(ID, band):
       #print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
       
       try:
-	#print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/dr/'+camcol+'/drField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+	print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/dr/'+camcol+'/drField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
 	
 	tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')
 
 	img = tsFile[1].data
-	#indexing -- field numbering in documentation starts with 0, hence #27 instead of #28 field, etc
-	zpt_r = list(img.field(27))[0][filterNumber]
-	ext_coeff = list(img.field(33))[0][filterNumber]
-	airmass = list(img.field(22))[0][filterNumber]
-	params = [zpt_r, ext_coeff, airmass]
+	#indexing -- field numbering in documentation starts with 0, hence #27 instead of #28 field, etc	
+	params = getFields(img, filterNumber)
+	tsFile.close()	
       except IOError as err:
 	tsFile = pyfits.open('http://das.sdss.org/imaging/'+run+'/'+rerun+'/dr/'+camcol+'/drField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit', mode='readonly')	
 	img = tsFile[1].data
-	#indexing -- field numbering in documentation starts with 0, hence #27 instead of #28 field, etc
-	zpt_r = list(img.field(27))[0][filterNumber]
-	ext_coeff = list(img.field(33))[0][filterNumber]
-	airmass = list(img.field(22))[0][filterNumber]
-	params = [zpt_r, ext_coeff, airmass]
+	params = getFields(img, filterNumber)
+	tsFile.close()
       return params
-'''
-with open('field_params.csv', 'a') as f:
-  for i in range(0, 939):
+
+with open('count_error_params.csv', 'a') as f:
+  for i in range(0, 940):
     par = []
     for band in ['u', 'g', 'r', 'i', 'z']: #0, 1, 2, 3, 4
       params = getParams(i, band)
       par.append(params)
-
-    f.write(str(i+1)+","+str(list(flatten(par)))+os.linesep)
+    #print str(i+1)+","+str(list(flatten(par)))[1:-1]+os.linesep
+    f.write(str(i+1)+","+str(list(flatten(par)))[1:-1]+os.linesep)
     
 f.close()
-'''

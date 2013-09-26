@@ -1,0 +1,55 @@
+This is BibTeX, Version 0.99d (TeX Live 2010)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: photometry_2.aux
+The style file: apj.bst
+Database file #1: photometry_2Notes.bib
+Warning--entry type for "REVTEX41Control" isn't style-file defined
+--line 1 of file photometry_2Notes.bib
+Warning--entry type for "apsrev41Control" isn't style-file defined
+--line 2 of file photometry_2Notes.bib
+Database file #2: phot_bib.bib
+Warning--to sort, need author or key in REVTEX41Control
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Warning--empty year in REVTEX41Control; set to ????
+You've used 6 entries,
+            3085 wiz_defined-function locations,
+            671 strings with 5385 characters,
+and the built_in function-call counts, 2517 in all, are:
+= -- 199
+> -- 170
+< -- 2
++ -- 59
+- -- 61
+* -- 208
+:= -- 485
+add.period$ -- 6
+call.type$ -- 6
+change.case$ -- 33
+chr.to.int$ -- 6
+cite$ -- 10
+duplicate$ -- 106
+empty$ -- 165
+format.name$ -- 64
+if$ -- 492
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 4
+newline$ -- 22
+num.names$ -- 20
+pop$ -- 43
+preamble$ -- 1
+purify$ -- 33
+quote$ -- 0
+skip$ -- 80
+stack$ -- 0
+substring$ -- 110
+swap$ -- 0
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 54
+warning$ -- 2
+while$ -- 17
+width$ -- 0
+write$ -- 58
+(There were 4 warnings)

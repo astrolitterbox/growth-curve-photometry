@@ -70,7 +70,7 @@ def getFields(img, filterNumber):
   return [zpt_r, ext_coeff, airmass, gain, dark_variance, sky, skySig, skyErr, nCR]
 
 def getParams(ID, band):
-      
+      #www.sdss.org/dr7/dm/flatFiles/tsField.html -- SDSS documentation
       filterNumber = getFilterNumber(band) #(0, 1, 2, 3, 4 - ugriz SDSS filters)     
       run = GalaxyParameters().SDSS(ID).run
       rerun = GalaxyParameters.SDSS(ID).rerun
@@ -79,7 +79,7 @@ def getParams(ID, band):
       runstr = GalaxyParameters.SDSS(ID).runstr
       field_str = GalaxyParameters.SDSS(ID).field_str
 	
-      #print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+camcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
+      #print 'STR -- http://das.sdss.org/imaging/'+run+'/'+rerun+'/calibChunks/'+ca  mcol+'/tsField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'
       
       try:
 	print 'http://das.sdss.org/imaging/'+run+'/'+rerun+'/dr/'+camcol+'/drField-'+runstr+'-'+camcol+'-'+rerun+'-'+field_str+'.fit'

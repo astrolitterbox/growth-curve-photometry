@@ -133,7 +133,7 @@ def main():
 	  
 	  #mags.append(out) 
 
-	  '''
+	  
 	  fig = plt.figure(figsize=(12, 12))
 	  ax = fig.add_subplot(221)
 	  ax.plot(isoA, skySubCumFlux, c="r", label='Total cum. flux')
@@ -157,8 +157,8 @@ def main():
 	  im = image.imread('img/2/snapshots/'+band+"/"+str(i)+".jpg")
 	  ax.imshow(im, cmap = cm.afmhot)
 	  plt.savefig('img/2/curves_diff/'+band+"/"+str(i))
-	  plt.close(fig)'''
-	  #np.savetxt(, mags, fmt="%i,%f,%f, %f,%f, %f,%f")
+	  plt.close(fig)
+	  
 	  with open("mags_"+band+".csv", 'a') as f:
 	    f.write(str(i)+","+str(elMag)+","+str(elMagM)+","+str(elHLR)+","+str(elHLRM)+","+str(elR90)+","+str(elR90M)+"\n")    
 	  f.close()

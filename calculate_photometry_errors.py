@@ -100,7 +100,7 @@ def getErrors(i, band):
 	    
 	    #converting to arcseconds:
 	    elHLR_err_low = 0.396*elHLR_err_low
-	    elHLR_err_hi = 0.396*elHLR_err_hi
+	    elHLR_err_hi = 0.396*elHLR_err_
 	    elR90_err_low = 0.396*elR90_err_low
 	    elR90_err_hi = 0.396*elR90_err_hi
 

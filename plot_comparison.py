@@ -2,6 +2,17 @@ import numpy as np
 from utils import *
 import matplotlib as mpl
 mpl.use('Agg')
+import prettyplotlib as ppl
+# This is "import matplotlib.pyplot as plt" from the prettyplotlib library
+from prettyplotlib import plt
+
+# This is "import matplotlib as mpl" from the prettyplotlib library
+from prettyplotlib import mpl
+
+# Set the random seed for consistency
+np.random.seed(12)
+
+
 import db
 import math
 import matplotlib.pyplot as plt
@@ -114,10 +125,11 @@ for i, band in enumerate(bands):
   lim_lo = limits[i][0]
   lim_hi = limits[i][1]
   x, m, b = makeDiagonalLine([lim_lo, lim_hi])
-  
+
   fig = plt.figure(figsize=(8, 8))  
   ax = plt.subplot(111)
-  c = ax.scatter(petroMags[:, i], mags[:, i], c='k', s=8, edgecolor='k') 
+
+  c = ppl.scatter(ax, petroMags[:, i], mags[:, i], s=8, c='k', edgecolor='k') 
   ax.axis([lim_lo, lim_hi, lim_lo, lim_hi])
   ax.errorbar(petroMags[:, i], mags[:, i], yerr=mag_err[:, i], mew=0, linestyle = "none", color="black")
   plt.plot(x,m*x + b, c='k')
@@ -126,6 +138,26 @@ for i, band in enumerate(bands):
   ax.yaxis.set_major_locator(majorLocator)
   ax.yaxis.set_minor_locator(minorLocator)
   ax.minorticks_on()
+  # Change the labels back to black
+  ax.xaxis.label.set_color('black')
+  ax.yaxis.label.set_color('black')
+  # Change the axis title also back to black
+  ax.title.set_color('black')
+  # Get back the top and right axes lines ("spines")
+  spines_to_remove = ['top', 'right']
+  for spine in spines_to_remove:
+     ax.spines[spine].set_visible(True)
+  # For all the spines, make their line thicker and return them to be black
+  all_spines = ['top', 'left', 'bottom', 'right']
+  for spine in all_spines:
+      ax.spines[spine].set_linewidth(0.5)
+      #ax.spines[spine].set_color('black')
+
+  # Get back the ticks. The position of the numbers is informative enough of
+  # the position of the value.
+  ax.xaxis.set_ticks_position('both')
+  ax.yaxis.set_ticks_position('both')
+  
   ax.tick_params('both', length=15, width=1, which='major')
   ax.tick_params('both', length=5, width=1, which='minor')
   plt.xlabel("SDSS "+band+" magnitude, mag")

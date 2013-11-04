@@ -266,10 +266,10 @@ class Photometry():
     distances = Photometry.createDistanceArray(i)
     
     e = Photometry.findClosestEdge(distances, center)
-    #pa = db.dbUtils.getFromDB('pa', Settings.getConstants().dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0]
-    #ba = db.dbUtils.getFromDB('ba', Settings.getConstants().dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0]
-    utils.writeOut([CALIFA_ID, e], 'closest_edge.csv')
-    #Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)
+    pa = db.dbUtils.getFromDB('pa', Settings.getConstants().dbDir+'CALIFA.sqlite', 'nadine', ' where califa_id = '+ CALIFA_ID)[0]
+    ba = db.dbUtils.getFromDB('ba', Settings.getConstants().dbDir+'CALIFA.sqlite', 'bestBA', ' where califa_id = '+ CALIFA_ID)[0]
+    #utils.writeOut([CALIFA_ID, e], 'closest_edge.csv')
+    Photometry.buildGrowthCurve(center, distances, pa, ba, CALIFA_ID)
     
 
     
@@ -311,12 +311,9 @@ class Settings():
   def getSkyFitValues(CALIFA_ID):
     band = Settings.getConstants().band
     ret = Settings()
-    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'gc2_'+band+"_sky", ' where califa_id = '+str(CALIFA_ID))[0] 
-    
+    ret.isoA = db.dbUtils.getFromDB('isoA', Settings.getConstants().dbDir+'CALIFA.sqlite', 'gc2_'+band+"_sky", ' where califa_id = '+str(CALIFA_ID))[0]  
     #Sky value where masked regions were not included
     ret.sky = np.float(db.dbUtils.getFromDB('mSky', Settings.getConstants().dbDir+'CALIFA.sqlite', 'gc2_'+band+"_sky", ' where califa_id = '+ str(CALIFA_ID))[0])
-    
-
     return ret
 
 
@@ -449,7 +446,7 @@ def main():
   galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   print galaxyRange
 
-  chunks = 1
+  chunks = 8
   for galaxyList in splitList(galaxyRange, chunks):
     #print len(galaxyList), 'length of a list of IDs'
     print galaxyList

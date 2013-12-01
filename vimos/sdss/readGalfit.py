@@ -29,11 +29,11 @@ for galaxy in galaxyList:
   try:
     ba, pa = read_pa_ba_values(barFile, galaxy)
   except Exception:
-    #print 'no bar'
+    print 'no bar'
     try:
       ba, pa = read_pa_ba_values(bulgeFile, galaxy)
     except Exception:
-      #print 'no bulge'	
+      print 'no bulge'	
       ba, pa = read_pa_ba_values(discFile, galaxy)
   print ba, pa  
   val.append([galaxy, ba, pa])

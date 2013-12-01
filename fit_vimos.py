@@ -218,7 +218,7 @@ class Photometry():
       isoA = 'nan'
       print 'aaaa'
     out = (name, sky, slope, skyM, slopeM, isoA)
-    utils.writeOut(out, "vimos_sky2_"+Settings.getConstants().band+"_ell.csv")
+    utils.writeOut(out, "vimos_sky_new_"+Settings.getConstants().band+"_ell.csv")
     
     print 'Circular APERTURE --------------------------'
     try:
@@ -231,7 +231,7 @@ class Photometry():
       isoA = 'nan'
       print 'aaaa'
     out = (name, sky, slope, skyM, slopeM, isoA)
-    utils.writeOut(out, "vimos_sky2_"+Settings.getConstants().band+"_circ.csv")
+    utils.writeOut(out, "vimos_sky_new_"+Settings.getConstants().band+"_circ.csv")
     
 
 def getDuplicates():
@@ -288,12 +288,12 @@ def main():
 
   band = sys.argv[1]
   data = np.genfromtxt("vimos/sdss/ba_pa_values.csv", delimiter=",", dtype='object')
-  try:
-	 res = np.genfromtxt("vimos_sky2_"+band+"_ell.csv", delimiter=",", dtype='object')
-  	 res_names = res[:, 0]
-  except IOError:
-	  res_names = []
-	  pass
+  #try:
+  #	 res = np.genfromtxt("vimos_sky2_"+band+"_ell.csv", delimiter=",", dtype='object')
+  #	 res_names = res[:, 0]
+  #except IOError:
+  res_names = []
+  #pass
   names = data[:, 0]
   for i, galaxy in enumerate(names):
     if galaxy in res_names:

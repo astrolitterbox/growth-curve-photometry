@@ -442,8 +442,8 @@ def main():
   
   band = Settings.getConstants().band
 
-  #galaxyRange = getMissing()
-  galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
+  galaxyRange = getMissing()
+  #galaxyRange = range(Settings.getConstants().lim_lo, Settings.getConstants().lim_hi)
   print galaxyRange
 
   chunks = 8

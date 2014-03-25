@@ -104,13 +104,13 @@ def getErrors(i, band):
 	    elR90_err_low = 0.396*elR90_err_low
 	    elR90_err_hi = 0.396*elR90_err_hi
 
-	  return [round(sky_error, 3)]
+	  return [round(err_mag, 2), round(sky_error, 3), elHLR_err_low, elHLR_err_hi, elR90_err_low, elR90_err_hi]
 	  
 
-with open('r_sky_GC_errors.csv', 'a') as f:
+with open('GC_errors.csv', 'a') as f:
   for i in range(1, 940):
     err = []
-    for band in ['r']: #0, 1, 2, 3, 4
+    for band in ['u', 'g', 'r', 'i', 'z']: #0, 1, 2, 3, 4
       err_b = getErrors(i, band)
       err.append(err_b)
     #print str(i+1)+","+str(list(flatten(par)))[1:-1]+os.linesep

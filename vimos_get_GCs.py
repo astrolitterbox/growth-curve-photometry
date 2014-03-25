@@ -212,7 +212,7 @@ class Photometry():
 		plotGrowthCurve.plotGrowthCurve(fluxData, Settings.getConstants().band, name)
 		#hdu = pyfits.PrimaryHDU(ellipseMask)
 		#hdu.writeto('vimos_masks/Mask'+name+"_"+Settings.getConstants().band+'.fits', clobber=True)
-		np.savetxt('vimos_growth_curves/el/'+Settings.getConstants().band+'/gc_profile_el_'+name+'.csv', fluxData)	
+		np.savetxt('vimos_growth_curves/el/'+Settings.getConstants().band+'/gc_profile_el_new_'+name+'.csv', fluxData)	
   
   @staticmethod
   def checkLimitCriterion(fluxData, distance, limitCriterion, width):

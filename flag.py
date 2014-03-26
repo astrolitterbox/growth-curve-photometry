@@ -2,73 +2,39 @@
 import numpy as np
 #import set
 import utils
-data = np.empty((939, 7), dtype = int)
+data = np.zeros((939, 6), dtype = int)
 data[:, 0] = np.arange(1, 940, dtype = int)
 
-u_sens = np.genfromtxt("u_wrong_skies.csv", delimiter = ",", dtype = int)[:, 0]
-g_sens = np.genfromtxt("g_wrong_skies.csv", delimiter = ",", dtype = int)[:, 0]
-r_sens = np.genfromtxt("r_wrong_skies.csv", delimiter = ",", dtype = int)[:, 0]
-i_sens = np.genfromtxt("i_wrong_skies.csv", delimiter = ",", dtype = int)[:, 0]
-z_sens = np.genfromtxt("z_wrong_skies.csv", delimiter = ",", dtype = int)[:, 0]
-
-
-susp_z = np.genfromtxt("susp_z.csv", dtype = int, delimiter = "\n")
-susp_u = np.genfromtxt("susp_u.csv", dtype = int, delimiter = "\n")
-
-for x, i in enumerate(susp_z):
-	susp_z[x] = i + 1
-
-for x, i in enumerate(susp_u):
-        susp_u[x] = i + 1
-
-
-
-#flag: 8 means more sensitive limiting slope value C = 0.00005*\sigma_{sky} (counts/pixel) was applieda
-
-indices = set(list(u_sens) + list(g_sens) + list(r_sens)+ list(i_sens)+list(z_sens)+list(susp_u)+list(susp_z))
-indices =  list(indices)
-
-indices.sort()
-print indices
 
 #flag: 1 denotes visually wrong PA:
 
-pa = np.genfromtxt("wrong_pas.txt", dtype = int)
-print pa
-pa = pa - 1
-print pa
-data[pa, 1] = 1
+indices = [10, 43, 104, 146, 156, 176, 194, 251, 265, 272, 302, 342, 418, 429, 431, 448, 525, 533, 566, 577, 638, 659, 721, 787, 878, 902, 938, 939]
+for i, x in enumerate(indices):
+	indices[i] = x - 1
+data[indices, 1] = 1
 
 #flag: 2 denotes off-center galaxies:
-#centers
-#subtracted indices already!
 center = [246, 428, 679]
-
 data[center, 2] = 2
+print data[center].shape, data.shape
 
-#flag: 4 denotes lower sensitivity limit galaxies with C = 0.00005:
-for x, i in enumerate(indices):
-	indices[x] = i - 1
-
-print indices, 'indices'
-
+#flag: 4 marks galaxies that are closer to the edge of the frame than 2 HLSMA (in r band):
+#select g.califa_id, (0.396*c.closest_edge)/g.elhlr from gc2_r as g, closest_edge as c where (c.closest_edge)/g.elhlr < 2 and g.califa_id = c.califa_id
+indices = [126, 244, 258, 260, 273, 304, 417, 434, 545, 696, 741, 763, 809, 841, 880] 
+for i, x in enumerate(indices):
+	indices[i] = x - 1
 data[indices, 3] = 4
-print data[indices, 3]
 
+#flag: 8 denotes galaxies that have suspicious/unreliable measurements (heavily masked)
 
-#flag: 8 denotes less sensitive galaxies with C = 0.0005:
+indices = [10, 22, 46, 53, 63, 86, 135, 154, 156, 161, 162, 175, 185, 223, 233, 245, 248, 255, 266, 267, 271, 355, 390, 426, 444, 457, 460, 491, 541, 577, 592, 617, 670, 680, 684, 699, 710, 714, 781, 784, 785, 801, 806, 819, 824, 827, 852, 858, 870, 874, 880, 881, 882, 883, 888, 893, 897, 908, 911, 924, 928, 932, 938, 939]
+for i, x in enumerate(indices):
+	indices[i] = x - 1
+data[indices, 4] = 8
 
-
-data[880, 4] = 8
-
-
-#flag: 16
-#visually suspicious galaxies with subtracted indices:
-vis = [136, 416, 544,937, 801, 914]
-data[vis, 5] = 16
 
 for i in range(0, 939):
-	data[i, 6]  = np.sum(data[i, 1:])
+	data[i, 5]  = np.sum(data[i, 1:5])
 	out = data[i, :]
 	print 'did you delete the file?'
-	utils.writeOut(out, 'flags.txt')		
+	utils.writeOut(out, 'gc2_flags.txt')		

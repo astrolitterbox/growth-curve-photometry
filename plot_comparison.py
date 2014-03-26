@@ -49,7 +49,7 @@ f = open('settings','r')
 settings = eval(f.read())
 dbDir = settings['dbDir']
 
-bands = ['u', 'g', 'r', 'i']
+bands = ['u', 'g', 'r', 'i', 'z']
 
 mags = np.empty((939, 5))
 mag_err = np.empty((939, 5))
@@ -119,7 +119,7 @@ plt.savefig('test/u_SDSS_vs_GC')
 
 
 
-limits = [[12, 18.5], [11.4, 16.5], [10, 16], [9.5, 16]]
+limits = [[12, 18.5], [11.4, 16.5], [10, 16], [9.5, 16], [9.5, 16]]
 
 for i, band in enumerate(bands):
   lim_lo = limits[i][0]
@@ -188,7 +188,7 @@ for i, band in enumerate(bands):
   plt.ylabel("GC "+band+" magnitude, mag")
 plt.savefig('test/all_SDSS_vs_GC', bbox_inches='tight')  
 
-exit()
+
 
 #colours
 fig = plt.figure(figsize=(8, 8))  

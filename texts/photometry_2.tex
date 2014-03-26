@@ -17,12 +17,12 @@
 \maketitle
 \section*{Motivation for having independent photometry measurements}
 
-As CALIFA sample was selected from the SDSS survey, all the CALIFA galaxies have SDSS Petrosian magnitudes  (TODO: cite Blanton 2001, Yasuda). However, SDSS Petrosian magnitudes are designed to capture a fixed percentage of the total flux which depends on the galaxy profile. As shown in \cite{Blanton2001}, the Petrosian flux measurement of a large exponential disk includes virtually all the flux, however, the ratio between the total flux and the Petrosian flux of a galaxy with de Vaucouleurs profile is only $\approx$80\%. Moreover, the SDSS Petrosian radii are based on signal-to-noise-ratio of the image, therefore flux in bands with low S/N (u, z) is underestimated, possibly affecting photometric stellar mass models.\\
+As CALIFA sample was selected from the SDSS survey, all the CALIFA galaxies have SDSS Petrosian magnitudes. However, SDSS Petrosian magnitudes are designed to capture a fixed percentage of the total flux which depends on the galaxy profile. As shown in \cite{Blanton2001}, the Petrosian flux measurement of a large exponential disk includes virtually all the flux, however, the ratio between the total flux and the Petrosian flux of a galaxy with de Vaucouleurs profile is only $\approx$80\%. Moreover, the SDSS Petrosian radii are based on signal-to-noise-ratio of the image, therefore flux in bands with low S/N (u, z) is underestimated, possibly affecting photometric stellar mass models.\\
 
-The CALIFA survey is primarily diameter-limited and consists of galaxies with quite large (40-80\") SDSS isophotal radii. The SDSS DR7 pipeline (TODO: cite) does not always perform well for bright, large galaxies, over-subtracting the sky or picking child photometric components for total flux measurements. Besides, all images contain foreground and background objects (stars, background galaxies, cosmic rays, image artifacts) that, if not accounted for, contribute to the error in both flux and sky value measurements. Just masking nuisance objects would lead to systematic underestimation of the galaxy magnitude, because the galaxy areas under them would remain excluded from the total flux measurement.
-
+The CALIFA survey is primarily diameter-limited and consists of galaxies with quite large (40-80\") SDSS isophotal radii. The SDSS DR7 pipeline does not always perform well for bright, large galaxies, over-subtracting the sky or picking child photometric components for total flux measurements. Besides, all images contain foreground and background objects (stars, background galaxies, cosmic rays, image artefacts) that, if not accounted for, contribute to the error in both flux and sky value measurements. 
 \section*{Image preparation}
-Neglecting the flux from the masked regions would lead to systematic underestimation of galaxy brightness. Simple interpolation would not have been applicable, so we chose a procedure known as inpainting -- masked pixels were iteratively replaced with a Gaussian inverse-distance weighted average of the neighbouring real pixels, starting with the pixels with the largest number of nearest neighbours. In order to apply the masks provided by the collaboration and available for r band images to the other 4 SDSS bands, we measured the shift between the different images and their r band counterparts using their WCS (FITS World Coordinate System) $\alpha$ and $\delta$ coordinates, then shifted the masks and cropped the images accordingly.
+Just masking nuisance objects would lead to systematic underestimation of the galaxy magnitude, because the galaxy areas under them would remain excluded from the total flux measurement.
+ Simple interpolation would not have been applicable, so we chose a procedure known as inpainting -- masked pixels were iteratively replaced with a Gaussian inverse-distance weighted average of the neighbouring real pixels, starting with the pixels with the largest number of nearest neighbours. In order to apply the masks provided by the collaboration and available for r band images to the other 4 SDSS bands, we measured the shift between the different images and their r band counterparts using their WCS (FITS World Coordinate System) $\alpha$ and $\delta$ coordinates, then shifted the masks and cropped the images accordingly.
 
 A small number of galaxies with large masked regions are distorted and were flagged as such. In such cases, only flux from non-masked regions was included.
 
@@ -34,7 +34,7 @@ Growth curve of a galaxy is the profile of integrated magnitude shown as a funct
 
 In theory, growth curve photometry measurements are superior to the other methods mentioned, retrieving the flux of all types of galaxy profiles well and making no prior assumptions or applying arbitrary cutoffs in surface brightness level, S/N level or aperture size. It is sensitive to even small flux levels at the outskirts of galaxies. In addition, it does not depend on the global features of the image, measuring the sky level in the immediate vicinity of the galaxy. The local sky values are more accurate than the sky mean frequently used for sky subtraction, resulting in better sky subtraction and more accurate magnitudes. It is also testable, because the shapes of the growth curves reveal inaccurate sky subtraction or interloping objects. 
 
-Trade-off between systematic errors correlated with galaxy light distribution (like SDSS Petrosian quantities) and random errors (due to masking).
+%Trade-off between systematic errors correlated with galaxy light distribution (like SDSS Petrosian quantities) and random errors (due to masking).
 
 Our implementation of a growth curve photometry algorithm first measures the sky value by constructing a mean flux-per-pixel profile in 1 px wide ellipses with given position angles, axis ratios, and major axis values). We use per-pixel values so as to avoid dependence on geometry, i.e. the ellipse shape, distance from the center, parts of galaxies which are outside the image frame.
 
@@ -45,7 +45,8 @@ We fit 150 px wide annuli of the flux profile using linear regression, going out
 
 We have checked that this procedure gives quite good results and is robust even in the presence of large masked regions or faint unmasked objects. %The sky values obtained were consistently lower than a simple mean of the image outside the galaxy and SDSS sky values provided in image headers (quantify!!).  
 
-In the second step we construct two growth curves for each galaxy - the sky subtracted cumulative flux profiles for all pixels and unmasked pixels. In the majority of cases they do flatten, showing that the sky subtraction was accurate. Then we calculate the magnitudes using the standard prescription given at \url{http://www.sdss.org/dr7/algorithms/fluxcal.html#counts2mag}
+In the second step we construct two growth curves for each galaxy - the sky subtracted cumulative flux profiles for all pixels and unmasked pixels. For the vast majority of cases they do flatten, showing that the sky subtraction was accurate. Then we calculate the magnitudes using the standard prescription given at \url{http://www.sdss.org/dr7/algorithms/fluxcal.html#counts2mag}
+
 
 \subsection{Outliers and quality flags}
 In several cases the growth curve procedure did not work well, either producing artificially large flux values due to incomplete masking of the foreground, or missing some of the flux because of being too close to the frame border. In the first case, we used flux from non-masked pixels only, after checking that we do not lose a large fraction of the flux near the center of the galaxy. 
@@ -106,8 +107,7 @@ We filled blank image with real sky from one of the CALIFA SDSS images (140). We
 
 We created fake galaxies with GALFIT, using de Vaucouleur's profile (n = 4) and an exponential disk. Its r magnitude was equal to 12.76 mag, half-light radii of both profiles were set equal to 45 px, the axis ratio b/a = 0.5. 
 
-The recovered sky value for an exponential profile was 123.01 counts, for a deVaucouleur profile -- 123.22 counts. The recovered magnitudes were 12.77 mag and 12.88 respectively, differing from the input ones by 0.01 and 0.12 mag. To put in in other way, the measured fluxes differed from the models by 1.2\% and 9.7\%. These errors dropped to 0.01\% and 3\% for small simulated galaxies (having half light radii equal to 14 px), for which the sky could have been estimated more accurately.
-
+The recovered sky value for an exponential profile was 123.01 counts, for a deVaucouleur profile -- 123.22 counts. The recovered magnitudes were 12.77 mag and 12.88 respectively, differing from the input ones by 0.01 and 0.12 mag.
 
 \begin{figure}[h]
 \centering
@@ -119,7 +119,7 @@ The recovered sky value for an exponential profile was 123.01 counts, for a deVa
 
 \section*{Results}
 
-The growth curve magnitudes in the 5 SDSS bands are brighter than the SDSS Petrosian magnitudes by 0.79, 0.39, 0.35, 0.35 and XX mag respectively. 
+The growth curve magnitudes in the 5 SDSS bands are brighter than the SDSS Petrosian magnitudes by 0.78, 0.39, 0.33, 0.36 and 0.46 mag respectively. 
 
 %On average, our sky values were smaller than SDSS sky values by 0.16 ADU (for ~650 galaxies with SDSS sky values in their headers).
 \begin{figure}[h]
@@ -129,20 +129,6 @@ The growth curve magnitudes in the 5 SDSS bands are brighter than the SDSS Petro
 \label{fig:app_mag_comparison}
 \end{figure}
 
-TODO:stellar masses, HLRi, ...
-\begin{figure}[h]
-\centering
-%\includegraphics[scale=0.4]{img/st_mass_SDSS_GC_comparison}\includegraphics[scale=0.4]{img/st_mass_comparison}
-\caption{Left: comparison between kcorrect stellar masses: GC vs. SDSS Petrosian magnitudes. Right: comparison between photometric stellar masses using GC measurements and STARLIGHT stellar masses.}
-\label{fig:app_mag_comparison}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-%\includegraphics[scale=0.8]{img/petroR50_circ_hlr}
-\caption{Petrosian R50 and GC hlr}
-\label{fig:petroR50}
-\end{figure}
 
 
 
